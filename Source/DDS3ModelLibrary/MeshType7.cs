@@ -49,7 +49,7 @@ namespace DDS3ModelLibrary
         public MeshType7()
         {
             Batches = new List<MeshBatchType7>();
-            Flags = MeshFlags.Bit3 | MeshFlags.TexCoord | MeshFlags.Normal | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Bit23 |
+            Flags = MeshFlags.Bit3 | MeshFlags.TexCoord | MeshFlags.Bit5 | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Bit23 |
                     MeshFlags.Bit24 | MeshFlags.FixShoes;
         }
 

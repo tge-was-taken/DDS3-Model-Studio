@@ -7,15 +7,11 @@ namespace DDS3ModelLibrary
 {
     public class MeshNodeBatchType7 : IBinarySerializable
     {
-        // For debugging
-        private int mPositionsAddress;
-        private int mNormalsAddress;
-
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
         public short NodeId { get; set; }
 
-        public int VertexCount => Positions.Length;
+        public int VertexCount => Positions?.Length ?? 0;
 
         public Vector4[] Positions { get; set; }
     
@@ -25,6 +21,27 @@ namespace DDS3ModelLibrary
         {
             NodeId = ( short )context;
 
+            var positionsPacket = reader.ReadObject<VifPacket>();
+            positionsPacket.Ensure( null, true, false, null, VifUnpackElementFormat.Float, 4 );
+            Positions = positionsPacket.Vector4s;
+
+            var normalsPacket = reader.ReadObject<VifPacket>();
+            normalsPacket.Ensure( null, true, false, VertexCount, VifUnpackElementFormat.Float, 3 );
+            Normals = normalsPacket.Vector3s;
+
+            var cmdTag = reader.ReadObject<VifCode>();
+            if ( cmdTag.Command == VifCommand.ActMicro )
+            {
+                cmdTag.Ensure( 0x14, 0, VifCommand.ActMicro );
+            }
+            else if ( cmdTag.Command != VifCommand.CntMicro )
+            {
+                throw new UnexpectedDataException( "Expected activate or execute microprogram vif command" );
+            }
+        }
+
+        private void ReadOld( EndianBinaryReader reader )
+        {
             while ( true )
             {
                 var tag = reader.ReadObject<VifTag>();
@@ -37,19 +54,17 @@ namespace DDS3ModelLibrary
                     break;
                 }
 
-                if ( ( VifCommand ) ( tag.Command & 0xF0 ) == VifCommand.Unpack )
+                if ( ( VifCommand )( tag.Command & 0xF0 ) == VifCommand.Unpack )
                 {
                     var packet = reader.ReadObject<VifPacket>( tag );
 
                     // TODO: use flags for this
                     if ( packet.ElementFormat == VifUnpackElementFormat.Float && packet.ElementCount == 4 )
                     {
-                        mPositionsAddress = packet.Address * 8;
                         Positions = packet.Vector4s;
                     }
                     else if ( packet.ElementFormat == VifUnpackElementFormat.Float && packet.ElementCount == 3 )
                     {
-                        mNormalsAddress = packet.Address * 8;
                         Normals = packet.Vector3s;
                     }
                     else
@@ -59,7 +74,7 @@ namespace DDS3ModelLibrary
                 }
                 else
                 {
-                    var command = ( VifCommand ) tag.Command;
+                    var command = ( VifCommand )tag.Command;
                     if ( command != VifCommand.ActMicro && command != VifCommand.CntMicro )
                         throw new UnexpectedDataException( "Unexpected VIF tag command" );
 
@@ -71,13 +86,8 @@ namespace DDS3ModelLibrary
         private void Write( EndianBinaryWriter writer, VifCodeStreamBuilder vif, bool first )
         {
             vif.Unpack( Positions );
+            vif.Unpack( Normals );
 
-            if ( Normals != null )
-            {
-                vif.Unpack( Normals );
-            }
-
-            // TODO: verify
             if ( first )
                 vif.ActivateMicro( 0x14 );
             else

@@ -9,9 +9,6 @@ namespace DDS3ModelLibrary
 {
     public class MeshBatchType7 : IBinarySerializable
     {
-        // For debugging
-        private int mTexCoordsAddress;
-
         public short UsedNodeCount => ( short )NodeBatches.Count;
 
         public short VertexCount { get; set; }
@@ -43,16 +40,12 @@ namespace DDS3ModelLibrary
             foreach ( short nodeId in usedNodeIds )
                 NodeBatches.Add( reader.ReadObject<MeshNodeBatchType7>( nodeId ) );
 
-            if ( flags.HasFlag( MeshFlags.TexCoord ) )
-            {
-                var texCoordsPacket = reader.ReadObject<VifPacket>();
-                texCoordsPacket.Ensure( null, true, false, VertexCount, VifUnpackElementFormat.Float, 2 );
-                TexCoords = texCoordsPacket.Vector2s;
-                mTexCoordsAddress = texCoordsPacket.Address * 8;
+            var texCoordsPacket = reader.ReadObject<VifPacket>();
+            texCoordsPacket.Ensure( null, true, false, VertexCount, VifUnpackElementFormat.Float, 2 );
+            TexCoords         = texCoordsPacket.Vector2s;
 
-                var texCoordsKickTag = reader.ReadObject<VifCode>();
-                texCoordsKickTag.Ensure( 0, 0, VifCommand.CntMicro );
-            }
+            var texCoordsKickTag = reader.ReadObject<VifCode>();
+            texCoordsKickTag.Ensure( 0, 0, VifCommand.CntMicro );
 
             var flushTag = reader.ReadObject<VifCode>();
             flushTag.Ensure( 0, 0, VifCommand.FlushEnd );

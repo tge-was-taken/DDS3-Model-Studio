@@ -16,7 +16,7 @@ namespace DDS3ModelLibrary
 
         public Vector2[] TexCoords { get; set; }
 
-        public Color[] Colors { get; set; }
+        //public Color[] Colors { get; set; }
 
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
@@ -39,20 +39,13 @@ namespace DDS3ModelLibrary
             positionsPacket.Ensure( 0, true, false, vertexCount, VifUnpackElementFormat.Float, 3 );
             Positions = positionsPacket.Vector3s;
 
-            // TODO: verify
-            if ( flags.HasFlag( MeshFlags.Normal )  )
-            {
-                var normalsPacket = reader.ReadObject<VifPacket>();
-                normalsPacket.Ensure( 0x18, true, false, vertexCount, VifUnpackElementFormat.Float, 3 );
-                Normals = normalsPacket.Vector3s;
-            }
+            var normalsPacket = reader.ReadObject<VifPacket>();
+            normalsPacket.Ensure( 0x18, true, false, vertexCount, VifUnpackElementFormat.Float, 3 );
+            Normals = normalsPacket.Vector3s;
 
-            if ( flags.HasFlag( MeshFlags.TexCoord ) )
-            {
-                var texCoordPacket = reader.ReadObject<VifPacket>();
-                texCoordPacket.Ensure( 0x30, true, false, vertexCount, VifUnpackElementFormat.Float, 2 );
-                TexCoords = texCoordPacket.Vector2s;
-            }
+            var texCoordPacket = reader.ReadObject<VifPacket>();
+            texCoordPacket.Ensure( 0x30, true, false, vertexCount, VifUnpackElementFormat.Float, 2 );
+            TexCoords = texCoordPacket.Vector2s;
 
             //if ( flags.HasFlag( MeshFlags.Color ) )
             //{
@@ -80,14 +73,14 @@ namespace DDS3ModelLibrary
             vif.UnpackHeader( VertexCount, 0 );
             vif.Unpack( Positions );
 
-            if ( Normals != null )
+            //if ( Normals != null )
                 vif.Unpack( Normals );
 
-            if ( TexCoords != null )
+            //if ( TexCoords != null )
                 vif.Unpack( TexCoords );
 
-            if ( Colors != null )
-                vif.Unpack( Colors.Select( x => new[] { x.R, x.G, x.B, x.A } ) );
+            //if ( Colors != null )
+            //    vif.Unpack( Colors.Select( x => new[] { x.R, x.G, x.B, x.A } ) );
 
             vif.ActivateMicro( 0x16 );
             vif.FlushEnd();
