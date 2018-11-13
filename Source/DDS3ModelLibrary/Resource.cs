@@ -5,41 +5,6 @@ using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary
 {
-    public enum ResourceFileType : byte
-    {
-        Default = 1,
-        Texture = 2,
-        Model = 6,
-        MotionPack = 8,
-        TexturePack = 9,
-        ModelPackEnd = 0xFF,
-    }
-
-    public enum ResourceIdentifier : uint
-    {
-        ModelPackInfo = 0x30424950,
-        TexturePack = 0x30505854,
-        Texture = 0x30584D54,
-        Model = 0x3030444D,
-        AnimationPack = 0x3030544D,
-        ModelPackEnd = 0x30444E45,
-        Particle = 0x00503344,
-        Video = 0x00555049,
-    }
-
-    public class ResourceDescriptor
-    {
-        public ResourceFileType FileType { get; }
-
-        public ResourceIdentifier Identifier { get; }
-
-        public ResourceDescriptor( ResourceFileType fileType, ResourceIdentifier identifier )
-        {
-            FileType = fileType;
-            Identifier = identifier;
-        }
-    }
-
     public abstract class Resource : IBinarySerializable
     {
         public abstract ResourceDescriptor ResourceDescriptor { get; }

@@ -3,11 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using DDS3ModelLibrary.IO.Common;
-using DDS3ModelLibrary.PS2.VIF;
 
-namespace DDS3ModelLibrary
+namespace DDS3ModelLibrary.PS2.VIF
 {
-    public class VifCommandBuffer : IBinarySerializable, IEnumerable<VifCode>
+    /// <summary>
+    /// Formats and builds vif code into a stream. Write only.
+    /// </summary>
+    public class VifCodeStreamBuilder : IBinarySerializable, IEnumerable<VifCode>
     {
         private readonly List<VifCode> mTags;
 
@@ -20,7 +22,7 @@ namespace DDS3ModelLibrary
         /// </summary>
         public int Address { get; set; }
 
-        public VifCommandBuffer()
+        public VifCodeStreamBuilder()
         {
             mTags = new List<VifCode>();
         }
@@ -31,7 +33,7 @@ namespace DDS3ModelLibrary
         /// <param name="value1"></param>
         /// <param name="value2"></param>
         /// <returns></returns>
-        public VifCommandBuffer UnpackHeader( short value1, short value2 )
+        public VifCodeStreamBuilder UnpackHeader( short value1, short value2 )
         {
             mTags.Add( new VifPacket( 0xFF, new[] { new[] { value1, value2 } } ) );
             return this;
@@ -42,7 +44,7 @@ namespace DDS3ModelLibrary
         /// </summary>
         /// <param name="elements"></param>
         /// <returns></returns>
-        public VifCommandBuffer Unpack( dynamic elements )
+        public VifCodeStreamBuilder Unpack( dynamic elements )
         {
             Debug.Assert( Address % 8 == 0 );
             var packet       = new VifPacket( Address / 8, elements, false );
@@ -59,7 +61,7 @@ namespace DDS3ModelLibrary
         /// <summary>
         /// Code 0x14. Activates a microprogram.
         /// </summary>
-        public VifCommandBuffer ActivateMicro()
+        public VifCodeStreamBuilder ActivateMicro()
         {
             mTags.Add( new VifCode( ( ushort ) VifCommand.ActMicro, 0, ( byte ) VifCommand.ActMicro ) );
             return this;
@@ -68,7 +70,7 @@ namespace DDS3ModelLibrary
         /// <summary>
         /// Code 0x17. Executes a microprogram continuously.
         /// </summary>
-        public VifCommandBuffer ExecuteMicro()
+        public VifCodeStreamBuilder ExecuteMicro()
         {
             mTags.Add( new VifCode( 0, 0, ( byte ) VifCommand.CntMicro ) );
             return this;
@@ -77,7 +79,7 @@ namespace DDS3ModelLibrary
         /// <summary>
         /// Code 0x10. Waits for the end of a microprogram.
         /// </summary>
-        public VifCommandBuffer FlushEnd()
+        public VifCodeStreamBuilder FlushEnd()
         {
             mTags.Add( new VifCode( 0, 0, ( byte )VifCommand.FlushEnd ) );
             Address = 0; // TODO: verify
@@ -86,7 +88,7 @@ namespace DDS3ModelLibrary
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )

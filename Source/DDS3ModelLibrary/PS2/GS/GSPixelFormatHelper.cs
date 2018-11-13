@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.IO;
 using Color = DDS3ModelLibrary.Primitives.Color;
 
 namespace DDS3ModelLibrary.PS2.GS
 {
+    [SuppressMessage( "ReSharper", "InconsistentNaming" )]
     internal static class GSPixelFormatHelper
     {
         private const string EXCEPTION_INVALID_PXFORMAT = "Invalid pixel format specified.";
@@ -21,12 +23,12 @@ namespace DDS3ModelLibrary.PS2.GS
 
         // alpha scalers
 
-        public static byte ConvertFromPS2Alpha( byte original )
+        public static byte AlphaFromGSAlpha( byte original )
         {
             return ( byte )Math.Min( ( original / 128.0f ) * 255, 255 );
         }
 
-        public static byte ConvertToPS2Alpha( byte original )
+        public static byte AlphaToGSAlpha( byte original )
         {
             return ( byte )( ( original / 255.0f ) * 128 );
         }

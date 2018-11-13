@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using DDS3ModelLibrary.IO.Common;
+using DDS3ModelLibrary.PS2.VIF;
 
 namespace DDS3ModelLibrary
 {
@@ -99,7 +100,7 @@ namespace DDS3ModelLibrary
 
             writer.WriteAlignmentPadding( 16 );
 
-            var vifCmd = new VifCommandBuffer();
+            var vifCmd = new VifCodeStreamBuilder();
 
             // Writer batches
             foreach ( var batch in Batches )

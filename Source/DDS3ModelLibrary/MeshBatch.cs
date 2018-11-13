@@ -10,13 +10,15 @@ namespace DDS3ModelLibrary
 {
     public class MeshBatch : IBinarySerializable
     {
+        // For debugging
+        private int mTexCoordsAddress;
+
         public short UsedNodeCount => ( short )NodeBatches.Count;
 
         public short VertexCount { get; private set; }
 
         public List<MeshNodeBatch> NodeBatches { get; private set; }
 
-        public int TexCoordsAddress;
         public Vector2[] TexCoords { get; private set; }
 
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
@@ -47,7 +49,7 @@ namespace DDS3ModelLibrary
                 var texCoordsPacket = reader.ReadObject<VifPacket>();
                 texCoordsPacket.Ensure( null, true, false, VertexCount, VifUnpackElementFormat.Float, 2 );
                 TexCoords = texCoordsPacket.Vector2s;
-                TexCoordsAddress = texCoordsPacket.Address * 8;
+                mTexCoordsAddress = texCoordsPacket.Address * 8;
 
                 var texCoordsKickTag = reader.ReadObject<VifCode>();
                 texCoordsKickTag.Ensure( 0, 0, VifCommand.CntMicro );
@@ -60,23 +62,23 @@ namespace DDS3ModelLibrary
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
         {
-            var vifCmd = ( VifCommandBuffer )context;
+            var vif = ( VifCodeStreamBuilder )context;
 
-            vifCmd.UnpackHeader( ( short ) ( Math.Max( 0, UsedNodeCount - 1 ) ), VertexCount );
+            vif.UnpackHeader( ( short ) ( Math.Max( 0, UsedNodeCount - 1 ) ), VertexCount );
 
             for ( var i = 0; i < NodeBatches.Count; i++ )
             {
                 var batch = NodeBatches[ i ];
-                writer.WriteObject( batch, ( vifCmd, i == 0 ) );
+                writer.WriteObject( batch, ( vif, i == 0 ) );
             }
 
             if ( TexCoords != null )
             {
-                vifCmd.Unpack( TexCoords );
-                vifCmd.ExecuteMicro();
+                vif.Unpack( TexCoords );
+                vif.ExecuteMicro();
             }
 
-            vifCmd.FlushEnd();
+            vif.FlushEnd();
         }
     }
 }

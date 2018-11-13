@@ -7,16 +7,18 @@ namespace DDS3ModelLibrary
 {
     public class MeshNodeBatch : IBinarySerializable
     {
+        // For debugging
+        private int mPositionsAddress;
+        private int mNormalsAddress;
+
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
         public short NodeId { get; set; }
 
         public int VertexCount => Positions.Length;
 
-        public int PositionsAddress;
         public Vector4[] Positions { get; private set; }
-
-        public int NormalsAddress;
+    
         public Vector3[] Normals { get; private set; }
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
@@ -42,12 +44,12 @@ namespace DDS3ModelLibrary
                     // TODO: use flags for this
                     if ( packet.ElementFormat == VifUnpackElementFormat.Float && packet.ElementCount == 4 )
                     {
-                        PositionsAddress = packet.Address * 8;
+                        mPositionsAddress = packet.Address * 8;
                         Positions = packet.Vector4s;
                     }
                     else if ( packet.ElementFormat == VifUnpackElementFormat.Float && packet.ElementCount == 3 )
                     {
-                        NormalsAddress = packet.Address * 8;
+                        mNormalsAddress = packet.Address * 8;
                         Normals = packet.Vector3s;
                     }
                     else
@@ -66,26 +68,26 @@ namespace DDS3ModelLibrary
             }
         }
 
-        private void Write( EndianBinaryWriter writer, VifCommandBuffer vifCmd, bool first )
+        private void Write( EndianBinaryWriter writer, VifCodeStreamBuilder vif, bool first )
         {
-            vifCmd.Unpack( Positions );
+            vif.Unpack( Positions );
 
             if ( Normals != null )
             {
-                vifCmd.Unpack( Normals );
+                vif.Unpack( Normals );
             }
 
             // TODO: verify
             if ( first )
-                vifCmd.ActivateMicro();
+                vif.ActivateMicro();
             else
-                vifCmd.ExecuteMicro();
+                vif.ExecuteMicro();
 
         }
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
         {
-            var contextTuple = ((VifCommandBuffer, bool))context;
+            var contextTuple = ((VifCodeStreamBuilder, bool))context;
             Write( writer, contextTuple.Item1, contextTuple.Item2);
         }
     }

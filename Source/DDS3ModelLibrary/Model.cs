@@ -7,12 +7,6 @@ using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary
 {
-    public enum ModelExtensionIdentifier
-    {
-        NodeName = 0x4D4E444E,
-        MPOS = 0x534F504D
-    }
-
     public class Model : Resource
     {
         public override ResourceDescriptor ResourceDescriptor { get; } = new ResourceDescriptor( ResourceFileType.Model, ResourceIdentifier.Model );

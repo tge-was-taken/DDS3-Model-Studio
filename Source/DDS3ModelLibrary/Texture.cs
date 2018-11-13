@@ -93,7 +93,7 @@ namespace DDS3ModelLibrary
                 case GSPixelFormat.PSMTC16:
                 case GSPixelFormat.PSMTC16S: // Non-indexed
                     PaletteFormat = 0;
-                    Pixels = new List<Color[]> { ScaleAlpha( BitmapHelper.GetColors( bitmap ), GSPixelFormatHelper.ConvertToPS2Alpha ) };
+                    Pixels = new List<Color[]> { ScaleAlpha( BitmapHelper.GetColors( bitmap ), GSPixelFormatHelper.AlphaToGSAlpha ) };
                     mBitmap       = bitmap;
                     break;
                 case GSPixelFormat.PSMT8:
@@ -136,7 +136,7 @@ namespace DDS3ModelLibrary
         private void SetupIndexedBitmap( Bitmap bitmap, int paletteColorCount )
         {
             BitmapHelper.QuantizeBitmap( bitmap, paletteColorCount, out var indices, out var palette );
-            Palettes = new List<Color[]>() { ScaleAlpha( palette, GSPixelFormatHelper.ConvertToPS2Alpha ) };
+            Palettes = new List<Color[]>() { ScaleAlpha( palette, GSPixelFormatHelper.AlphaToGSAlpha ) };
             PixelIndices = new List<byte[]>() { indices };
             PaletteFormat = GSPixelFormat.PSMTC32;
         }
@@ -166,12 +166,12 @@ namespace DDS3ModelLibrary
         {
             if ( IsIndexed )
             {
-                mBitmap = BitmapHelper.Create( ScaleAlpha( Palettes[ palIdx ], GSPixelFormatHelper.ConvertFromPS2Alpha ), PixelIndices[ mipIdx ],
+                mBitmap = BitmapHelper.Create( ScaleAlpha( Palettes[ palIdx ], GSPixelFormatHelper.AlphaFromGSAlpha ), PixelIndices[ mipIdx ],
                                                GetMipDimension( Width, mipIdx ), GetMipDimension( Height, mipIdx ) );
             }
             else
             {
-                mBitmap = BitmapHelper.Create( ScaleAlpha( Pixels[ mipIdx ], GSPixelFormatHelper.ConvertFromPS2Alpha ),
+                mBitmap = BitmapHelper.Create( ScaleAlpha( Pixels[ mipIdx ], GSPixelFormatHelper.AlphaFromGSAlpha ),
                                                GetMipDimension( Width, mipIdx ), GetMipDimension( Height, mipIdx ) );
             }
         }
