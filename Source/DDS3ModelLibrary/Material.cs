@@ -102,7 +102,7 @@ namespace DDS3ModelLibrary
         public Color? Color4
         {
             get => mColor4;
-            set { mColor4 = value; UpdateFlags( mColor3, MaterialFlags.Color4 ); }
+            set { mColor4 = value; UpdateFlags( mColor4, MaterialFlags.Color4 ); }
         }
 
         /// <summary>
