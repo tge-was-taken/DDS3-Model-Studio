@@ -14,12 +14,6 @@ namespace DDS3ModelLibrary
 
         public override MeshType Type => MeshType.Type7;
 
-        public short Field00 { get; set; }
-
-        public int Field04 { get; set; }
-
-        public int Field08 { get; set; }
-
         public short TriangleCount => ( short )Triangles.Length;
 
         public short VertexCount { get; set; }
@@ -49,17 +43,17 @@ namespace DDS3ModelLibrary
         public MeshType7()
         {
             Batches = new List<MeshBatchType7>();
-            Flags = MeshFlags.Bit3 | MeshFlags.TexCoord | MeshFlags.Bit5 | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Bit23 |
+            Flags = MeshFlags.Bit3 | MeshFlags.TexCoord | MeshFlags.Normal | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Bit23 |
                     MeshFlags.Bit24 | MeshFlags.FixShoes;
         }
 
         protected override void Read( EndianBinaryReader reader )
         {
             // Read header
-            Field00    = reader.ReadInt16();
+            var field00 = reader.ReadInt16Expects( 0, "Field00 is not 0" );
             MaterialId = reader.ReadInt16();
-            Field04    = reader.ReadInt32();
-            Field08    = reader.ReadInt32();
+            var field04 = reader.ReadInt32Expects( 0, "Field04 is not 0" );
+            var field08 = reader.ReadInt32Expects( 0, "Field08 is not 0" );
             var triangleCount = reader.ReadInt16();
             VertexCount = reader.ReadInt16();
             var flags = Flags = ( MeshFlags )reader.ReadInt32();
@@ -94,10 +88,10 @@ namespace DDS3ModelLibrary
         protected override void Write( EndianBinaryWriter writer )
         {
             // Write header
-            writer.Write( Field00 );
+            writer.Write( ( short ) 0 );
             writer.Write( MaterialId );
-            writer.Write( Field04 );
-            writer.Write( Field08 );
+            writer.Write( 0 );
+            writer.Write( 0 );
             writer.Write( TriangleCount );
             writer.Write( VertexCount );
             writer.Write( ( int ) Flags );
