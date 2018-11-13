@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Numerics;
 using DDS3ModelLibrary.IO.Common;
 using DDS3ModelLibrary.Primitives;
@@ -10,6 +11,9 @@ namespace DDS3ModelLibrary
     {
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
+        /// <summary>
+        /// Usually 1, but in hansya01.MB it is 0.
+        /// </summary>
         public int Field00 { get; set; }
 
         public int Field04 { get; set; }
@@ -28,7 +32,13 @@ namespace DDS3ModelLibrary
 
         public int Field48 { get; set; }
 
-        public int Field4C { get; set; }
+        /// <summary>
+        /// This is only used in a handful of really old models, use the <see cref="Geometry"/> property instead.
+        /// </summary>
+        /// <remarks>
+        /// Used in hansya01.MB and kyusyu01.MB.
+        /// </remarks>
+        public MeshList DeprecatedMeshList { get; set; }
 
         public string Name { get; set; }
 
@@ -43,7 +53,6 @@ namespace DDS3ModelLibrary
             BoundingBox = null;
             Geometry    = null;
             Field48     = 0;
-            Field4C     = 0;
         }
 
         public override string ToString()
@@ -54,7 +63,7 @@ namespace DDS3ModelLibrary
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
             var nodes = context as List<Node> ?? throw new InvalidOperationException( "Expected context argument to be the node list" );
-            Field00 = reader.ReadInt32Expects( 1, "Node Field00 isnt 1" );
+            Field00 = reader.ReadInt32();
             Field04 = reader.ReadInt32Expects( 0, "Node Field04 isnt 0" );
             var index = reader.ReadInt32();
 
@@ -71,7 +80,7 @@ namespace DDS3ModelLibrary
             BoundingBox = reader.ReadObjectOffset<BoundingBox>();
             Geometry    = reader.ReadObjectOffset<Geometry>();
             Field48     = reader.ReadInt32Expects( 0, "Node Field48 isnt 0" );
-            Field4C     = reader.ReadInt32Expects( 0, "Node Field4C isnt 0" );
+            DeprecatedMeshList = reader.ReadObjectOffset<MeshList>();
         }
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
@@ -90,7 +99,7 @@ namespace DDS3ModelLibrary
             writer.ScheduleWriteObjectOffset( BoundingBox, 16 );
             writer.ScheduleWriteObjectOffset( Geometry, 16 );
             writer.Write( Field48 );
-            writer.Write( Field4C );
+            writer.ScheduleWriteObjectOffset( DeprecatedMeshList, 16 );
         }
     }
 }

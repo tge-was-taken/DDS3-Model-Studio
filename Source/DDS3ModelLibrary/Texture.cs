@@ -206,8 +206,10 @@ namespace DDS3ModelLibrary
                     Palettes.Add( palette );
                 }
 
-                PixelIndices = new List<byte[]>();
-                PixelIndices.Add( GSPixelFormatHelper.ReadPixelData<byte>( PixelFormat, reader, Width, Height ) );
+                PixelIndices = new List<byte[]>
+                {
+                    GSPixelFormatHelper.ReadPixelData<byte>( PixelFormat, reader, Width, Height )
+                };
 
                 if ( mipMapCount > 0 )
                 {
@@ -220,8 +222,7 @@ namespace DDS3ModelLibrary
             }
             else
             {
-                Pixels = new List<Color[]>();
-                Pixels.Add( GSPixelFormatHelper.ReadPixelData<Color>( PixelFormat, reader, Width, Height ) );
+                Pixels = new List<Color[]> { GSPixelFormatHelper.ReadPixelData<Color>( PixelFormat, reader, Width, Height ) };
 
                 if ( mipMapCount > 0 )
                 {

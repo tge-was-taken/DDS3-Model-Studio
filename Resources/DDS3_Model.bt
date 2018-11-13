@@ -303,7 +303,7 @@ typedef struct( u32 hasHeader )
 typedef struct 
 {
     SetRandomBackColor();
-    u32 Field00; Assert( Field00 == 1, "Node Field00 isnt 1" );
+    u32 Field00; // not 0 in hansya01.MB
     u32 Field04; Assert( Field04 == 0, "Node Field04 isnt 0" );
     s32 Index;
     s32 ParentIndex;
@@ -313,7 +313,7 @@ typedef struct
     u32 BoundingBoxOffset;
     u32 GeometryOffset;
     u32 Field48; Assert( Field48 == 0, "Node Field48 isnt 0" );
-    u32 Field4C; Assert( Field4C == 0, "Node Field4C isnt 0" );
+    u32 Field4C; // not 0 in hansya01.MB
 
     local u32 end = FTell();
 
@@ -332,6 +332,13 @@ typedef struct
         struct TGeometry Geometry;
     }
 
+    if ( Field4C != 0 )
+    {
+        SetRandomBackColor();
+        FSeek( gBaseOffset + Field4C );
+        struct TMeshList DeprecatedMeshList; // only used in 1 really old model
+    }
+
     FSeek( end );
 } TNode;
 
@@ -341,48 +348,50 @@ typedef struct
 
     if ( MeshesOffset != 0 )
     {
-        struct
-        {
-            SetRandomBackColor();
-            FSeek( gBaseOffset + MeshesOffset );
-            u16 MeshCount;
-            u16 Field02;
-
-            //if ( Field02 != 0 )
-            //    Printf( "TGeometry: Field02 isn't 0 (%d)\n", Field02 ); 
-
-            local u32 next = FTell();
-            local u32 meshIndex;
-            for ( meshIndex = 0; meshIndex < MeshCount; ++meshIndex )
-            {
-                struct
-                {
-                    u32 MeshOffset;
-                    next = FTell();
-
-                    if ( MeshOffset != 0 )
-                    {
-                        SetRandomBackColor();
-                        FSeek( gBaseOffset + MeshOffset );
-                        u32 MeshType;
-
-                        switch ( MeshType )
-                        {
-                            case 1: struct TMeshType1 Mesh; break;
-                            case 2: struct TMeshType2 Mesh; break;
-                            case 5: struct TMeshType5 Mesh; break;
-                            case 7: struct TMeshType7 Mesh; break;
-                            case 8: struct TMeshType8 Mesh; break;
-                            default: Printf( "Unhandled mesh type: %d\n", MeshType ); break;
-                        }
-                    }
-    
-                    FSeek( next );
-                } Mesh;
-            } 
-        } Meshes;
+        FSeek( gBaseOffset + MeshesOffset );
+        struct TMeshList Meshes;
     }
 } TGeometry;
+
+typedef struct
+{
+    SetRandomBackColor();
+    u16 MeshCount;
+    u16 Field02;
+
+    //if ( Field02 != 0 )
+    //    Printf( "TGeometry: Field02 isn't 0 (%d)\n", Field02 ); 
+
+    local u32 next = FTell();
+    local u32 meshIndex;
+    for ( meshIndex = 0; meshIndex < MeshCount; ++meshIndex )
+    {
+        struct
+        {
+            u32 MeshOffset;
+            next = FTell();
+
+            if ( MeshOffset != 0 )
+            {
+                SetRandomBackColor();
+                FSeek( gBaseOffset + MeshOffset );
+                u32 MeshType;
+
+                switch ( MeshType )
+                {
+                    case 1: struct TMeshType1 Mesh; break;
+                    case 2: struct TMeshType2 Mesh; break;
+                    case 5: struct TMeshType5 Mesh; break;
+                    case 7: struct TMeshType7 Mesh; break;
+                    case 8: struct TMeshType8 Mesh; break;
+                    default: Printf( "Unhandled mesh type: %d\n", MeshType ); break;
+                }
+            }
+
+            FSeek( next );
+        } Mesh;
+    } 
+} TMeshList;
 
 typedef struct
 {

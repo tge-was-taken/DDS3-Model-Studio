@@ -25,12 +25,12 @@ namespace DDS3ModelLibraryCLI
             modelPack.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_a.PB" );
         }
 
-        private static void FindUniqueModels()
+        private static void FindUniqueFiles( string outDirectory, string searchDirectory, string extension )
         {
-            Directory.CreateDirectory( "unique_models" );
+            Directory.CreateDirectory( outDirectory );
 
             var checksums = new HashSet<long>();
-            var paths     = Directory.EnumerateFiles( @"D:\Modding\DDS3", "*.PB", SearchOption.AllDirectories ).ToList();
+            var paths     = Directory.EnumerateFiles( searchDirectory, "*" + extension, SearchOption.AllDirectories ).ToList();
             var done      = 0;
             Parallel.ForEach( paths, new ParallelOptions() { MaxDegreeOfParallelism = 6 }, ( path ) =>
             {
@@ -49,7 +49,7 @@ namespace DDS3ModelLibraryCLI
                 {
                     if ( !checksums.Contains( checksum ) )
                     {
-                        File.Copy( path, Path.Combine( "unique_models", Path.GetFileNameWithoutExtension( path ) + "_" + checksum + ".PB" ), true );
+                        File.Copy( path, Path.Combine( outDirectory, Path.GetFileNameWithoutExtension( path ) + "_" + checksum + extension ), true );
                         checksums.Add( checksum );
                     }
                 }
@@ -61,9 +61,14 @@ namespace DDS3ModelLibraryCLI
         private static void OpenAndSaveModelPackBatchTest()
         {
             if ( !Directory.Exists( "unique_models" ) )
-                FindUniqueModels();
+                FindUniqueFiles( "unique_models", @"D:\Modding\DDS3", ".PB" );
 
-            var paths = Directory.EnumerateFiles( "unique_models", "*.PB", SearchOption.AllDirectories ).ToList();
+            if ( !Directory.Exists( "unique_models_mb" ) )
+                FindUniqueFiles( "unique_models_mb", @"D:\Modding\DDS3", ".MB" );
+
+            var paths = Directory.EnumerateFiles( "unique_models", "*.PB", SearchOption.AllDirectories )
+                                 .Concat( Directory.EnumerateFiles( "unique_models_mb", "*.MB", SearchOption.AllDirectories ) )
+                                 .ToList();
             var done = 0;
             Parallel.ForEach( paths, new ParallelOptions() { MaxDegreeOfParallelism = 1 }, ( path ) =>
             {

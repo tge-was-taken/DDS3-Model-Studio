@@ -59,6 +59,7 @@
     <Compile Include="MeshBatchType7.cs" />
     <Compile Include="MeshBatchType8.cs" />
     <Compile Include="MeshFlags.cs" />
+    <Compile Include="MeshList.cs" />
     <Compile Include="MeshNodeBatchType7.cs" />
     <Compile Include="MeshType.cs" />
     <Compile Include="MeshType7.cs" />
