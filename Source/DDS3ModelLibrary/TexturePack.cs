@@ -25,8 +25,33 @@ namespace DDS3ModelLibrary
         internal override void ReadContent( EndianBinaryReader reader, ResourceHeader header )
         {
             var textureCount = reader.ReadInt32();
+            long nextTextureOffset = 0;
             for ( int i = 0; i < textureCount; i++ )
-                Textures.Add( reader.ReadObjectOffset<Texture>() );
+            {
+                // Some files have broken offsets (f021_aljira.PB), so we must calculate them ourselves
+                var offset = reader.ReadInt32();
+                var nextOffset = reader.Position;
+
+                if ( i == 0 )
+                {
+                    reader.SeekBegin( offset + reader.BaseOffset );
+                }
+                else
+                {
+                    reader.SeekBegin( nextTextureOffset );
+                }
+
+                Textures.Add( reader.ReadObject<Texture>() );
+                reader.Align( 64 );
+
+                if ( ( i + 1 ) != textureCount )
+                {
+                    nextTextureOffset = reader.Position;
+                    reader.SeekBegin( nextOffset );
+                }
+            }
+
+            // Make sure we end at the end of the last texture
         }
 
         internal override void WriteContent( EndianBinaryWriter writer, object context )

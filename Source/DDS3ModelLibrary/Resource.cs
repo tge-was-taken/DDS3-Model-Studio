@@ -121,7 +121,10 @@ namespace DDS3ModelLibrary
             var end = start + header.FileSize;
             UserId = header.UserId;
             ReadContent( reader, header );
-            reader.SeekBegin( end );
+
+            // Some files have broken offsets & filesize in their texture pack (f021_aljira.PB)
+            if ( header.Identifier != ResourceIdentifier.TexturePack )
+                reader.SeekBegin( end );
 
             reader.PopBaseOffset();
         }

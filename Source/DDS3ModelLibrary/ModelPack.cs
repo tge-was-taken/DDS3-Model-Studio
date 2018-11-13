@@ -78,7 +78,9 @@ namespace DDS3ModelLibrary
                         throw new UnexpectedDataException( $"Unexpected '{header.Identifier}' chunk in PB file" );
                 }
 
-                reader.SeekBegin( end );
+                // Some files have broken offsets & filesize in their texture pack (f021_aljira.PB)
+                if ( header.Identifier != ResourceIdentifier.TexturePack )
+                    reader.SeekBegin( end );
             }
         }
 
