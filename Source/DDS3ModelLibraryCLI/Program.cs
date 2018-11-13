@@ -12,7 +12,7 @@ namespace DDS3ModelLibraryCLI
     {
         static void Main( string[] args )
         {
-            var modelPack = new ModelPack( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_b.PB" );
+            var modelPack = new ModelPack( @"..\..\..\..\Resources\player_a.PB" );
             modelPack.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_a.PB" );
         }
     }
