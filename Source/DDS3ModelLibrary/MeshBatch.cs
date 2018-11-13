@@ -44,7 +44,7 @@ namespace DDS3ModelLibrary
             foreach ( short nodeId in usedNodeIds )
                 NodeBatches.Add( reader.ReadObject<MeshNodeBatch>( nodeId ) );
 
-            if ( flags.HasFlag( MeshFlags.TexCoords ) )
+            if ( flags.HasFlag( MeshFlags.TexCoord ) )
             {
                 var texCoordsPacket = reader.ReadObject<VifPacket>();
                 texCoordsPacket.Ensure( null, true, false, VertexCount, VifUnpackElementFormat.Float, 2 );

@@ -9,14 +9,14 @@ namespace DDS3ModelLibrary
         Bit1      = 1 << 1,
         Bit2      = 1 << 2,
         Bit3      = 1 << 3,
-        TexCoords = 1 << 4, // Verified
-        Normals   = 1 << 5, // May be wrong
+        TexCoord = 1 << 4, // Verified
+        Normal   = 1 << 5, // May be wrong
         Bit6      = 1 << 6,
         Bit7      = 1 << 7,
         Bit8      = 1 << 8,
         Bit9      = 1 << 9,
         Bit10     = 1 << 10,
-        Colors    = 1 << 11,
+        Color    = 1 << 11,
         TexCoord2     = 1 << 12,
         Bit13     = 1 << 13,
         NoNormals = 1 << 14, // May be wrong

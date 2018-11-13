@@ -4,11 +4,14 @@ using System.Linq;
 using System.Numerics;
 using DDS3ModelLibrary.IO.Common;
 using DDS3ModelLibrary.PS2.VIF;
+using System.Diagnostics;
 
 namespace DDS3ModelLibrary
 {
     public class MeshType7 : Mesh
     {
+        private Vector2[] mTexCoords2;
+
         public override MeshType Type => MeshType.Type7;
 
         public short Field00 { get; set; }
@@ -31,12 +34,22 @@ namespace DDS3ModelLibrary
 
         public List<MeshBatch> Batches { get; private set; }
 
-        public Vector2[] TexCoords2 { get; private set; }
+        public Vector2[] TexCoords2
+        {
+            get => mTexCoords2;
+            set
+            {
+                if ( ( mTexCoords2 = value ) == null )
+                    Flags &= ~MeshFlags.TexCoord2;
+                else
+                    Flags |= MeshFlags.TexCoord2;
+            }
+        }
 
         public MeshType7()
         {
             Batches = new List<MeshBatch>();
-            Flags = MeshFlags.Bit3 | MeshFlags.TexCoords | MeshFlags.Normals | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Bit23 |
+            Flags = MeshFlags.Bit3 | MeshFlags.TexCoord | MeshFlags.Normal | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Bit23 |
                     MeshFlags.Bit24 | MeshFlags.FixShoes;
         }
 
@@ -49,7 +62,7 @@ namespace DDS3ModelLibrary
             Field08    = reader.ReadInt32();
             var triangleCount = reader.ReadInt16();
             VertexCount = reader.ReadInt16();
-            Flags       = ( MeshFlags )reader.ReadInt32();
+            var flags = Flags = ( MeshFlags )reader.ReadInt32();
             var usedNodeCount = reader.ReadInt16();
             var usedNodeIds = reader.ReadInt16Array( usedNodeCount );
             reader.Align( 16 );
@@ -74,6 +87,8 @@ namespace DDS3ModelLibrary
             {
                 TexCoords2 = reader.ReadVector2s( VertexCount );
             }
+
+            Debug.Assert( Flags == flags, "Flags doesn't match value read from file" );
         }
 
         protected override void Write( EndianBinaryWriter writer )
