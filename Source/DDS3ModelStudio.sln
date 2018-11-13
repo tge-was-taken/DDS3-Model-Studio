@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2003
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS3ModelLibrary", "DDS3ModelLibrary\DDS3ModelLibrary.csproj", "{D8D5B882-7D8F-4206-8DC7-DF0F0EB59A55}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS3ModelLibraryCLI", "DDS3ModelLibraryCLI\DDS3ModelLibraryCLI.csproj", "{6453CE1B-556C-4584-B10D-70A51071C055}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D8D5B882-7D8F-4206-8DC7-DF0F0EB59A55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8D5B882-7D8F-4206-8DC7-DF0F0EB59A55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8D5B882-7D8F-4206-8DC7-DF0F0EB59A55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8D5B882-7D8F-4206-8DC7-DF0F0EB59A55}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6453CE1B-556C-4584-B10D-70A51071C055}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6453CE1B-556C-4584-B10D-70A51071C055}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6453CE1B-556C-4584-B10D-70A51071C055}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6453CE1B-556C-4584-B10D-70A51071C055}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B01D8815-2CC3-46F4-A8D7-D81974BD6CDF}
+	EndGlobalSection
+EndGlobal
