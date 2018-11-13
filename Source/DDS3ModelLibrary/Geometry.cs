@@ -47,6 +47,7 @@ namespace DDS3ModelLibrary
                                 mesh = reader.ReadObject<MeshType7>();
                                 break;
                             case MeshType.Type8:
+                                mesh = reader.ReadObject<MeshType8>();
                                 break;
 
                             default:
@@ -62,7 +63,7 @@ namespace DDS3ModelLibrary
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
         {
-            var canWrite = Meshes?.Count > 0 && Meshes.All( x => x.Type == MeshType.Type7 );
+            var canWrite = Meshes?.Count > 0 && Meshes.All( x => x.Type == MeshType.Type7 || x.Type == MeshType.Type8 );
 
             if ( canWrite )
             {
@@ -106,11 +107,6 @@ namespace DDS3ModelLibrary
     }
 
     public class MeshType5
-    {
-
-    }
-
-    public class MeshType8
     {
 
     }

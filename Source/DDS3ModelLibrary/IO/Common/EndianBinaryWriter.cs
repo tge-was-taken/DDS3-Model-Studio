@@ -139,6 +139,12 @@ namespace DDS3ModelLibrary.IO.Common
 
         public void PopBaseOffset() => mBaseOffsetStack.Pop();
 
+        public void Write( IEnumerable<byte> values )
+        {
+            foreach ( byte t in values )
+                Write( t );
+        }
+
         public void Write( IEnumerable<sbyte> values )
         {
             foreach ( sbyte t in values )

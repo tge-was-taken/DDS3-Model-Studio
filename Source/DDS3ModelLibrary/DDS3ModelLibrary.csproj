@@ -33,6 +33,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AssimpNet">
+      <HintPath>..\..\..\GFDStudio\Dependencies\Assimp.Net\AssimpNet.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -53,11 +56,13 @@
     <Compile Include="Material.cs" />
     <Compile Include="MaterialFlags.cs" />
     <Compile Include="Mesh.cs" />
-    <Compile Include="MeshBatch.cs" />
+    <Compile Include="MeshBatchType7.cs" />
+    <Compile Include="MeshBatchType8.cs" />
     <Compile Include="MeshFlags.cs" />
-    <Compile Include="MeshNodeBatch.cs" />
+    <Compile Include="MeshNodeBatchType7.cs" />
     <Compile Include="MeshType.cs" />
     <Compile Include="MeshType7.cs" />
+    <Compile Include="MeshType8.cs" />
     <Compile Include="MeshTypeTraits.cs" />
     <Compile Include="ModelExtension.cs" />
     <Compile Include="ModelExtensionHeader.cs" />
@@ -68,7 +73,7 @@
     <Compile Include="IO\Common\Bits.cs" />
     <Compile Include="Model.cs" />
     <Compile Include="PS2\VIF\VifCode.cs" />
-    <Compile Include="PS2\VIF\VifCodeHeader.cs" />
+    <Compile Include="PS2\VIF\VifTag.cs" />
     <Compile Include="PS2\VIF\VifCommand.cs" />
     <Compile Include="PS2\VIF\VifPacket.cs" />
     <Compile Include="PS2\VIF\VifUnpackElementFormat.cs" />
@@ -120,6 +125,13 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Assimp32.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assimp64.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

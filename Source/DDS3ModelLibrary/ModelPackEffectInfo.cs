@@ -20,7 +20,7 @@ namespace DDS3ModelLibrary
             Id = reader.ReadInt32();
             var size = reader.ReadInt32();
             Trace.Assert( ( size % sizeof( short ) ) == 0, "ModelPackEffectInfo data size is not even" );
-            Fields = reader.ReadInt16List( size / sizeof( short ) );
+            Fields = reader.ReadInt16List( ( size - HEADER_SIZE ) / sizeof( short ) );
         }
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )

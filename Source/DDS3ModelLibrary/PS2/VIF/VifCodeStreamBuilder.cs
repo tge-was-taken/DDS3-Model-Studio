@@ -61,9 +61,9 @@ namespace DDS3ModelLibrary.PS2.VIF
         /// <summary>
         /// Code 0x14. Activates a microprogram.
         /// </summary>
-        public VifCodeStreamBuilder ActivateMicro()
+        public VifCodeStreamBuilder ActivateMicro( ushort id )
         {
-            mTags.Add( new VifCode( ( ushort ) VifCommand.ActMicro, 0, ( byte ) VifCommand.ActMicro ) );
+            mTags.Add( new VifCode( id, 0, ( byte ) VifCommand.ActMicro ) );
             return this;
         }
 

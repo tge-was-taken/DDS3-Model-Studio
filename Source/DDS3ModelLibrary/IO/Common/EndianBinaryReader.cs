@@ -213,6 +213,17 @@ namespace DDS3ModelLibrary.IO.Common
             return actual;
         }
 
+        public List<byte> ReadByteList( int count )
+        {
+            var list = new List<byte>( count );
+            for ( var i = 0; i < list.Capacity; i++ )
+            {
+                list.Add( ReadByte() );
+            }
+
+            return list;
+        }
+
         public sbyte[] ReadSBytes( int count )
         {
             var array = new sbyte[count];

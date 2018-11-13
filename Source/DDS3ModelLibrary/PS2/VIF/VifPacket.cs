@@ -242,7 +242,7 @@ namespace DDS3ModelLibrary.PS2.VIF
             Flag          = flag;
             ElementFormat = format;
             ElementCount  = elementCount;
-            Count         = ( byte )count;
+            Count         = count > byte.MaxValue ? throw new ArgumentException(nameof(count)) : ( byte )count;
             Elements      = elements;
         }
 

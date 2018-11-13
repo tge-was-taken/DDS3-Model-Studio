@@ -22,7 +22,7 @@ namespace DDS3ModelLibrary
 
         public short TriangleCount => ( short )Triangles.Length;
 
-        public short VertexCount { get; private set; }
+        public short VertexCount { get; set; }
 
         public MeshFlags Flags { get; set; }
 
@@ -30,9 +30,9 @@ namespace DDS3ModelLibrary
 
         public IEnumerable<short> UsedNodeIds => Batches.SelectMany( x => x.NodeBatches ).Select( x => x.NodeId ).Distinct();
 
-        public Triangle[] Triangles { get; private set; }
+        public Triangle[] Triangles { get; set; }
 
-        public List<MeshBatch> Batches { get; private set; }
+        public List<MeshBatchType7> Batches { get; private set; }
 
         public Vector2[] TexCoords2
         {
@@ -48,7 +48,7 @@ namespace DDS3ModelLibrary
 
         public MeshType7()
         {
-            Batches = new List<MeshBatch>();
+            Batches = new List<MeshBatchType7>();
             Flags = MeshFlags.Bit3 | MeshFlags.TexCoord | MeshFlags.Normal | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Bit23 |
                     MeshFlags.Bit24 | MeshFlags.FixShoes;
         }
@@ -78,7 +78,7 @@ namespace DDS3ModelLibrary
             var readVertexCount = 0;
             while ( readVertexCount < VertexCount )
             {
-                var batch = reader.ReadObject<MeshBatch>( ( usedNodeIds, Flags ) );
+                var batch = reader.ReadObject<MeshBatchType7>( ( usedNodeIds, Flags ) );
                 readVertexCount += batch.VertexCount;
                 Batches.Add( batch );
             }

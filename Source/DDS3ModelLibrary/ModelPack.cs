@@ -13,7 +13,7 @@ namespace DDS3ModelLibrary
 
         public List<Resource> Effects { get; }
 
-        public List<Resource> Models { get; }
+        public List<Model> Models { get; }
 
         public List<Resource> AnimationPacks { get; }
 
@@ -22,7 +22,7 @@ namespace DDS3ModelLibrary
             Info = new ModelPackInfo();
             TexturePack = null;
             Effects = new List<Resource>();
-            Models = new List<Resource>();
+            Models = new List<Model>();
             AnimationPacks = new List<Resource>();
         }
 
@@ -91,7 +91,10 @@ namespace DDS3ModelLibrary
             }
 
             writer.WriteObjects( Effects );
-            writer.WriteObject( TexturePack );
+
+            if ( TexturePack != null )
+                writer.WriteObject( TexturePack );
+
             writer.WriteObjects( Models );
             writer.WriteObjects( AnimationPacks );
 

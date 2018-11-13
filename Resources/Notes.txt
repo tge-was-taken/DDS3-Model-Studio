@@ -1,0 +1,6 @@
+4 nodes per vertex
+24 vertices per batch
+< 96 vertices per mesh?
+type 7: Bit3, TexCoords, Normals, Bit6, Bit21, Bit22, Bit23, Bit24, Bit27
+type 7: requires at least 2 node batches
+MPOS extension doesn't seem to have an apparent affect on player_a.pb

@@ -18,6 +18,7 @@ namespace DDS3ModelLibrary
         /* 21 */ private short[] mShortArray;
         /* 22 */ private float[] mFloatArray2;
         /* 23 */ private Color? mColor4;
+        /* 24 */ private Color? mColor5;
         /* 25 */ private float? mFloat1;
         /* 26 */ private float[] mFloatArray3;
 
@@ -106,6 +107,16 @@ namespace DDS3ModelLibrary
         }
 
         /// <summary>
+        /// Gets or sets Color5.
+        /// </summary>
+        public Color? Color5
+        {
+            get => mColor5;
+            set { mColor5 = value; UpdateFlags( mColor5, MaterialFlags.Color5 ); }
+        }
+
+
+        /// <summary>
         /// Gets or sets Float1.
         /// </summary>
         public float? Float1
@@ -168,6 +179,9 @@ namespace DDS3ModelLibrary
                         case MaterialFlags.Color4:
                             Color4 = reader.ReadColor();
                             break;
+                        case MaterialFlags.Color5:
+                            Color5 = reader.ReadColor();
+                            break;
                         case MaterialFlags.Float1:
                             Float1 = reader.ReadSingle();
                             break;
@@ -218,6 +232,9 @@ namespace DDS3ModelLibrary
                             break;
                         case MaterialFlags.Color4:
                             writer.Write( Color4.Value );
+                            break;
+                        case MaterialFlags.Color5:
+                            writer.Write( Color5.Value );
                             break;
                         case MaterialFlags.Float1:
                             writer.Write( Float1.Value );

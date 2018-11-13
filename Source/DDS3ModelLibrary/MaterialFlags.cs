@@ -32,7 +32,7 @@ namespace DDS3ModelLibrary
         ShortArray  = 1 << 21,
         FloatArray2 = 1 << 22,
         Color4      = 1 << 23,
-        Bit24       = 1 << 24,
+        Color5      = 1 << 24,
         Float1      = 1 << 25,
         FloatArray3 = 1 << 26,
         Bit27       = 1 << 27,

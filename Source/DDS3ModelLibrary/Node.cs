@@ -46,6 +46,11 @@ namespace DDS3ModelLibrary
             Field4C     = 0;
         }
 
+        public override string ToString()
+        {
+            return Name;
+        }
+
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
             var nodes = context as List<Node> ?? throw new InvalidOperationException( "Expected context argument to be the node list" );

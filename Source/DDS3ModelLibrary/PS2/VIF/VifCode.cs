@@ -52,14 +52,14 @@ namespace DDS3ModelLibrary.PS2.VIF
                 throw new UnexpectedDataException( $"Vifcode command type is not {command}" );
         }
 
-        private void Read( EndianBinaryReader reader, VifCodeHeader header )
+        private void Read( EndianBinaryReader reader, VifTag tag )
         {
-            if ( header == null )
-                header = reader.ReadObject<VifCodeHeader>();
+            if ( tag == null )
+                tag = reader.ReadObject<VifTag>();
 
-            mCommand = ( byte )header.Command;
-            mImmediate = header.Immediate;
-            mCount = header.Count;
+            mCommand = ( byte )tag.Command;
+            mImmediate = tag.Immediate;
+            mCount = tag.Count;
             ReadContent( reader );
         }
 
@@ -68,7 +68,7 @@ namespace DDS3ModelLibrary.PS2.VIF
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Read( reader, context as VifCodeHeader );
+            Read( reader, context as VifTag );
         }
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
