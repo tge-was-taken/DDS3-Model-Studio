@@ -3,37 +3,38 @@ using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary
 {
-    public class MeshType5BlendShape : IBinarySerializable
+    public class MeshType5NodeSplit : IBinarySerializable
     {
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        public Vector3[] Positions { get; set; }
+        public short NodeIndex { get; set; }
+
+        public Vector4[] Positions { get; set; }
 
         public Vector3[] Normals { get; set; }
 
-        public MeshType5BlendShape()
+        public MeshType5NodeSplit()
         {
         }
 
-        public MeshType5BlendShape( Vector3[] positions, Vector3[] normals )
+        public MeshType5NodeSplit( Vector4[] positions, Vector3[] normals )
         {
             Positions = positions;
-            Normals = normals;
+            Normals   = normals;
         }
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            var vertexCount = ( short )context;
-            Positions = reader.ReadVector3s( vertexCount );
-            reader.Align( 16 );
-            Normals = reader.ReadVector3s( vertexCount );
+            ( short vertexCount, short nodeIndex ) = ( (short, short) ) context;
+            NodeIndex = nodeIndex;
+            Positions = reader.ReadVector4s( vertexCount );
+            Normals   = reader.ReadVector3s( vertexCount );
             reader.Align( 16 );
         }
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
         {
             writer.Write( Positions );
-            writer.Align( 16 );
             writer.Write( Normals );
             writer.Align( 16 );
         }

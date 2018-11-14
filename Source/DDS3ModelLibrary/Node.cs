@@ -9,6 +9,10 @@ namespace DDS3ModelLibrary
 {
     public class Node : IBinarySerializable
     {
+        // For debugging only, only valid when read from a file.
+        private int mIndex;
+        private int mParentIndex;
+
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
         /// <summary>
@@ -65,11 +69,11 @@ namespace DDS3ModelLibrary
             var nodes = context as List<Node> ?? throw new InvalidOperationException( "Expected context argument to be the node list" );
             Field00 = reader.ReadInt32();
             Field04 = reader.ReadInt32Expects( 0, "Node Field04 isnt 0" );
-            var index = reader.ReadInt32();
+            mIndex = reader.ReadInt32();
 
-            var parentIndex = reader.ReadInt32();
-            if ( parentIndex != -1 )
-                Parent = nodes[ parentIndex ];
+            mParentIndex = reader.ReadInt32();
+            if ( mParentIndex != -1 )
+                Parent = nodes[ mParentIndex ];
 
             Rotation = reader.ReadVector3();
             reader.ReadSingleExpects( 0f, "Node Rotation W isnt 0" );
@@ -85,10 +89,10 @@ namespace DDS3ModelLibrary
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
         {
-            var nodes = context as List<Node> ?? throw new InvalidOperationException( "Expected context argument to be the node list" );
+            ( int index, List<Node> nodes ) = ( (int, List<Node>) ) context;
             writer.Write( Field00 );
             writer.Write( Field04 );
-            writer.Write( nodes.IndexOf( this ) );
+            writer.Write( index );
             writer.Write( Parent == null ? -1 : nodes.IndexOf( Parent ) );
             writer.Write( Rotation );
             writer.Write( 0f );

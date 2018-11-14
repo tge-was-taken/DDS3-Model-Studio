@@ -575,6 +575,8 @@ typedef struct
     u16 TriangleCount;
     u16 VertexCount;
     u32 Flags;
+    u16 UsedNodeCount;
+    u16 UsedNodes[ UsedNodeCount ];
     FAlign( 16 );
 
 
@@ -612,17 +614,19 @@ typedef struct
                 FAlign( 16 );
             } Shape;
         }
-
-        for ( shapeIndex = 0; shapeIndex < ShapeCount; ++shapeIndex )
-        {
-            SetRandomBackColor();
-            struct
-            {
-                Vector2 TexCoords[ VertexCount ];
-                FAlign( 16 );
-            } ShapeTexCoords;
-        }
     } Shapes;
+
+    if ( Flags & ( 1 << 4 ) )
+    {
+        Vector2 TexCoords[ VertexCount ];
+        FAlign( 16 );
+    }
+
+    if ( Flags & ( 1 << 12 ) )
+    {
+        Vector2 TexCoords2[ VertexCount ];
+        FAlign( 16 );
+    }
 
 } TMeshType5;
 

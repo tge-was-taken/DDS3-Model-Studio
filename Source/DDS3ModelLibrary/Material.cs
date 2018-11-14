@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using DDS3ModelLibrary.IO.Common;
 using DDS3ModelLibrary.Primitives;
 
@@ -10,6 +11,9 @@ namespace DDS3ModelLibrary
     /// </summary>
     public class Material : IBinarySerializable
     {
+        // For debugging only, only valid when read from a file.
+        private int mIndex;
+
         /* 16 */ private Color? mColor1;
         /* 17 */ private Color? mColor2;
         /* 18 */ private int? mTextureId;
@@ -23,11 +27,6 @@ namespace DDS3ModelLibrary
         /* 26 */ private float[] mFloatArray3;
 
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
-
-        /// <summary>
-        /// Gets or sets the material id.
-        /// </summary>
-        public int Id { get; set; }
 
         /// <summary>
         /// Gets or sets the material flags.
@@ -134,6 +133,67 @@ namespace DDS3ModelLibrary
             set { mFloatArray3 = value; UpdateFlags( mFloatArray3, MaterialFlags.FloatArray3 ); }
         }
 
+        public Material()
+        {
+        }
+
+        public override int GetHashCode() => GetHashCode( true );
+
+        public int GetCacheHashCode() => GetHashCode( false );
+
+        private int GetHashCode( bool includeIds )
+        {
+            var hash = 0x33333333;
+            hash ^= Flags.GetHashCode();
+
+            for ( int i = 0; i < 31; i++ )
+            {
+                var flag = ( 1 << i );
+                if ( ( ( int )Flags & flag ) != 0 )
+                {
+                    switch ( ( MaterialFlags )flag )
+                    {
+                        case MaterialFlags.Color1:
+                            hash ^= Color1.Value.GetHashCode();
+                            break;
+                        case MaterialFlags.Color2:
+                            hash ^= Color2.Value.GetHashCode();
+                            break;
+                        case MaterialFlags.TextureId:
+                            if ( includeIds )
+                                hash ^= TextureId.Value.GetHashCode();
+                            break;
+                        case MaterialFlags.FloatArray1:
+                            hash = FloatArray1.Aggregate( hash, ( current, f ) => current ^ f.GetHashCode() );
+                            break;
+                        case MaterialFlags.Color3:
+                            hash ^= Color3.Value.GetHashCode();
+                            break;
+                        case MaterialFlags.ShortArray:
+                            hash = ShortArray.Aggregate( hash, ( current, v ) => current ^ v );
+                            break;
+                        case MaterialFlags.FloatArray2:
+                            hash = FloatArray2.Aggregate( hash, ( current, f ) => current ^ f.GetHashCode() );
+                            break;
+                        case MaterialFlags.Color4:
+                            hash ^= Color4.Value.GetHashCode();
+                            break;
+                        case MaterialFlags.Color5:
+                            hash ^= Color5.Value.GetHashCode();
+                            break;
+                        case MaterialFlags.Float1:
+                            hash ^= Float1.Value.GetHashCode();
+                            break;
+                        case MaterialFlags.FloatArray3:
+                            hash = FloatArray3.Aggregate( hash, ( current, f ) => current ^ f.GetHashCode() );
+                            break;
+                    }
+                }
+            }
+
+            return hash;
+        }
+
         private void UpdateFlags( object value, MaterialFlags flag )
         {
             if ( value == null )
@@ -144,7 +204,7 @@ namespace DDS3ModelLibrary
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Id = reader.ReadInt32();
+            mIndex = reader.ReadInt32();
             var flags = ( MaterialFlags )reader.ReadInt32();
             Flags = flags;
 
@@ -199,7 +259,8 @@ namespace DDS3ModelLibrary
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
         {
-            writer.Write( Id );
+            var index = ( int )context;
+            writer.Write( index );
             writer.Write( ( int )Flags );
 
             for ( int i = 0; i < 31; i++ )

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -117,13 +118,15 @@ namespace DDS3ModelLibrary
             {
                 writer.Write( Nodes.Count );
                 writer.Align( 16 );
-                writer.WriteObjects( Nodes, Nodes );
+                for ( int i = 0; i < Nodes.Count; i++ )
+                    writer.WriteObject( Nodes[ i ], ( i, Nodes ) );
             } );
 
             writer.ScheduleWriteOffsetAligned( 16, () =>
             {
                 writer.Write( Materials.Count );
-                writer.WriteObjects( Materials );
+                for ( int i = 0; i < Materials.Count; i++ )
+                    writer.WriteObject( Materials[ i ], i );
             } );
 
             var morpherMeshCount = Nodes.Where( x => x.Geometry != null && x.Geometry.Meshes?.Count > 0 )

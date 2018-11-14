@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Numerics;
 using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary
@@ -14,15 +16,34 @@ namespace DDS3ModelLibrary
 
         public MeshFlags Flags { get; set; }
 
+        /// <summary>
+        /// Most likely deprecated, used only in a few odd files.
+        /// </summary>
+        public short UsedNodeCount => ( short )NodeSplits.Count;
+
+        /// <summary>
+        /// Most likely deprecated, used only in a few odd files.
+        /// </summary>
+        public IEnumerable<short> UsedNodeIndices => NodeSplits.Select( x => x.NodeIndex );
+
         public Triangle[] Triangles { get; set; }
 
         public List<MeshType5BlendShape> BlendShapes { get; }
 
+        public Vector2[] TexCoords { get; set; }
+
+        public Vector2[] TexCoords2 { get; set; }
+
+        /// <summary>
+        /// Most likely deprecated, used only in a few odd files.
+        /// </summary>
+        public List<MeshType5NodeSplit> NodeSplits { get; }
+
         public MeshType5()
         {
             BlendShapes = new List<MeshType5BlendShape>();
-            Flags = MeshFlags.Bit3 | MeshFlags.TexCoord | MeshFlags.Bit5 | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Normal |
-                    MeshFlags.Bit24;
+            Flags = MeshFlags.Bit3 | MeshFlags.Bit5 | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Bit24 | MeshFlags.Bit28;
+            NodeSplits = new List<MeshType5NodeSplit>();
         }
 
         protected override void Read( EndianBinaryReader reader )
@@ -36,6 +57,8 @@ namespace DDS3ModelLibrary
             var triangleCount = reader.ReadInt16();
             var vertexCount = reader.ReadInt16();
             var flags = Flags = ( MeshFlags )reader.ReadInt32();
+            var usedNodeCount = reader.ReadInt16();
+            var usedNodes = reader.ReadInt16Array( usedNodeCount );
             reader.Align( 16 );
 
             // Read triangles
@@ -47,19 +70,19 @@ namespace DDS3ModelLibrary
 
             // Read blend shapes
             for ( int i = 0; i < shapeCount; i++ )
-            {
-                var shape = new MeshType5BlendShape();
-                shape.Positions = reader.ReadVector3s( vertexCount );
-                reader.Align( 16 );
-                shape.Normals = reader.ReadVector3s( vertexCount );
-                reader.Align( 16 );
-                BlendShapes.Add( shape );
-            }
+                BlendShapes.Add( reader.ReadObject<MeshType5BlendShape>( vertexCount ) );
 
-            for ( int i = 0; i < shapeCount; i++ )
+            if ( flags.HasFlag( MeshFlags.TexCoord ) )
+                TexCoords = reader.ReadVector2s( vertexCount );
+
+            if ( flags.HasFlag( MeshFlags.TexCoord2 ) )
+                TexCoords2 = reader.ReadVector2s( vertexCount );
+
+            // TODO: where does this go?
+            if ( usedNodeCount > 0 )
             {
-                BlendShapes[i].TexCoords = reader.ReadVector2s( vertexCount );
-                reader.Align( 16 );
+                foreach ( var nodeIndex in usedNodes )
+                    NodeSplits.Add( reader.ReadObject<MeshType5NodeSplit>( ( vertexCount, nodeIndex ) ) );
             }
 
             Debug.Assert( Flags == flags, "Flags doesn't match value read from file" );
@@ -76,6 +99,8 @@ namespace DDS3ModelLibrary
             writer.Write( TriangleCount );
             writer.Write( VertexCount );
             writer.Write( ( int )Flags );
+            writer.Write( UsedNodeCount );
+            writer.Write( UsedNodeIndices );
             writer.Align( 16 );
 
             // Write triangles
@@ -89,19 +114,17 @@ namespace DDS3ModelLibrary
             writer.Align( 16 );
 
             // Write blend shapes
-            foreach ( var shape in BlendShapes )
-            {
-                writer.Write( shape.Positions );
-                writer.Align( 16 );
-                writer.Write( shape.Normals );
-                writer.Align( 16 );
-            }
+            writer.WriteObjects( BlendShapes );
 
-            foreach ( var shape in BlendShapes )
-            {
-                writer.Write( shape.TexCoords );
-                writer.Align( 16 );
-            }
+            if ( Flags.HasFlag( MeshFlags.TexCoord ) )
+                writer.Write( TexCoords );
+
+            if ( Flags.HasFlag( MeshFlags.TexCoord2 ) )
+                writer.Write( TexCoords2 );
+
+            // TODO: where does this go?
+            foreach ( var nodeBatch in NodeSplits )
+                writer.WriteObject( nodeBatch );
         }
     }
 }

@@ -22,7 +22,7 @@ namespace DDS3ModelLibrary
 
         public short UsedNodeCount => ( short ) UsedNodeIds.Count();
 
-        public IEnumerable<short> UsedNodeIds => Batches.SelectMany( x => x.NodeBatches ).Select( x => x.NodeId ).Distinct();
+        public IEnumerable<short> UsedNodeIds => Batches.SelectMany( x => x.NodeBatches ).Select( x => x.NodeId );
 
         public Triangle[] Triangles { get; set; }
 
