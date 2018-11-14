@@ -15,8 +15,8 @@ namespace DDS3ModelLibraryCLI
     {
         private static void Main( string[] args )
         {
-            //ReplaceModelTest();
-            OpenAndSaveModelPackBatchTest();
+            ReplaceModelTest();
+            //OpenAndSaveModelPackBatchTest();
         }
 
         private static void OpenAndSaveModelPackTest()
@@ -82,9 +82,9 @@ namespace DDS3ModelLibraryCLI
 
         private static void ReplaceModelTest()
         {
-            //var modelPack = new ModelPack( @"..\..\..\..\Resources\player_a.PB" );
-            var modelPack =
-                new ModelPack( @"D:\Modding\DDS3\Nocturne\DDS3_OUT\model\field\player_b.PB" );
+            var modelPack = new ModelPack( @"..\..\..\..\Resources\player_a.PB" );
+            //var modelPack =
+            //    new ModelPack( @"D:\Modding\DDS3\Nocturne\DDS3_OUT\model\field\player_b.PB" );
             var model = modelPack.Models[ 0 ];
 
             var context = new Assimp.AssimpContext();

@@ -381,6 +381,15 @@ namespace DDS3ModelLibrary.IO.Common
             return SwapBytes ? EndiannessHelper.Swap( base.ReadSingle() ) : base.ReadSingle();
         }
 
+        public float ReadSingleExpects( float expected, string message )
+        {
+            var actual = ReadSingle();
+            if ( actual != expected )
+                throw new UnexpectedDataException( message );
+
+            return actual;
+        }
+
         public float[] ReadSingles( int count )
         {
             var array = new float[count];

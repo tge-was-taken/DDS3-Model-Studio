@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary
@@ -41,6 +42,7 @@ namespace DDS3ModelLibrary
                         case MeshType.Type4:
                             break;
                         case MeshType.Type5:
+                            mesh = reader.ReadObject<MeshType5>();
                             break;
                         case MeshType.Type7:
                             mesh = reader.ReadObject<MeshType7>();

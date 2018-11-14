@@ -58,6 +58,8 @@
     <Compile Include="Mesh.cs" />
     <Compile Include="MeshType1Batch.cs" />
     <Compile Include="MeshType1BatchRenderMode.cs" />
+    <Compile Include="MeshType5.cs" />
+    <Compile Include="MeshType5BlendShape.cs" />
     <Compile Include="MeshType7Batch.cs" />
     <Compile Include="MeshType8Batch.cs" />
     <Compile Include="MeshFlags.cs" />

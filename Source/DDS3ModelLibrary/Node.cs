@@ -71,12 +71,12 @@ namespace DDS3ModelLibrary
             if ( parentIndex != -1 )
                 Parent = nodes[ parentIndex ];
 
-            Position = reader.ReadVector3();
-            reader.SeekCurrent( 4 );
             Rotation = reader.ReadVector3();
-            reader.SeekCurrent( 4 );
+            reader.ReadSingleExpects( 0f, "Node Rotation W isnt 0" );
+            Position = reader.ReadVector3();
+            reader.ReadSingleExpects( 1f, "Node Position W isnt 1" );
             Scale = reader.ReadVector3();
-            reader.SeekCurrent( 4 );
+            reader.ReadSingleExpects( 0f, "Node Scale W isnt 0" );
             BoundingBox = reader.ReadObjectOffset<BoundingBox>();
             Geometry    = reader.ReadObjectOffset<Geometry>();
             Field48     = reader.ReadInt32Expects( 0, "Node Field48 isnt 0" );
