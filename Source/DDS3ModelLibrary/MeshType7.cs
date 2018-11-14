@@ -20,9 +20,9 @@ namespace DDS3ModelLibrary
 
         public MeshFlags Flags { get; set; }
 
-        public short UsedNodeCount => ( short ) UsedNodeIds.Count();
+        public short UsedNodeCount => Batches.Count == 0 ? ( short ) 0 : ( short ) Batches[ 0 ].NodeBatches.Count;
 
-        public IEnumerable<short> UsedNodeIds => Batches.SelectMany( x => x.NodeBatches ).Select( x => x.NodeId );
+        public IEnumerable<short> UsedNodeIds => Batches.Count == 0 ? new short[] { } : Batches[ 0 ].NodeBatches.Select( x => x.NodeId );
 
         public Triangle[] Triangles { get; set; }
 
