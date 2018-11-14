@@ -6,7 +6,7 @@ using DDS3ModelLibrary.PS2.VIF;
 
 namespace DDS3ModelLibrary
 {
-    public class MeshBatchType8 : IBinarySerializable
+    public class MeshType8Batch : IBinarySerializable
     {
         public short VertexCount => Positions != null ? ( short ) Positions.Length : ( short ) 0;
 
@@ -16,11 +16,9 @@ namespace DDS3ModelLibrary
 
         public Vector2[] TexCoords { get; set; }
 
-        //public Color[] Colors { get; set; }
-
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        public MeshBatchType8()
+        public MeshType8Batch()
         {
         }
 
@@ -47,17 +45,6 @@ namespace DDS3ModelLibrary
             texCoordPacket.Ensure( 0x30, true, false, vertexCount, VifUnpackElementFormat.Float, 2 );
             TexCoords = texCoordPacket.Vector2s;
 
-            //if ( flags.HasFlag( MeshFlags.Color ) )
-            //{
-            //    var colorPacket = reader.ReadObject<VifPacket>();
-            //    // TODO: verify parameters properly
-            //    if ( colorPacket.ElementFormat != VifUnpackElementFormat.Byte )
-            //        throw new UnexpectedDataException();
-
-            //    Colors = colorPacket.SignedByteArrays.Select( x => new Color( ( byte ) x[ 0 ], ( byte ) x[ 1 ], ( byte ) x[ 2 ], ( byte ) x[ 3 ] ) )
-            //                        .ToArray();
-            //}
-
             var activateTag = reader.ReadObject<VifCode>();
             activateTag.Ensure( 0x16, 0, VifCommand.ActMicro );
 
@@ -69,19 +56,10 @@ namespace DDS3ModelLibrary
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
         {
             var vif = ( VifCodeStreamBuilder )context;
-
             vif.UnpackHeader( VertexCount, 0 );
             vif.Unpack( Positions );
-
-            //if ( Normals != null )
-                vif.Unpack( Normals );
-
-            //if ( TexCoords != null )
-                vif.Unpack( TexCoords );
-
-            //if ( Colors != null )
-            //    vif.Unpack( Colors.Select( x => new[] { x.R, x.G, x.B, x.A } ) );
-
+            vif.Unpack( Normals );
+            vif.Unpack( TexCoords );
             vif.ActivateMicro( 0x16 );
             vif.FlushEnd();
         }

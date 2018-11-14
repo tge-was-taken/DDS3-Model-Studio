@@ -21,7 +21,7 @@ namespace DDS3ModelLibrary
 
         public Triangle[] Triangles { get; set; }
 
-        public List<MeshBatchType8> Batches { get; private set; }
+        public List<MeshType8Batch> Batches { get; private set; }
 
         public Vector2[] TexCoords2
         {
@@ -37,8 +37,8 @@ namespace DDS3ModelLibrary
 
         public MeshType8()
         {
-            Batches = new List<MeshBatchType8>();
-            Flags = MeshFlags.Bit3 | MeshFlags.TexCoord | MeshFlags.Normal | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Bit23 |
+            Batches = new List<MeshType8Batch>();
+            Flags = MeshFlags.Bit3 | MeshFlags.TexCoord | MeshFlags.Bit5 | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Normal |
                     MeshFlags.Bit24;
         }
 
@@ -65,7 +65,7 @@ namespace DDS3ModelLibrary
             var readVertexCount = 0;
             while ( readVertexCount < VertexCount )
             {
-                var batch = reader.ReadObject<MeshBatchType8>( Flags );
+                var batch = reader.ReadObject<MeshType8Batch>( Flags );
                 readVertexCount += batch.VertexCount;
                 Batches.Add( batch );
             }
@@ -88,7 +88,7 @@ namespace DDS3ModelLibrary
             writer.Write( TriangleCount );
             writer.Write( VertexCount );
             writer.Write( ( int )Flags );
-            writer.WriteAlignmentPadding( 16 );
+            writer.Align( 16 );
 
             // Write triangles
             foreach ( var triangle in Triangles )
@@ -98,7 +98,7 @@ namespace DDS3ModelLibrary
                 writer.Write( triangle.C );
             }
 
-            writer.WriteAlignmentPadding( 16 );
+            writer.Align( 16 );
 
             var vifCmd = new VifCodeStreamBuilder();
 

@@ -85,7 +85,7 @@ namespace DDS3ModelLibrary
 
             // Seek back to the end and align to 64 bytes
             writer.SeekBegin( end );
-            writer.WriteAlignmentPadding( 64 );
+            writer.Align( 64 );
             writer.PopBaseOffset();
         }
 

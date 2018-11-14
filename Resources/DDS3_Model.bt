@@ -377,6 +377,8 @@ typedef struct
                 FSeek( gBaseOffset + MeshOffset );
                 u32 MeshType;
 
+                Printf( "Mesh Type: %d\n", MeshType );
+
                 switch ( MeshType )
                 {
                     case 1: struct TMeshType1 Mesh; break;
@@ -395,25 +397,25 @@ typedef struct
 
 typedef struct
 {
-    u16 PacketStreamSize;
+    u16 VifCodeStreamSize;
     u16 MaterialId;
-    u32 PacketStreamOffset;
+    u32 VifCodeStreamOffset;
     FAlign( 16 );
     
-    if ( PacketStreamOffset != 0 )
+    if ( VifCodeStreamOffset != 0 )
     {
-        FSeek( gBaseOffset + PacketStreamOffset );
+        FSeek( gBaseOffset + VifCodeStreamOffset );
 
-        local u32 packetStreamEnd = FTell() + ( PacketStreamSize * 16 );
+        local u32 vifCodeStreamEnd = FTell() + ( VifCodeStreamSize * 16 );
 
         struct
         {
             local u8 vifCmd;
 
-            while ( FTell() < packetStreamEnd )
+            while ( FTell() < vifCodeStreamEnd )
             {
                 vifCmd = ReadByte( FTell() + 3 );
-                if ( vifCmd == 0 && Align( FTell(), 16 ) == packetStreamEnd )
+                if ( vifCmd == 0 && Align( FTell(), 16 ) == vifCodeStreamEnd )
                 {
                     // Packet stream padding, stop reading
                     break;
@@ -432,6 +434,7 @@ typedef struct
 
                     SetRandomBackColor();
                     local u8 batchDone = false;
+                    //Printf( "\n" );
 
                     while ( !batchDone )
                     {
@@ -449,6 +452,8 @@ typedef struct
                             case 0x60:
                             case 0x70:
                                 struct TVifPacket VifPacket; 
+
+                                //Printf( "   Address: %08X Size: %08X Count: %d\n", VifPacket.Address * 8, VifPacket.size, VifPacket.Count );
 
                                 if ( VifPacket.Address == 0 )
                                 {
@@ -478,27 +483,27 @@ typedef struct
 
 typedef struct
 {
-    u16 PacketStreamSize;
+    u16 VifCodeStreamSize;
     u16 MaterialId;
-    u32 PacketStreamOffset;
+    u32 VifCodeStreamOffset;
     u32 UsedNodeCount;
     u16 UsedNodes[ UsedNodeCount ];
 
-    if ( PacketStreamOffset != 0 )
+    if ( VifCodeStreamOffset != 0 )
     {
-        FSeek( gBaseOffset + PacketStreamOffset );
+        FSeek( gBaseOffset + VifCodeStreamOffset );
 
-        local u32 packetStreamEnd = FTell() + ( PacketStreamSize * 16 );
+        local u32 vifCodeStreamEnd = FTell() + ( VifCodeStreamSize * 16 );
 
         struct
         {
             local u8 vifCmd;
             local u32 usedNodeIndex;
 
-            while ( FTell() < packetStreamEnd )
+            while ( FTell() < vifCodeStreamEnd )
             {
                 vifCmd = ReadByte( FTell() + 3 );
-                if ( vifCmd == 0 && Align( FTell(), 16 ) == packetStreamEnd )
+                if ( vifCmd == 0 && Align( FTell(), 16 ) == vifCodeStreamEnd )
                 {
                     // Packet stream padding, stop reading
                     break;
@@ -672,7 +677,7 @@ typedef struct
         
                 for ( batchIndex = 0; batchIndex < UsedNodeCount; ++batchIndex )
                 {
-                    Printf( "%d\n", batchIndex );
+                    //Printf( "%d\n", batchIndex );
                     struct
                     {
                         SetRandomBackColor();
@@ -696,7 +701,7 @@ typedef struct
                                 case 0x70:
                                     struct TVifPacket VifPacket; 
 
-                                    Printf( "   Address: %08X Size: %08X Count: %d\n", VifPacket.Address * 8, VifPacket.size, VifPacket.Count );
+                                    //Printf( "   Address: %08X Size: %08X Count: %d\n", VifPacket.Address * 8, VifPacket.size, VifPacket.Count );
                                     break;
                 
                                 default:
@@ -718,8 +723,8 @@ typedef struct
                 struct TVifTag TexCoordsKickTag;    Assert( TexCoordsKickTag.Command == 0x17 );
                 struct TVifTag FlushTag;            Assert( FlushTag.Command == 0x10 );
 
-                Printf( "   Address: %08X Size: %08X Count: %d (TexCoord)\n", TexCoordsPacket.Address * 8,
-                                        TexCoordsPacket.size, TexCoordsPacket.Count);
+                //Printf( "   Address: %08X Size: %08X Count: %d (TexCoord)\n", TexCoordsPacket.Address * 8,
+                //                        TexCoordsPacket.size, TexCoordsPacket.Count);
                 FAlign( 16 );
             } Batch <optimize=false>;
         }

@@ -27,6 +27,19 @@ namespace DDS3ModelLibrary.PS2.VIF
             mTags = new List<VifCode>();
         }
 
+
+        /// <summary>
+        /// Code 0x65. Used to unpack the header contents to VU memory (special configuration).
+        /// </summary>
+        /// <param name="value1"></param>
+        /// <param name="value2"></param>
+        /// <returns></returns>
+        public VifCodeStreamBuilder UnpackHeader( short value1, short value2, uint value3 )
+        {
+            mTags.Add( new VifPacket( 0, new[] { new[] { value1, value2, ( short ) value3, ( short )( value3 >> 16 ) } }, true ) );
+            return this;
+        }
+
         /// <summary>
         /// Code 0x65. Used to unpack the header contents to VU memory (special configuration).
         /// </summary>
@@ -50,10 +63,25 @@ namespace DDS3ModelLibrary.PS2.VIF
             var packet       = new VifPacket( Address / 8, elements, false );
             //var unpackedSize = ( packet.Count * AlignmentHelper.Align( packet.ElementCount * packet.ElementSize, 16 ) ) * usedNodeCount;
             //mAddress += unpackedSize;
+
             Address += 0xC0;
             if ( Address > 0x240 )
                 Address = 0;
 
+            mTags.Add( packet );
+            return this;
+        }
+
+        /// <summary>
+        /// Code 0x6X. Decompresses data and writes to VU memory.
+        /// </summary>
+        /// <param name="elements"></param>
+        /// <returns></returns>
+        public VifCodeStreamBuilder Unpack( int address, dynamic elements )
+        {
+            Address = address;
+            Debug.Assert( Address % 8 == 0 );
+            var packet = new VifPacket( Address / 8, elements, true );
             mTags.Add( packet );
             return this;
         }
@@ -98,10 +126,10 @@ namespace DDS3ModelLibrary.PS2.VIF
                 writer.WriteObject( tag );
 
                 if ( tag.Command == VifCommand.FlushEnd )
-                    writer.WriteAlignmentPadding( 16 );
+                    writer.Align( 16 );
             }
 
-            writer.WriteAlignmentPadding( 16 );
+            writer.Align( 16 );
         }
 
         public IEnumerator<VifCode> GetEnumerator()

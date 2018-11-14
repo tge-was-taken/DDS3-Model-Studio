@@ -111,12 +111,12 @@ namespace DDS3ModelLibrary
                 writer.Write( encodedRelocationTable.Length );
                 writer.SeekBegin( end );
             } );
-            writer.WriteAlignmentPadding( 16 );
+            writer.Align( 16 );
 
             writer.ScheduleWriteOffsetAligned( 16, () =>
             {
                 writer.Write( Nodes.Count );
-                writer.WriteAlignmentPadding( 16 );
+                writer.Align( 16 );
                 writer.WriteObjects( Nodes, Nodes );
             } );
 
@@ -142,7 +142,7 @@ namespace DDS3ModelLibrary
                         for ( int i = 0; i < Nodes.Count; i++ )
                         {
                             writer.Write( Nodes[i].Name, StringBinaryFormat.NullTerminated );
-                            writer.WriteAlignmentPadding( 4 );
+                            writer.Align( 4 );
                             writer.Write( i );
                         }
                     } );
@@ -154,7 +154,7 @@ namespace DDS3ModelLibrary
                 // Write dummy end extension
                 writer.Write( 0 );
                 writer.Write( 0 );
-                writer.WriteAlignmentPadding( 16 );
+                writer.Align( 16 );
             } );
 
             writer.PerformScheduledWrites();
@@ -168,7 +168,7 @@ namespace DDS3ModelLibrary
 
             writeAction();
 
-            writer.WriteAlignmentPadding( 16 );
+            writer.Align( 16 );
             var extensionEnd = writer.Position;
 
             // Calculate size and write extension header

@@ -421,7 +421,7 @@ namespace DDS3ModelLibrary.IO.Common
                 Write( ( byte )0 );
         }
 
-        public void WriteAlignmentPadding( int alignment )
+        public void Align( int alignment )
         {
             WritePadding( AlignmentHelper.GetAlignedDifference( Position, alignment ) );
         }
@@ -460,7 +460,7 @@ namespace DDS3ModelLibrary.IO.Common
         {
             ScheduleWriteOffset( 0, null, () =>
             {
-                WriteAlignmentPadding( alignment );
+                Align( alignment );
                 long offset = BaseStream.Position;
                 action();
                 return offset;
@@ -471,7 +471,7 @@ namespace DDS3ModelLibrary.IO.Common
         {
             ScheduleWriteOffset( priority, null, () =>
             {
-                WriteAlignmentPadding( alignment );
+                Align( alignment );
                 long offset = BaseStream.Position;
                 action();
                 return offset;
@@ -527,7 +527,7 @@ namespace DDS3ModelLibrary.IO.Common
             {
                 ScheduleWriteOffset( 0, list, () =>
                 {
-                    WriteAlignmentPadding( alignment );
+                    Align( alignment );
                     var offset = BaseStream.Position;
 
                     foreach ( var item in list )
@@ -565,7 +565,7 @@ namespace DDS3ModelLibrary.IO.Common
             {
                 ScheduleWriteOffset( 0, obj, () =>
                 {
-                    WriteAlignmentPadding( alignment );
+                    Align( alignment );
                     long current = BaseStream.Position;
                     obj.Write( this, context );
                     return current;
@@ -583,7 +583,7 @@ namespace DDS3ModelLibrary.IO.Common
             {
                 ScheduleWriteOffset( 0, obj, () =>
                 {
-                    WriteAlignmentPadding( alignment );
+                    Align( alignment );
                     long current = BaseStream.Position;
                     Write( obj, StringBinaryFormat.NullTerminated );
                     return current;
@@ -601,7 +601,7 @@ namespace DDS3ModelLibrary.IO.Common
             {
                 ScheduleWriteOffset( 0, obj, () =>
                 {
-                    WriteAlignmentPadding( alignment );
+                    Align( alignment );
                     long current = BaseStream.Position;
                     action( obj );
                     return current;
@@ -618,7 +618,7 @@ namespace DDS3ModelLibrary.IO.Common
                 ScheduleWriteOffset( 0, array, () =>
                 {
                     if ( alignment != 0 )
-                        WriteAlignmentPadding( alignment );
+                        Align( alignment );
 
                     long offset = BaseStream.Position;
                     for ( int i = 0; i < array.Length; i++ )
@@ -642,7 +642,7 @@ namespace DDS3ModelLibrary.IO.Common
                 count = list.Count;
                 ScheduleWriteOffset( 0, list, () =>
                 {
-                    WriteAlignmentPadding( alignment );
+                    Align( alignment );
                     var offset = BaseStream.Position;
 
                     for ( int i = 0; i < list.Count; i++ )
@@ -667,7 +667,7 @@ namespace DDS3ModelLibrary.IO.Common
                 count = list.Count;
                 ScheduleWriteOffset( 0, list, () =>
                 {
-                    WriteAlignmentPadding( alignment );
+                    Align( alignment );
                     long offset = BaseStream.Position;
                     for ( int i = 0; i < list.Count; i++ )
                         list[i].Write( this, context );

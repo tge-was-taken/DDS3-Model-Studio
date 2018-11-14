@@ -26,7 +26,7 @@ namespace DDS3ModelLibrary
 
         public Triangle[] Triangles { get; set; }
 
-        public List<MeshBatchType7> Batches { get; private set; }
+        public List<MeshType7Batch> Batches { get; private set; }
 
         public Vector2[] TexCoords2
         {
@@ -42,9 +42,9 @@ namespace DDS3ModelLibrary
 
         public MeshType7()
         {
-            Batches = new List<MeshBatchType7>();
-            Flags = MeshFlags.Bit3 | MeshFlags.TexCoord | MeshFlags.Normal | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Bit23 |
-                    MeshFlags.Bit24 | MeshFlags.FixShoes;
+            Batches = new List<MeshType7Batch>();
+            Flags = MeshFlags.Bit3 | MeshFlags.TexCoord | MeshFlags.Bit5 | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Normal |
+                    MeshFlags.Bit24 | MeshFlags.Bit27;
         }
 
         protected override void Read( EndianBinaryReader reader )
@@ -72,7 +72,7 @@ namespace DDS3ModelLibrary
             var readVertexCount = 0;
             while ( readVertexCount < VertexCount )
             {
-                var batch = reader.ReadObject<MeshBatchType7>( ( usedNodeIds, Flags ) );
+                var batch = reader.ReadObject<MeshType7Batch>( ( usedNodeIds, Flags ) );
                 readVertexCount += batch.VertexCount;
                 Batches.Add( batch );
             }
@@ -97,7 +97,7 @@ namespace DDS3ModelLibrary
             writer.Write( ( int ) Flags );
             writer.Write( UsedNodeCount );
             writer.Write( UsedNodeIds );
-            writer.WriteAlignmentPadding( 16 );
+            writer.Align( 16 );
 
             // Write triangles
             foreach ( var triangle in Triangles )
@@ -107,7 +107,7 @@ namespace DDS3ModelLibrary
                 writer.Write( triangle.C );
             }
 
-            writer.WriteAlignmentPadding( 16 );
+            writer.Align( 16 );
 
             var vifCmd = new VifCodeStreamBuilder();
 

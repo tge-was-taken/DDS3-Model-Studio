@@ -9,8 +9,8 @@ namespace DDS3ModelLibrary
         Bit1      = 1 << 1,
         Bit2      = 1 << 2,
         Bit3      = 1 << 3,
-        TexCoord = 1 << 4,
-        Normal   = 1 << 5, // Ignored by: 7, 8
+        TexCoord  = 1 << 4,
+        Bit5      = 1 << 5,
         Bit6      = 1 << 6,
         Bit7      = 1 << 7,
         Bit8      = 1 << 8,
@@ -22,7 +22,7 @@ namespace DDS3ModelLibrary
         /// </summary>
         TexCoord2 = 1 << 12, // Verified
         Bit13     = 1 << 13,
-        NoNormals = 1 << 14, // May be wrong
+        Bit14     = 1 << 14, 
         Bit15     = 1 << 15,
         Bit16     = 1 << 16,
         Bit17     = 1 << 17,
@@ -31,15 +31,11 @@ namespace DDS3ModelLibrary
         Bit20     = 1 << 20,
         Bit21     = 1 << 21,
         Bit22     = 1 << 22,
-        Bit23     = 1 << 23,
+        Normal     = 1 << 23,
         Bit24     = 1 << 24,
         Bit25     = 1 << 25,
         Bit26     = 1 << 26,
-
-        /// <summary>
-        /// Corrupts player_b.PB shoes if not used.
-        /// </summary>
-        FixShoes     = 1 << 27,
+        Bit27     = 1 << 27,
         Bit28     = 1 << 28,
         Bit29     = 1 << 29,
         Bit30     = 1 << 30,

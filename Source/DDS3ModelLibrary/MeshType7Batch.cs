@@ -7,21 +7,21 @@ using DDS3ModelLibrary.PS2.VIF;
 
 namespace DDS3ModelLibrary
 {
-    public class MeshBatchType7 : IBinarySerializable
+    public class MeshType7Batch : IBinarySerializable
     {
         public short UsedNodeCount => ( short )NodeBatches.Count;
 
         public short VertexCount { get; set; }
 
-        public List<MeshNodeBatchType7> NodeBatches { get; private set; }
+        public List<MeshType7NodeBatch> NodeBatches { get; private set; }
 
         public Vector2[] TexCoords { get; set; }
 
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        public MeshBatchType7()
+        public MeshType7Batch()
         {
-            NodeBatches = new List<MeshNodeBatchType7>();
+            NodeBatches = new List<MeshType7NodeBatch>();
         }
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
@@ -38,7 +38,7 @@ namespace DDS3ModelLibrary
                 throw new UnexpectedDataException();
 
             foreach ( short nodeId in usedNodeIds )
-                NodeBatches.Add( reader.ReadObject<MeshNodeBatchType7>( nodeId ) );
+                NodeBatches.Add( reader.ReadObject<MeshType7NodeBatch>( nodeId ) );
 
             var texCoordsPacket = reader.ReadObject<VifPacket>();
             texCoordsPacket.Ensure( null, true, false, VertexCount, VifUnpackElementFormat.Float, 2 );

@@ -5,7 +5,7 @@ using DDS3ModelLibrary.PS2.VIF;
 
 namespace DDS3ModelLibrary
 {
-    public class MeshNodeBatchType7 : IBinarySerializable
+    public class MeshType7NodeBatch : IBinarySerializable
     {
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 

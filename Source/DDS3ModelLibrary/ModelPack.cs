@@ -105,7 +105,7 @@ namespace DDS3ModelLibrary
             writer.Write( 16 );
             writer.Write( ( int )ResourceIdentifier.ModelPackEnd );
             writer.Write( 0 );
-            writer.WriteAlignmentPadding( 64 );
+            writer.Align( 64 );
         }
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context ) => Read( reader );
