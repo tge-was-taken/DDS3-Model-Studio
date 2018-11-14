@@ -111,7 +111,7 @@ namespace DDS3ModelLibrary
 
             writer.WriteObject( vifCmd );
 
-            if ( Flags.HasFlag( MeshFlags.TexCoord2 ) )
+            if ( TexCoords2 != null )
             {
                 writer.Write( TexCoords2 );
             }

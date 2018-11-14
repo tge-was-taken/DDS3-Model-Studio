@@ -5,11 +5,11 @@ namespace DDS3ModelLibrary
     [Flags]
     public enum MeshFlags
     {
-        Bit0      = 1 << 0,
+        Bit0      = 1 << 0, // Turns model black, visual glitches
         Bit1      = 1 << 1,
         Bit2      = 1 << 2,
         Bit3      = 1 << 3,
-        TexCoord = 1 << 4, // Ignored by: 7, 8
+        TexCoord = 1 << 4,
         Normal   = 1 << 5, // Ignored by: 7, 8
         Bit6      = 1 << 6,
         Bit7      = 1 << 7,
@@ -17,6 +17,9 @@ namespace DDS3ModelLibrary
         Bit9      = 1 << 9,
         Bit10     = 1 << 10,
         Color     = 1 << 11,
+        /// <summary>
+        /// Used for eg. Demifiends health overlay texture.
+        /// </summary>
         TexCoord2 = 1 << 12, // Verified
         Bit13     = 1 << 13,
         NoNormals = 1 << 14, // May be wrong
