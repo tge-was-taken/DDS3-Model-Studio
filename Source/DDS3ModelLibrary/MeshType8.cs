@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Numerics;
 using DDS3ModelLibrary.IO.Common;
 using DDS3ModelLibrary.PS2.VIF;
@@ -15,7 +16,7 @@ namespace DDS3ModelLibrary
 
         public short TriangleCount => ( short )Triangles.Length;
 
-        public short VertexCount { get; set; }
+        public short VertexCount => ( short ) Batches.Sum( x => x.VertexCount );
 
         public MeshFlags Flags { get; set; }
 
@@ -46,11 +47,11 @@ namespace DDS3ModelLibrary
         {
             // Read header
             var field00 = reader.ReadInt16Expects( 0, "Field00 is not 0" );
-            MaterialId = reader.ReadInt16();
+            MaterialIndex = reader.ReadInt16();
             var field04 = reader.ReadInt32Expects( 0, "Field04 is not 0" );
             var field08 = reader.ReadInt32Expects( 0, "Field08 is not 0" );
             var triangleCount = reader.ReadInt16();
-            VertexCount = reader.ReadInt16();
+            var vertexCount = reader.ReadInt16();
             var flags = Flags = ( MeshFlags )reader.ReadInt32();
             reader.Align( 16 );
 
@@ -63,7 +64,7 @@ namespace DDS3ModelLibrary
 
             // Read batches
             var readVertexCount = 0;
-            while ( readVertexCount < VertexCount )
+            while ( readVertexCount < vertexCount )
             {
                 var batch = reader.ReadObject<MeshType8Batch>( Flags );
                 readVertexCount += batch.VertexCount;
@@ -72,7 +73,7 @@ namespace DDS3ModelLibrary
 
             if ( Flags.HasFlag( MeshFlags.TexCoord2 ) )
             {
-                TexCoords2 = reader.ReadVector2s( VertexCount );
+                TexCoords2 = reader.ReadVector2s( vertexCount );
             }
 
             Debug.Assert( Flags == flags, "Flags doesn't match value read from file" );
@@ -82,7 +83,7 @@ namespace DDS3ModelLibrary
         {
             // Write header
             writer.Write( ( short ) 0 );
-            writer.Write( MaterialId );
+            writer.Write( MaterialIndex );
             writer.Write( 0 );
             writer.Write( 0 );
             writer.Write( TriangleCount );

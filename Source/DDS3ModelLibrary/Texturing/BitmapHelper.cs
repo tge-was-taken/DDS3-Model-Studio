@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using nQuant;
 using Color = DDS3ModelLibrary.Primitives.Color;
 
-namespace DDS3ModelLibrary.Textures.Processing
+namespace DDS3ModelLibrary.Texturing
 {
     /// <summary>
     /// Contains helper methods for creating and converting bitmaps to and from indexed bitmap data.

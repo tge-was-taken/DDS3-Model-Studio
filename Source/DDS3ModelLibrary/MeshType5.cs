@@ -50,7 +50,7 @@ namespace DDS3ModelLibrary
         {
             // Read header
             var field00 = reader.ReadInt16Expects( 0, "Field00 is not 0" );
-            MaterialId = reader.ReadInt16();
+            MaterialIndex = reader.ReadInt16();
             var shapeCount = reader.ReadInt16();
             var field06 = reader.ReadInt16();
             var field08 = reader.ReadInt32Expects( 0, "Field08 is not 0" );
@@ -92,7 +92,7 @@ namespace DDS3ModelLibrary
         {
             // Write header
             writer.Write( ( short )0 );
-            writer.Write( MaterialId );
+            writer.Write( MaterialIndex );
             writer.Write( ( short ) BlendShapes.Count );
             writer.Write( ( short ) 0 );
             writer.Write( 0 );

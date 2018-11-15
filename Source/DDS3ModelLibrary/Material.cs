@@ -139,7 +139,11 @@ namespace DDS3ModelLibrary
 
         public override int GetHashCode() => GetHashCode( true );
 
-        public int GetCacheHashCode() => GetHashCode( false );
+        /// <summary>
+        /// Get a hash code that can uniquely identify render state (excl. variables such as ids)
+        /// </summary>
+        /// <returns></returns>
+        public int GetRenderStateHashCode() => GetHashCode( false );
 
         private int GetHashCode( bool includeIds )
         {

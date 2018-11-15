@@ -8,7 +8,7 @@ namespace DDS3ModelLibrary
 
         public abstract MeshType Type { get; }
 
-        public short MaterialId { get; set; }
+        public short MaterialIndex { get; set; }
 
         protected abstract void Read( EndianBinaryReader reader );
 

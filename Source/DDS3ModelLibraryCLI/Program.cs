@@ -70,7 +70,7 @@ namespace DDS3ModelLibraryCLI
                                  .Concat( Directory.EnumerateFiles( "unique_models_mb", "*.MB", SearchOption.AllDirectories ) )
                                  .ToList();
             var done = 0;
-            Parallel.ForEach( paths, new ParallelOptions() { MaxDegreeOfParallelism = 1 }, ( path ) =>
+            Parallel.ForEach( paths, new ParallelOptions() { MaxDegreeOfParallelism = 8 }, ( path ) =>
             {
                 Console.WriteLine( Path.GetFileName(path) );
 
@@ -83,55 +83,28 @@ namespace DDS3ModelLibraryCLI
         private static void ReplaceModelTest()
         {
             var modelPack = new ModelPack( @"..\..\..\..\Resources\player_a.PB" );
-            //var modelPack =
-            //    new ModelPack( @"D:\Modding\DDS3\Nocturne\DDS3_OUT\model\field\player_b.PB" );
+            modelPack.Replace( "player_a_test.fbx" );
+            modelPack.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_a.PB" );
+            return;
+
             var model = modelPack.Models[ 0 ];
 
             var context = new Assimp.AssimpContext();
             context.SetConfig( new Assimp.Configs.FBXPreservePivotsConfig( false ) );
-            //var aiScene = context.ImportFile( "player_a_test.fbx", Assimp.PostProcessSteps.JoinIdenticalVertices |
-            //                                            Assimp.PostProcessSteps.CalculateTangentSpace | Assimp.PostProcessSteps.FindDegenerates |
-            //                                            Assimp.PostProcessSteps.FindInvalidData | Assimp.PostProcessSteps.FlipUVs |
-            //                                            Assimp.PostProcessSteps.GenerateNormals | Assimp.PostProcessSteps.GenerateUVCoords |
-            //                                            Assimp.PostProcessSteps.ImproveCacheLocality |
-            //                                            Assimp.PostProcessSteps.Triangulate |
-            //                                            //Assimp.PostProcessSteps.FixInFacingNormals |
-            //                                            Assimp.PostProcessSteps.GenerateSmoothNormals |
-            //                                            Assimp.PostProcessSteps.JoinIdenticalVertices |
-            //                                            Assimp.PostProcessSteps.LimitBoneWeights | Assimp.PostProcessSteps.OptimizeMeshes
-            //                                         //| Assimp.PostProcessSteps.PreTransformVertices
-            //                                );
-
-            //foreach ( var node in model.Nodes.Where( x => x.Geometry != null ) )
-            //{
-            //    foreach ( var mesh in node.Geometry.Meshes )
-            //    {
-            //        var flags = unchecked( ( MeshFlags ) 0xFFFFFFFF ) & ~MeshFlags.TexCoord2;
-            //        switch ( mesh.Type )
-            //        {
-            //            case MeshType.Type1:
-            //                break;
-            //            case MeshType.Type2:
-            //                break;
-            //            case MeshType.Type3:
-            //                break;
-            //            case MeshType.Type4:
-            //                break;
-            //            case MeshType.Type5:
-            //                break;
-            //            case MeshType.Type7:
-            //                ( ( MeshType7 ) mesh ).Flags = 0;
-            //                ( ( MeshType7 ) mesh ).Flags |= flags;
-            //                break;
-            //            case MeshType.Type8:
-            //                ( ( MeshType8 )mesh ).Flags = 0;
-            //                ( ( MeshType8 )mesh ).Flags |= flags;
-            //                break;
-            //            default:
-            //                throw new ArgumentOutOfRangeException();
-            //        }
-            //    }
-            //}
+            var aiScene = context.ImportFile( "player_a_test.fbx", Assimp.PostProcessSteps.JoinIdenticalVertices |
+                                                                   Assimp.PostProcessSteps.CalculateTangentSpace |
+                                                                   Assimp.PostProcessSteps.FindDegenerates |
+                                                                   Assimp.PostProcessSteps.FindInvalidData | Assimp.PostProcessSteps.FlipUVs |
+                                                                   Assimp.PostProcessSteps.GenerateNormals |
+                                                                   Assimp.PostProcessSteps.GenerateUVCoords |
+                                                                   Assimp.PostProcessSteps.ImproveCacheLocality |
+                                                                   Assimp.PostProcessSteps.Triangulate |
+                                                                   Assimp.PostProcessSteps.FixInFacingNormals |
+                                                                   Assimp.PostProcessSteps.GenerateSmoothNormals |
+                                                                   Assimp.PostProcessSteps.JoinIdenticalVertices |
+                                                                   Assimp.PostProcessSteps.LimitBoneWeights | Assimp.PostProcessSteps.OptimizeMeshes
+                                                                 //| Assimp.PostProcessSteps.PreTransformVertices
+                                            );
 
             //foreach ( var material in model.Materials )
             //{
@@ -148,14 +121,14 @@ namespace DDS3ModelLibraryCLI
             //headNode.Geometry = new Geometry();
             //headNode.Geometry.Meshes.Add( ConvertAssimpMesh( aiScene.Meshes[ 0 ], model.Nodes ) );
 
-            modelPack.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_a.PB" );
+            
         }
 
         private static Mesh ConvertAssimpMesh( Assimp.Mesh aiMesh, List<Node> nodes )
         {
             var mesh = new MeshType7();
-            mesh.MaterialId = ( short ) aiMesh.MaterialIndex;
-            mesh.VertexCount = ( short ) aiMesh.VertexCount;
+            mesh.MaterialIndex = ( short ) aiMesh.MaterialIndex;
+            //mesh.VertexCount = ( short ) aiMesh.VertexCount;
 
             // Convert triangles
             mesh.Triangles = new Triangle[aiMesh.FaceCount];
@@ -180,15 +153,15 @@ namespace DDS3ModelLibraryCLI
                 // Create batches
                 var batchVertexCount = Math.Min( VERTEX_LIMIT, mesh.VertexCount - processedVertexCount );
                 var batch = new MeshType7Batch();
-                batch.VertexCount = ( short ) batchVertexCount;
+                //batch.VertexCount = ( short ) batchVertexCount;
                 batch.TexCoords = new Vector2[batchVertexCount];
                 Array.Copy( texCoords, processedVertexCount, batch.TexCoords, 0, batchVertexCount );
 
                 // Create node batches
                 {
                     var nodeBatch = new MeshType7NodeBatch();
-                    //nodeBatch.NodeId = ( short ) nodes.FindIndex( x => x.Name == aiMesh.Bones[ 0 ].Name );
-                    nodeBatch.NodeId = 50;
+                    //nodeBatch.NodeIndex = ( short ) nodes.FindIndex( x => x.Name == aiMesh.Bones[ 0 ].Name );
+                    nodeBatch.NodeIndex = 50;
 
                     nodeBatch.Positions = new Vector4[batchVertexCount];
                     Array.Copy( positions, processedVertexCount, nodeBatch.Positions, 0, batchVertexCount );
@@ -202,7 +175,7 @@ namespace DDS3ModelLibraryCLI
 
                 {
                     var nodeBatch = new MeshType7NodeBatch();
-                    nodeBatch.NodeId = 51;
+                    nodeBatch.NodeIndex = 51;
                     nodeBatch.Positions = new Vector4[batchVertexCount];
                     nodeBatch.Normals = new Vector3[batchVertexCount];
                     batch.NodeBatches.Add( nodeBatch );

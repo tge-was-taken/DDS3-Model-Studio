@@ -9,9 +9,9 @@ namespace DDS3ModelLibrary
     {
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        public short NodeId { get; set; }
+        public short NodeIndex { get; set; }
 
-        public int VertexCount => Positions?.Length ?? 0;
+        public short VertexCount => ( short ) ( Positions?.Length ?? 0 );
 
         public Vector4[] Positions { get; set; }
     
@@ -19,7 +19,7 @@ namespace DDS3ModelLibrary
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            NodeId = ( short )context;
+            NodeIndex = ( short )context;
 
             var positionsPacket = reader.ReadObject<VifPacket>();
             positionsPacket.Ensure( null, true, false, null, VifUnpackElementFormat.Float, 4 );

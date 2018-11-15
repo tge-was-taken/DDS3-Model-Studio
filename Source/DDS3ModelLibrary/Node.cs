@@ -46,6 +46,38 @@ namespace DDS3ModelLibrary
 
         public string Name { get; set; }
 
+        /// <summary>
+        /// Gets the local transform of this node.
+        /// </summary>
+        public Matrix4x4 Transform
+        {
+            get
+            {
+                var transform = Matrix4x4.CreateRotationX( Rotation.X ) * Matrix4x4.CreateRotationY( Rotation.Y ) *
+                                Matrix4x4.CreateRotationY( Rotation.Z );
+
+                transform *= Matrix4x4.CreateScale( Scale );
+                transform.Translation = Position;
+
+                return transform;
+            }
+        }
+
+        /// <summary>
+        /// Gets the world transform of this node.
+        /// </summary>
+        public Matrix4x4 WorldTransform
+        {
+            get
+            {
+                var transform = Transform;
+                if ( Parent != null )
+                    transform *= Parent.WorldTransform;
+
+                return transform;
+            }
+        }
+
         public Node()
         {
             Field00     = 1;

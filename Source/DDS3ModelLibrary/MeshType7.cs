@@ -16,13 +16,13 @@ namespace DDS3ModelLibrary
 
         public short TriangleCount => ( short )Triangles.Length;
 
-        public short VertexCount { get; set; }
+        public short VertexCount => ( short )Batches.Sum( x => x.VertexCount );
 
         public MeshFlags Flags { get; set; }
 
         public short UsedNodeCount => Batches.Count == 0 ? ( short ) 0 : ( short ) Batches[ 0 ].NodeBatches.Count;
 
-        public IEnumerable<short> UsedNodeIds => Batches.Count == 0 ? new short[] { } : Batches[ 0 ].NodeBatches.Select( x => x.NodeId );
+        public IEnumerable<short> UsedNodeIndices => Batches.Count == 0 ? new short[] { } : Batches[ 0 ].NodeBatches.Select( x => x.NodeIndex );
 
         public Triangle[] Triangles { get; set; }
 
@@ -51,14 +51,14 @@ namespace DDS3ModelLibrary
         {
             // Read header
             var field00 = reader.ReadInt16Expects( 0, "Field00 is not 0" );
-            MaterialId = reader.ReadInt16();
+            MaterialIndex = reader.ReadInt16();
             var field04 = reader.ReadInt32Expects( 0, "Field04 is not 0" );
             var field08 = reader.ReadInt32Expects( 0, "Field08 is not 0" );
             var triangleCount = reader.ReadInt16();
-            VertexCount = reader.ReadInt16();
+            var vertexCount = reader.ReadInt16();
             var flags = Flags = ( MeshFlags )reader.ReadInt32();
             var usedNodeCount = reader.ReadInt16();
-            var usedNodeIds = reader.ReadInt16Array( usedNodeCount );
+            var usedNodes = reader.ReadInt16Array( usedNodeCount );
             reader.Align( 16 );
 
             // Read triangles
@@ -70,16 +70,16 @@ namespace DDS3ModelLibrary
 
             // Read batches
             var readVertexCount = 0;
-            while ( readVertexCount < VertexCount )
+            while ( readVertexCount < vertexCount )
             {
-                var batch = reader.ReadObject<MeshType7Batch>( ( usedNodeIds, Flags ) );
+                var batch = reader.ReadObject<MeshType7Batch>( ( usedNodes, Flags ) );
                 readVertexCount += batch.VertexCount;
                 Batches.Add( batch );
             }
 
             if ( Flags.HasFlag( MeshFlags.TexCoord2 ) )
             {
-                TexCoords2 = reader.ReadVector2s( VertexCount );
+                TexCoords2 = reader.ReadVector2s( vertexCount );
             }
 
             Debug.Assert( Flags == flags, "Flags doesn't match value read from file" );
@@ -89,14 +89,14 @@ namespace DDS3ModelLibrary
         {
             // Write header
             writer.Write( ( short ) 0 );
-            writer.Write( MaterialId );
+            writer.Write( MaterialIndex );
             writer.Write( 0 );
             writer.Write( 0 );
             writer.Write( TriangleCount );
             writer.Write( VertexCount );
             writer.Write( ( int ) Flags );
             writer.Write( UsedNodeCount );
-            writer.Write( UsedNodeIds );
+            writer.Write( UsedNodeIndices );
             writer.Align( 16 );
 
             // Write triangles

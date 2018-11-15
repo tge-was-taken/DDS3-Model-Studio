@@ -19,7 +19,7 @@ namespace DDS3ModelLibrary
         protected override void Read( EndianBinaryReader reader )
         {
             var vifCodeStreamSize = reader.ReadInt16();
-            MaterialId = reader.ReadInt16();
+            MaterialIndex = reader.ReadInt16();
             reader.ReadOffset( () =>
             {
                 var vifCodeStreamEnd = reader.Position + ( vifCodeStreamSize * 16 );
@@ -43,7 +43,7 @@ namespace DDS3ModelLibrary
         {
             var start = writer.Position;
             writer.SeekCurrent( 2 );
-            writer.Write( MaterialId );
+            writer.Write( MaterialIndex );
             writer.ScheduleWriteOffset( () =>
             {
                 // Build vif code stream

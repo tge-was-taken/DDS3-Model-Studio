@@ -1065,7 +1065,7 @@ struct
         }
 
         // Some files have broken offsets (f021_aljira.PB), 
-        if ( chunkType != MakeFourCC( "TXP0" ) )
+        if ( chunkType != MakeFourCC( "TXP0" ) || TexturePack.TextureCount == 0 )
         {
             FSeek( chunkStart + chunkSize );
             FAlign( 64 );

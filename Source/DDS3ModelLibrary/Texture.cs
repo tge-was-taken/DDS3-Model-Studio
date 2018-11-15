@@ -5,7 +5,7 @@ using System.Drawing;
 using DDS3ModelLibrary;
 using DDS3ModelLibrary.IO.Common;
 using DDS3ModelLibrary.PS2.GS;
-using DDS3ModelLibrary.Textures.Processing;
+using DDS3ModelLibrary.Texturing;
 using Color = DDS3ModelLibrary.Primitives.Color;
 
 namespace DDS3ModelLibrary
@@ -93,7 +93,7 @@ namespace DDS3ModelLibrary
                 case GSPixelFormat.PSMTC16:
                 case GSPixelFormat.PSMTC16S: // Non-indexed
                     PaletteFormat = 0;
-                    Pixels = new List<Color[]> { ScaleAlpha( BitmapHelper.GetColors( bitmap ), GSPixelFormatHelper.AlphaToGSAlpha ) };
+                    Pixels = new List<Color[]> { ScaleAlpha( BitmapHelper.GetColors( bitmap ), GSHelper.AlphaToGSAlpha ) };
                     mBitmap       = bitmap;
                     break;
                 case GSPixelFormat.PSMT8:
@@ -136,7 +136,7 @@ namespace DDS3ModelLibrary
         private void SetupIndexedBitmap( Bitmap bitmap, int paletteColorCount )
         {
             BitmapHelper.QuantizeBitmap( bitmap, paletteColorCount, out var indices, out var palette );
-            Palettes = new List<Color[]>() { ScaleAlpha( palette, GSPixelFormatHelper.AlphaToGSAlpha ) };
+            Palettes = new List<Color[]>() { ScaleAlpha( palette, GSHelper.AlphaToGSAlpha ) };
             PixelIndices = new List<byte[]>() { indices };
             PaletteFormat = GSPixelFormat.PSMTC32;
         }
@@ -166,12 +166,12 @@ namespace DDS3ModelLibrary
         {
             if ( IsIndexed )
             {
-                mBitmap = BitmapHelper.Create( ScaleAlpha( Palettes[ palIdx ], GSPixelFormatHelper.AlphaFromGSAlpha ), PixelIndices[ mipIdx ],
+                mBitmap = BitmapHelper.Create( ScaleAlpha( Palettes[ palIdx ], GSHelper.AlphaFromGSAlpha ), PixelIndices[ mipIdx ],
                                                GetMipDimension( Width, mipIdx ), GetMipDimension( Height, mipIdx ) );
             }
             else
             {
-                mBitmap = BitmapHelper.Create( ScaleAlpha( Pixels[ mipIdx ], GSPixelFormatHelper.AlphaFromGSAlpha ),
+                mBitmap = BitmapHelper.Create( ScaleAlpha( Pixels[ mipIdx ], GSHelper.AlphaFromGSAlpha ),
                                                GetMipDimension( Width, mipIdx ), GetMipDimension( Height, mipIdx ) );
             }
         }

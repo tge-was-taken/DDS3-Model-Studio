@@ -22,6 +22,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,6 +32,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AssimpNet">
@@ -42,6 +44,9 @@
     <Reference Include="System.Numerics" />
     <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.2\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -75,10 +80,16 @@
     <Compile Include="ModelExtensionHeader.cs" />
     <Compile Include="ModelBinaryExtension.cs" />
     <Compile Include="ModelExtensionIdentifier.cs" />
+    <Compile Include="Modeling\Utilities\AssimpHelper.cs" />
+    <Compile Include="Modeling\Utilities\Matrix4x4Extension.cs" />
+    <Compile Include="Modeling\Utilities\TagName.cs" />
+    <Compile Include="Modeling\Utilities\TagNameParseException.cs" />
+    <Compile Include="Modeling\Utilities\TagNameParser.cs" />
     <Compile Include="Node.cs" />
     <Compile Include="Primitives\BoundingBox.cs" />
     <Compile Include="IO\Common\Bits.cs" />
     <Compile Include="Model.cs" />
+    <Compile Include="PS2\GS\GSHelper.cs" />
     <Compile Include="PS2\VIF\VifCode.cs" />
     <Compile Include="PS2\VIF\VifTag.cs" />
     <Compile Include="PS2\VIF\VifCommand.cs" />
@@ -112,24 +123,36 @@
     <Compile Include="ResourceIdentifier.cs" />
     <Compile Include="Texture.cs" />
     <Compile Include="TexturePack.cs" />
-    <Compile Include="Textures\Processing\BitmapHelper.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\Box.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\ColorData.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\CubeCut.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\IWuQuantizer.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\Lookup.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\LookupData.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\Pixel.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\QuantizationException.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\QuantizedPalette.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\WuQuantizer.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\WuQuantizerBase.cs" />
+    <Compile Include="Texturing\ImportFormats\DDS\DDSCodec.cs" />
+    <Compile Include="Texturing\ImportFormats\DDS\DDSFormatDetails.cs" />
+    <Compile Include="Texturing\ImportFormats\DDS\DDSHeader.cs" />
+    <Compile Include="Texturing\ImportFormats\DDS\DDSHeaderCaps.cs" />
+    <Compile Include="Texturing\ImportFormats\DDS\DDSHeaderFlags.cs" />
+    <Compile Include="Texturing\ImportFormats\DDS\DDSHelper.cs" />
+    <Compile Include="Texturing\ImportFormats\DDS\DDSPixelFormat.cs" />
+    <Compile Include="Texturing\ImportFormats\DDS\DDSPixelFormatFlags.cs" />
+    <Compile Include="Texturing\ImportFormats\DDS\DDSPixelFormatFourCC.cs" />
+    <Compile Include="Texturing\TextureImportHelper.cs" />
+    <Compile Include="Texturing\BitmapHelper.cs" />
+    <Compile Include="Texturing\Processing\WuQuantizer\Box.cs" />
+    <Compile Include="Texturing\Processing\WuQuantizer\ColorData.cs" />
+    <Compile Include="Texturing\Processing\WuQuantizer\CubeCut.cs" />
+    <Compile Include="Texturing\Processing\WuQuantizer\IWuQuantizer.cs" />
+    <Compile Include="Texturing\Processing\WuQuantizer\Lookup.cs" />
+    <Compile Include="Texturing\Processing\WuQuantizer\LookupData.cs" />
+    <Compile Include="Texturing\Processing\WuQuantizer\Pixel.cs" />
+    <Compile Include="Texturing\Processing\WuQuantizer\QuantizationException.cs" />
+    <Compile Include="Texturing\Processing\WuQuantizer\QuantizedPalette.cs" />
+    <Compile Include="Texturing\Processing\WuQuantizer\WuQuantizer.cs" />
+    <Compile Include="Texturing\Processing\WuQuantizer\WuQuantizerBase.cs" />
     <Compile Include="TextureWrapMode.cs" />
     <Compile Include="Primitives\Triangle.cs" />
     <Compile Include="UnexpectedDataException.cs" />
     <Compile Include="PS2\VIF\VifCodeStreamBuilder.cs" />
+    <Compile Include="Utilities\ListExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -140,5 +163,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

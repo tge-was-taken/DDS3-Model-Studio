@@ -11,9 +11,9 @@ namespace DDS3ModelLibrary
     {
         public short UsedNodeCount => ( short )NodeBatches.Count;
 
-        public short VertexCount { get; set; }
+        public short VertexCount => ( short ) ( NodeBatches.Count > 0 ? NodeBatches[ 0 ].VertexCount : 0 );
 
-        public List<MeshType7NodeBatch> NodeBatches { get; private set; }
+        public List<MeshType7NodeBatch> NodeBatches { get; }
 
         public Vector2[] TexCoords { get; set; }
 
@@ -32,7 +32,7 @@ namespace DDS3ModelLibrary
             headerPacket.Ensure( 0xFF, true, false, 1, VifUnpackElementFormat.Short, 2 );
 
             var usedNodeCount = headerPacket.ShortArrays[ 0 ][ 0 ];
-            VertexCount = headerPacket.ShortArrays[ 0 ][ 1 ];
+            var vertexCount = headerPacket.ShortArrays[ 0 ][ 1 ];
 
             if ( usedNodeCount + 1 != usedNodeIds.Length )
                 throw new UnexpectedDataException();
@@ -41,7 +41,7 @@ namespace DDS3ModelLibrary
                 NodeBatches.Add( reader.ReadObject<MeshType7NodeBatch>( nodeId ) );
 
             var texCoordsPacket = reader.ReadObject<VifPacket>();
-            texCoordsPacket.Ensure( null, true, false, VertexCount, VifUnpackElementFormat.Float, 2 );
+            texCoordsPacket.Ensure( null, true, false, vertexCount, VifUnpackElementFormat.Float, 2 );
             TexCoords         = texCoordsPacket.Vector2s;
 
             var texCoordsKickTag = reader.ReadObject<VifCode>();
