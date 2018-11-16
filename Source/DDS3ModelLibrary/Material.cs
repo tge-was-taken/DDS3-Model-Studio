@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using DDS3ModelLibrary.IO.Common;
 using DDS3ModelLibrary.Primitives;
+using Newtonsoft.Json;
 
 namespace DDS3ModelLibrary
 {
@@ -19,7 +21,7 @@ namespace DDS3ModelLibrary
         /* 18 */ private int? mTextureId;
         /* 19 */ private float[] mFloatArray1;
         /* 20 */ private Color? mColor3;
-        /* 21 */ private short[] mShortArray;
+        /* 21 */ private short[] mOverlayTextureIds;
         /* 22 */ private float[] mFloatArray2;
         /* 23 */ private Color? mColor4;
         /* 24 */ private Color? mColor5;
@@ -31,11 +33,13 @@ namespace DDS3ModelLibrary
         /// <summary>
         /// Gets or sets the material flags.
         /// </summary>
+        [JsonIgnore]
         public MaterialFlags Flags { get; set; }
 
         /// <summary>
         /// Gets or sets Color1.
         /// </summary>
+        [JsonProperty(PropertyName = "16", NullValueHandling = NullValueHandling.Ignore)]
         public Color? Color1
         {
             get => mColor1;
@@ -45,6 +49,7 @@ namespace DDS3ModelLibrary
         /// <summary>
         /// Gets or sets Color2.
         /// </summary>
+        [JsonProperty( PropertyName = "17", NullValueHandling = NullValueHandling.Ignore )]
         public Color? Color2
         {
             get => mColor2;
@@ -54,6 +59,7 @@ namespace DDS3ModelLibrary
         /// <summary>
         /// Gets or sets the texture id used by this material.
         /// </summary>
+        [JsonIgnore]
         public int? TextureId
         {
             get => mTextureId;
@@ -63,6 +69,7 @@ namespace DDS3ModelLibrary
         /// <summary>
         /// Gets or sets FloatArray1.
         /// </summary>
+        [JsonProperty( PropertyName = "19", NullValueHandling = NullValueHandling.Ignore )]
         public float[] FloatArray1
         {
             get => mFloatArray1;
@@ -72,6 +79,7 @@ namespace DDS3ModelLibrary
         /// <summary>
         /// Gets or sets Color3.
         /// </summary>
+        [JsonProperty( PropertyName = "20", NullValueHandling = NullValueHandling.Ignore )]
         public Color? Color3
         {
             get => mColor3;
@@ -79,17 +87,19 @@ namespace DDS3ModelLibrary
         }
 
         /// <summary>
-        /// Gets or sets ShortArray.
+        /// Gets or sets the masked overlay tetxture id. First value is mask id, second is diffuse id.
         /// </summary>
-        public short[] ShortArray
+        [JsonProperty( PropertyName = "21", NullValueHandling = NullValueHandling.Ignore )]
+        public short[] OverlayTextureIds
         {
-            get => mShortArray;
-            set { mShortArray = value; UpdateFlags( mShortArray, MaterialFlags.ShortArray ); }
+            get => mOverlayTextureIds;
+            set { mOverlayTextureIds = value; UpdateFlags( mOverlayTextureIds, MaterialFlags.OverlayTextureIds ); }
         }
 
         /// <summary>
         /// Gets or sets FloatArray2.
         /// </summary>
+        [JsonProperty( PropertyName = "22", NullValueHandling = NullValueHandling.Ignore )]
         public float[] FloatArray2
         {
             get => mFloatArray2;
@@ -99,6 +109,7 @@ namespace DDS3ModelLibrary
         /// <summary>
         /// Gets or sets Color4.
         /// </summary>
+        [JsonProperty( PropertyName = "23", NullValueHandling = NullValueHandling.Ignore )]
         public Color? Color4
         {
             get => mColor4;
@@ -108,6 +119,7 @@ namespace DDS3ModelLibrary
         /// <summary>
         /// Gets or sets Color5.
         /// </summary>
+        [JsonProperty( PropertyName = "24", NullValueHandling = NullValueHandling.Ignore )]
         public Color? Color5
         {
             get => mColor5;
@@ -118,6 +130,7 @@ namespace DDS3ModelLibrary
         /// <summary>
         /// Gets or sets Float1.
         /// </summary>
+        [JsonProperty( PropertyName = "25", NullValueHandling = NullValueHandling.Ignore )]
         public float? Float1
         {
             get => mFloat1;
@@ -127,6 +140,7 @@ namespace DDS3ModelLibrary
         /// <summary>
         /// Gets or sets FloatArray3.
         /// </summary>
+        [JsonProperty( PropertyName = "26", NullValueHandling = NullValueHandling.Ignore )]
         public float[] FloatArray3
         {
             get => mFloatArray3;
@@ -137,18 +151,67 @@ namespace DDS3ModelLibrary
         {
         }
 
+        public static Material CreateDefault()
+        {
+            return new Material
+            {
+            };
+        }
+
+        public static Material CreateDefault( int textureId )
+        {
+            return new Material
+            {
+                Color3            = new Color( 0xD1, 0xFE, 0x01, 0x80 ),
+                FloatArray3       = new[] { 0, 0.01f },
+                TextureId = textureId,
+            };
+        }
+
+        public static Material CreateDefault( int textureId, int overlayMaskTextureId, int overlayTextureId )
+        {
+            return new Material
+            {
+                Color3            = new Color( 0xD1, 0xFE, 0x01, 0x80 ),
+                FloatArray3       = new[] { 0, 0.01f },
+                TextureId         = textureId,
+                OverlayTextureIds = new[] { (short)overlayMaskTextureId, (short)overlayTextureId }
+            };
+        }
+
+        public static Material FromPreset( int id )
+        {
+            return MaterialPresetStore.GetPreset( id, false, false );
+        }
+
+        public static Material FromPreset( int id, int textureId )
+        {
+            var material = MaterialPresetStore.GetPreset( id, true, false );
+            material.TextureId = textureId;
+            return material;
+        }
+
+        public static Material FromPreset( int id, int textureId, int overlayMaskTextureId, int overlayTextureId )
+        {
+            var material = MaterialPresetStore.GetPreset( id, true, true );
+            material.TextureId         = textureId;
+            material.OverlayTextureIds = new[] { ( short )overlayMaskTextureId, ( short )overlayTextureId };
+            return material;
+        }
+
         public override int GetHashCode() => GetHashCode( true );
 
         /// <summary>
         /// Get a hash code that can uniquely identify render state (excl. variables such as ids)
         /// </summary>
         /// <returns></returns>
-        public int GetRenderStateHashCode() => GetHashCode( false );
+        public int GetPresetHashCode() => GetHashCode( false );
 
         private int GetHashCode( bool includeIds )
         {
             var hash = 0x33333333;
-            hash ^= Flags.GetHashCode();
+            if ( includeIds )
+                hash ^= Flags.GetHashCode();
 
             for ( int i = 0; i < 31; i++ )
             {
@@ -158,38 +221,39 @@ namespace DDS3ModelLibrary
                     switch ( ( MaterialFlags )flag )
                     {
                         case MaterialFlags.Color1:
-                            hash ^= Color1.Value.GetHashCode();
+                            hash = hash * 3 ^ Color1.Value.GetHashCode();
                             break;
                         case MaterialFlags.Color2:
-                            hash ^= Color2.Value.GetHashCode();
+                            hash = hash * 3 ^ Color2.Value.GetHashCode();
                             break;
                         case MaterialFlags.TextureId:
                             if ( includeIds )
-                                hash ^= TextureId.Value.GetHashCode();
+                                hash = hash * 3 ^ TextureId.Value.GetHashCode();
                             break;
                         case MaterialFlags.FloatArray1:
-                            hash = FloatArray1.Aggregate( hash, ( current, f ) => current ^ f.GetHashCode() );
+                            hash = FloatArray1.Aggregate( hash, ( current, f ) => current * 3 ^ f.GetHashCode() );
                             break;
                         case MaterialFlags.Color3:
-                            hash ^= Color3.Value.GetHashCode();
+                            hash = hash * 3 ^ Color3.Value.GetHashCode();
                             break;
-                        case MaterialFlags.ShortArray:
-                            hash = ShortArray.Aggregate( hash, ( current, v ) => current ^ v );
+                        case MaterialFlags.OverlayTextureIds:
+                            if ( includeIds )
+                                hash = OverlayTextureIds.Aggregate( hash, ( current, v ) => current * 3 ^ v );
                             break;
                         case MaterialFlags.FloatArray2:
-                            hash = FloatArray2.Aggregate( hash, ( current, f ) => current ^ f.GetHashCode() );
+                            hash = FloatArray2.Aggregate( hash, ( current, f ) => current * 3 ^ f.GetHashCode() );
                             break;
                         case MaterialFlags.Color4:
-                            hash ^= Color4.Value.GetHashCode();
+                            hash = hash * 3 ^ Color4.Value.GetHashCode();
                             break;
                         case MaterialFlags.Color5:
-                            hash ^= Color5.Value.GetHashCode();
+                            hash = hash * 3 ^ Color5.Value.GetHashCode();
                             break;
                         case MaterialFlags.Float1:
-                            hash ^= Float1.Value.GetHashCode();
+                            hash = hash * 3 ^ Float1.Value.GetHashCode();
                             break;
                         case MaterialFlags.FloatArray3:
-                            hash = FloatArray3.Aggregate( hash, ( current, f ) => current ^ f.GetHashCode() );
+                            hash = FloatArray3.Aggregate( hash, ( current, f ) => current * 3 ^ f.GetHashCode() );
                             break;
                     }
                 }
@@ -234,8 +298,8 @@ namespace DDS3ModelLibrary
                         case MaterialFlags.Color3:
                             Color3 = reader.ReadColor();
                             break;
-                        case MaterialFlags.ShortArray:
-                            ShortArray = reader.ReadInt16Array( 2 );
+                        case MaterialFlags.OverlayTextureIds:
+                            OverlayTextureIds = reader.ReadInt16Array( 2 );
                             break;
                         case MaterialFlags.FloatArray2:
                             FloatArray2 = reader.ReadSingles( 5 );
@@ -289,8 +353,8 @@ namespace DDS3ModelLibrary
                         case MaterialFlags.Color3:
                             writer.Write( Color3.Value );
                             break;
-                        case MaterialFlags.ShortArray:
-                            writer.Write( ShortArray );
+                        case MaterialFlags.OverlayTextureIds:
+                            writer.Write( OverlayTextureIds );
                             break;
                         case MaterialFlags.FloatArray2:
                             writer.Write( FloatArray2 );

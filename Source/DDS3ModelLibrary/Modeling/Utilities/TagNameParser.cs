@@ -58,7 +58,7 @@ namespace DDS3ModelLibrary.Modeling.Utilities
                         break;
 
                     case State.ParsingPropertyDone:
-                        tagName.Properties.Add( new TagProperty( propertyName, propertyArguments ) );
+                        tagName[propertyName] = propertyArguments;
                         goto case State.ParsingPropertyName;
 
                 }
@@ -66,7 +66,7 @@ namespace DDS3ModelLibrary.Modeling.Utilities
 
             if ( state == State.ParsingPropertyArguments )
             {
-                tagName.Properties.Add( new TagProperty( propertyName, propertyArguments ) );
+                tagName[propertyName] = propertyArguments;
             }
 
             return tagName;

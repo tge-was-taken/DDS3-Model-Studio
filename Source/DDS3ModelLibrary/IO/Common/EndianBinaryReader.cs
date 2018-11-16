@@ -46,6 +46,13 @@ namespace DDS3ModelLibrary.IO.Common
             Init( Encoding.GetEncoding( 932 ), endianness );
         }
 
+        public EndianBinaryReader( Stream input, string fileName, Endianness endianness )
+            : base( input )
+        {
+            FileName = input is FileStream fs ? fs.Name : fileName;
+            Init( Encoding.GetEncoding( 932 ), endianness );
+        }
+
         public EndianBinaryReader( string filepath, Endianness endianness )
             : base( File.OpenRead( filepath ) )
         {

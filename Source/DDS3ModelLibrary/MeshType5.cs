@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
@@ -9,6 +10,10 @@ namespace DDS3ModelLibrary
     public class MeshType5 : Mesh
     {
         public override MeshType Type => MeshType.Type5;
+
+        public short BlendShapeCount => ( short )BlendShapes.Count;
+
+        public short Material2Index { get; set; }
 
         public short TriangleCount => ( short )Triangles.Length;
 
@@ -52,7 +57,7 @@ namespace DDS3ModelLibrary
             var field00 = reader.ReadInt16Expects( 0, "Field00 is not 0" );
             MaterialIndex = reader.ReadInt16();
             var shapeCount = reader.ReadInt16();
-            var field06 = reader.ReadInt16();
+            Material2Index = reader.ReadInt16();
             var field08 = reader.ReadInt32Expects( 0, "Field08 is not 0" );
             var triangleCount = reader.ReadInt16();
             var vertexCount = reader.ReadInt16();
@@ -93,8 +98,8 @@ namespace DDS3ModelLibrary
             // Write header
             writer.Write( ( short )0 );
             writer.Write( MaterialIndex );
-            writer.Write( ( short ) BlendShapes.Count );
-            writer.Write( ( short ) 0 );
+            writer.Write( BlendShapeCount );
+            writer.Write( Material2Index );
             writer.Write( 0 );
             writer.Write( TriangleCount );
             writer.Write( VertexCount );

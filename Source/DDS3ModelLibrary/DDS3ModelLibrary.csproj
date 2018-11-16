@@ -38,6 +38,9 @@
     <Reference Include="AssimpNet">
       <HintPath>..\..\..\GFDStudio\Dependencies\Assimp.Net\AssimpNet.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.1-beta1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -60,6 +63,7 @@
     <Compile Include="IO\Common\BinarySourceInfo.cs" />
     <Compile Include="Material.cs" />
     <Compile Include="MaterialFlags.cs" />
+    <Compile Include="MaterialPresetStore.cs" />
     <Compile Include="Mesh.cs" />
     <Compile Include="MeshType1Batch.cs" />
     <Compile Include="MeshType1BatchRenderMode.cs" />
@@ -120,7 +124,9 @@
     <Compile Include="ResourceDescriptor.cs" />
     <Compile Include="ResourceFileType.cs" />
     <Compile Include="ResourceHeader.cs" />
+    <Compile Include="ResourceReference.cs" />
     <Compile Include="ResourceIdentifier.cs" />
+    <Compile Include="ResourceStore.cs" />
     <Compile Include="Texture.cs" />
     <Compile Include="TexturePack.cs" />
     <Compile Include="Texturing\ImportFormats\DDS\DDSCodec.cs" />
@@ -149,6 +155,7 @@
     <Compile Include="Primitives\Triangle.cs" />
     <Compile Include="UnexpectedDataException.cs" />
     <Compile Include="PS2\VIF\VifCodeStreamBuilder.cs" />
+    <Compile Include="Utilities\ByteArrayExtensions.cs" />
     <Compile Include="Utilities\ListExtensions.cs" />
   </ItemGroup>
   <ItemGroup>

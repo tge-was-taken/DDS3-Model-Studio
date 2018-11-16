@@ -570,7 +570,7 @@ typedef struct
     u16 Field00;
     u16 MaterialId;
     u16 ShapeCount;
-    u16 Field06;
+    u16 MaterialId2;
     u32 Field08;
     u16 TriangleCount;
     u16 VertexCount;
@@ -578,7 +578,6 @@ typedef struct
     u16 UsedNodeCount;
     u16 UsedNodes[ UsedNodeCount ];
     FAlign( 16 );
-
 
     //Printf( "Type 5 Flags: %08X\n", Flags );
 

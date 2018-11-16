@@ -9,11 +9,20 @@ namespace DDS3ModelLibrary.Modeling.Utilities
 
         public string Name { get; set; }
 
-        public List<TagProperty> Properties { get; }
+        public Dictionary<string, List<string>> Properties { get; }
+
+        public List<string> this[ string key ]
+        {
+            get
+            {
+                return !Properties.TryGetValue( key, out var value ) ? new List<string>() : value;
+            }
+            set => Properties[ key ] = value;
+        }
 
         public TagName()
         {
-            Properties = new List<TagProperty>();
+            Properties = new Dictionary<string, List<string>>();
         }
 
         /// <summary>
@@ -24,19 +33,6 @@ namespace DDS3ModelLibrary.Modeling.Utilities
         public static TagName Parse( string input )
         {
             return sParser.Parse( input );
-        }
-    }
-
-    public class TagProperty
-    {
-        public string Name { get; }
-
-        public List<string> Arguments { get; }
-
-        public TagProperty( string name, List<string> arguments )
-        {
-            Name = name ?? throw new ArgumentNullException( nameof( name ) );
-            Arguments = arguments ?? throw new ArgumentNullException( nameof( arguments ) );
         }
     }
 }

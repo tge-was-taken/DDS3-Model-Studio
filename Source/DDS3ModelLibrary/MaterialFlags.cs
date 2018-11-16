@@ -29,7 +29,7 @@ namespace DDS3ModelLibrary
         TextureId   = 1 << 18,
         FloatArray1 = 1 << 19,
         Color3      = 1 << 20,
-        ShortArray  = 1 << 21,
+        OverlayTextureIds  = 1 << 21,
         FloatArray2 = 1 << 22,
         Color4      = 1 << 23,
         Color5      = 1 << 24,

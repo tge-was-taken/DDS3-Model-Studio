@@ -25,6 +25,11 @@ namespace DDS3ModelLibrary
             C = c;
         }
 
+        public bool Contains( ushort index )
+        {
+            return A == index || B == index || C == index;
+        }
+
         public override bool Equals( object obj )
         {
             return obj is Triangle triangle && Equals( triangle );

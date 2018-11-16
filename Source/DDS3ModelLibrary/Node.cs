@@ -54,7 +54,7 @@ namespace DDS3ModelLibrary
             get
             {
                 var transform = Matrix4x4.CreateRotationX( Rotation.X ) * Matrix4x4.CreateRotationY( Rotation.Y ) *
-                                Matrix4x4.CreateRotationY( Rotation.Z );
+                                Matrix4x4.CreateRotationZ( Rotation.Z );
 
                 transform *= Matrix4x4.CreateScale( Scale );
                 transform.Translation = Position;

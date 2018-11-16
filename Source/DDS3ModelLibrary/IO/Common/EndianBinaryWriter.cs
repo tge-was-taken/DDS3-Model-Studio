@@ -82,7 +82,7 @@ namespace DDS3ModelLibrary.IO.Common
         }
 
         public EndianBinaryWriter( string filepath, Endianness endianness )
-            : base( File.Create( filepath ) )
+            : base( File.Create( filepath, 1024 * 1024 ) )
         {
             Init( Encoding.GetEncoding( 932 ), endianness );
         }
