@@ -109,12 +109,14 @@ namespace DDS3ModelLibrary
 
         private static MeshType7 ConvertToMeshType7( Assimp.Mesh aiMesh, bool hasTexture, List<Node> nodes, Matrix4x4 aiNodeWorldTransform, ref Matrix4x4 nodeInvWorldTransform, List<Vector3> localPositions )
         {
-            var mesh = new MeshType7();
-            mesh.MaterialIndex = ( short )aiMesh.MaterialIndex;
-            mesh.Triangles = aiMesh
-                             .Faces.Select( x => new Triangle( ( ushort )x.Indices[0], ( ushort )x.Indices[1],
-                                                               ( ushort )( x.IndexCount > 2 ? x.Indices[2] : x.Indices[1] ) ) )
-                             .ToArray();
+            var mesh = new MeshType7
+            {
+                MaterialIndex = ( short ) aiMesh.MaterialIndex,
+                Triangles = aiMesh
+                            .Faces.Select( x => new Triangle( ( ushort ) x.Indices[ 0 ], ( ushort ) x.Indices[ 1 ],
+                                                              ( ushort ) ( x.IndexCount > 2 ? x.Indices[ 2 ] : x.Indices[ 1 ] ) ) )
+                            .ToArray()
+            };
 
             if ( !hasTexture )
                 mesh.Flags &= ~MeshFlags.TexCoord;
@@ -145,17 +147,11 @@ namespace DDS3ModelLibrary
             Trace.Assert( usedNodeIndices.Count > 1 );
 
             // Start building batches
-            var vertexIndexRemap = new Dictionary<int, int>();
             var batchVertexBaseIndex = 0;
-
-            while ( vertexIndexRemap.Count < aiMesh.VertexCount )
+            while ( batchVertexBaseIndex < aiMesh.VertexCount )
             {
-                var effectiveBatchVertexLimit = Math.Min( BATCH_VERTEX_LIMIT, aiMesh.VertexCount - vertexIndexRemap.Count );
-                var batchVertexCount = 0;
-                var batch = new MeshType7Batch();
-                var batchVertexIndexRemap = new Dictionary<int, int>();
-                var batchTexCoords = new List<Vector2>();
-                var nodeBatchLookup = new Dictionary<short, MeshType7NodeBatch>();
+                var batchVertexCount = Math.Min( BATCH_VERTEX_LIMIT, aiMesh.VertexCount - batchVertexBaseIndex );
+                var batch = new MeshType7Batch { TexCoords = new Vector2[batchVertexCount] };
 
                 // req. all vertices to use the same set of node indices
                 foreach ( var usedNodeIndex in usedNodeIndices )
@@ -164,142 +160,61 @@ namespace DDS3ModelLibrary
                     var usedNodeWorldTransformInv = usedNodeWorldTransform.Inverted();
 
                     // get all verts with this index
-                    var nodePositions = new List<Vector4>();
-                    var nodeNormals = new List<Vector3>();
-
-                    if ( batchVertexCount == 0 )
-                    {
-                        for ( int vertexIndex = 0; vertexIndex < aiMesh.VertexCount; vertexIndex++ )
-                        {
-                            // Skip this vertex if it has already been processed before
-                            if ( vertexIndexRemap.ContainsKey( vertexIndex ) )
-                                continue;
-
-                            foreach ( (short nodeIndex, float nodeWeight) in vertexWeights[vertexIndex] )
-                            {
-                                if ( nodeIndex != usedNodeIndex )
-                                    continue;
-
-                                // Transform position and normal to model space
-                                var worldPosition = Vector3.Transform( aiMesh.Vertices[vertexIndex].FromAssimp(), aiNodeWorldTransform );
-                                localPositions.Add( Vector3.Transform( worldPosition, nodeInvWorldTransform ) );
-                                var position = Vector3.Transform( worldPosition, usedNodeWorldTransformInv );
-                                var normal = Vector3.TransformNormal( Vector3.TransformNormal( aiMesh.Normals[vertexIndex].FromAssimp(), aiNodeWorldTransform ),
-                                                                      usedNodeWorldTransformInv );
-
-                                // Add entry to vertex remap, and add the model space positions and normals to our lists
-                                batchVertexIndexRemap[vertexIndex] = batchVertexBaseIndex + nodePositions.Count;
-                                nodePositions.Add( new Vector4( position, nodeWeight ) );
-                                nodeNormals.Add( aiMesh.HasNormals ? normal : new Vector3() );
-                                batchTexCoords.Add( aiMesh.HasTextureCoords( 0 )
-                                                        ? aiMesh.TextureCoordinateChannels[ 0 ][ vertexIndex ].FromAssimpAsVector2()
-                                                        : new Vector2() );
-
-                                // Stop looking if we've reached our vertex count
-                                if ( nodePositions.Count == effectiveBatchVertexLimit )
-                                    break;
-                            }
-
-                            // Ditto
-                            if ( nodePositions.Count == effectiveBatchVertexLimit )
-                                break;
-                        }
-
-                        if ( nodePositions.Count != effectiveBatchVertexLimit )
-                        {
-                            // Add filler
-                            for ( int vertexIndex = 0; vertexIndex < aiMesh.VertexCount; vertexIndex++ )
-                            {
-                                // Skip this vertex if it has already been processed before
-                                if ( vertexIndexRemap.ContainsKey( vertexIndex ) || batchVertexIndexRemap.ContainsKey( vertexIndex ) )
-                                    continue;
-
-                                // Add entry to vertex remap, and add the model space positions and normals to our lists
-                                batchVertexIndexRemap[vertexIndex] = batchVertexBaseIndex + nodePositions.Count;
-                                nodePositions.Add( new Vector4() );
-                                nodeNormals.Add( new Vector3() );
-                                batchTexCoords.Add( aiMesh.TextureCoordinateChannels[0][vertexIndex].FromAssimpAsVector2() );
-
-                                // Ditto
-                                if ( nodePositions.Count == effectiveBatchVertexLimit )
-                                    break;
-                            }
-
-                        }
-
-                        batchVertexCount = nodePositions.Count;
-                    }
-                    else
-                    {
-                        foreach ( var kvp in batchVertexIndexRemap )
-                        {
-                            var vertexIndex = kvp.Key;
-                            var anyAdded = false;
-                            foreach ( (short nodeIndex, float nodeWeight) in vertexWeights[vertexIndex] )
-                            {
-                                if ( nodeIndex != usedNodeIndex )
-                                    continue;
-
-                                // Transform position and normal to model space
-                                var worldPosition = Vector3.Transform( aiMesh.Vertices[vertexIndex].FromAssimp(), aiNodeWorldTransform );
-                                localPositions.Add( Vector3.Transform( worldPosition, nodeInvWorldTransform ) );
-                                var position = Vector3.Transform( worldPosition, usedNodeWorldTransformInv );
-                                var normal = Vector3.TransformNormal( Vector3.TransformNormal( aiMesh.Normals[vertexIndex].FromAssimp(), aiNodeWorldTransform ),
-                                                                      usedNodeWorldTransformInv );
-
-                                nodePositions.Add( new Vector4( position, nodeWeight ) );
-                                nodeNormals.Add( aiMesh.HasNormals ? normal : new Vector3() );
-                                anyAdded = true;
-
-                                // Stop looking if we've reached our vertex count
-                                if ( nodePositions.Count == batchVertexCount )
-                                    break;
-                            }
-
-                            if ( !anyAdded )
-                            {
-                                // DUMMY!
-                                nodePositions.Add( new Vector4() );
-                                nodeNormals.Add( new Vector3() );
-                            }
-
-                            // Ditto
-                            if ( nodePositions.Count == batchVertexCount )
-                                break;
-                        }
-                    }
-
-                    nodeBatchLookup.Add( usedNodeIndex, new MeshType7NodeBatch
+                    var nodeBatch = new MeshType7NodeBatch
                     {
                         NodeIndex = usedNodeIndex,
-                        Positions = nodePositions.ToArray(),
-                        Normals   = nodeNormals.ToArray()
-                    } );
+                        Positions = new Vector4[batchVertexCount],
+                        Normals = new Vector3[batchVertexCount]
+                    };
+
+                    for ( int vertexIndex = batchVertexBaseIndex; vertexIndex < ( batchVertexBaseIndex + batchVertexCount ); vertexIndex++ )
+                    {
+                        var nodeBatchVertexIndex = vertexIndex - batchVertexBaseIndex;
+                        var addedAny = false;
+                        foreach ( (short nodeIndex, float nodeWeight) in vertexWeights[vertexIndex] )
+                        {
+                            if ( nodeIndex != usedNodeIndex )
+                                continue;
+
+                            // Transform position and normal to model space
+                            var worldPosition = Vector3.Transform( aiMesh.Vertices[vertexIndex].FromAssimp(), aiNodeWorldTransform );
+                            localPositions.Add( Vector3.Transform( worldPosition, nodeInvWorldTransform ) );
+                            var position = Vector3.Transform( worldPosition, usedNodeWorldTransformInv );
+                            var normal = Vector3.TransformNormal( Vector3.TransformNormal( aiMesh.Normals[vertexIndex].FromAssimp(), aiNodeWorldTransform ),
+                                                                  usedNodeWorldTransformInv );
+
+                            // add the model space positions and normals to our lists
+                            nodeBatch.Positions[nodeBatchVertexIndex] = new Vector4( position, nodeWeight );
+
+                            if ( aiMesh.HasNormals )
+                                nodeBatch.Normals[nodeBatchVertexIndex] = normal;
+
+                            if ( batch.NodeBatches.Count == 0 )
+                            {
+                                batch.TexCoords[nodeBatchVertexIndex] = aiMesh.HasTextureCoords( 0 )
+                                    ? aiMesh.TextureCoordinateChannels[0][vertexIndex].FromAssimpAsVector2()
+                                    : new Vector2();
+                            }
+
+                            addedAny = true;
+                        }
+
+                        if ( !addedAny && batch.NodeBatches.Count == 0 )
+                        {
+                            batch.TexCoords[nodeBatchVertexIndex] = aiMesh.HasTextureCoords( 0 )
+                                ? aiMesh.TextureCoordinateChannels[0][vertexIndex].FromAssimpAsVector2()
+                                : new Vector2();
+                        }
+                    }
+
+                    batch.NodeBatches.Add( nodeBatch );
                 }
-
-                foreach ( var usedNodeIndex in usedNodeIndices )
-                    batch.NodeBatches.Add( nodeBatchLookup[ usedNodeIndex ] );
-
-                batch.TexCoords = batchTexCoords.ToArray();
-                Debug.Assert( batch.TexCoords.Length == batchVertexCount );
-
-                foreach ( var i in batchVertexIndexRemap )
-                    vertexIndexRemap.Add( i.Key, i.Value );
 
                 Debug.Assert( batch.NodeBatches.Count > 0 );
                 Debug.Assert( batch.NodeBatches.TrueForAll( x => x.VertexCount == batch.NodeBatches[0].VertexCount ) );
 
                 mesh.Batches.Add( batch );
                 batchVertexBaseIndex += batchVertexCount;
-            }
-
-            // Remap triangle vertex indices
-            for ( var i = 0; i < mesh.Triangles.Length; i++ )
-            {
-                ref var triangle = ref mesh.Triangles[i];
-                triangle.A = ( ushort )vertexIndexRemap[triangle.A];
-                triangle.B = ( ushort )vertexIndexRemap[triangle.B];
-                triangle.C = ( ushort )vertexIndexRemap[triangle.C];
             }
 
             var vertexCount = mesh.VertexCount;
@@ -309,12 +224,14 @@ namespace DDS3ModelLibrary
 
         private static MeshType8 ConvertToMeshType8( Assimp.Mesh aiMesh, bool hasTexture, Matrix4x4 aiNodeWorldTransform, List<Vector3> localPositions, ref Matrix4x4 nodeInvWorldTransform )
         {
-            var mesh = new MeshType8();
-            mesh.MaterialIndex = ( short )aiMesh.MaterialIndex;
-            mesh.Triangles = aiMesh
-                             .Faces.Select( x => new Triangle( ( ushort )x.Indices[0], ( ushort )x.Indices[1],
-                                                               ( ushort )( x.IndexCount > 2 ? x.Indices[2] : x.Indices[1] ) ) )
-                             .ToArray();
+            var mesh = new MeshType8
+            {
+                MaterialIndex = ( short ) aiMesh.MaterialIndex,
+                Triangles = aiMesh
+                            .Faces.Select( x => new Triangle( ( ushort ) x.Indices[ 0 ], ( ushort ) x.Indices[ 1 ],
+                                                              ( ushort ) ( x.IndexCount > 2 ? x.Indices[ 2 ] : x.Indices[ 1 ] ) ) )
+                            .ToArray()
+            };
 
             if ( !hasTexture )
                 mesh.Flags &= ~MeshFlags.TexCoord;
@@ -323,10 +240,9 @@ namespace DDS3ModelLibrary
             while ( processedVertexCount < aiMesh.VertexCount )
             {
                 var batchVertexCount = Math.Min( BATCH_VERTEX_LIMIT, aiMesh.VertexCount - processedVertexCount );
-                var batch = new MeshType8Batch();
+                var batch = new MeshType8Batch { Positions = new Vector3[batchVertexCount] };
 
                 // Convert positions
-                batch.Positions = new Vector3[batchVertexCount];
                 if ( aiMesh.HasVertices )
                 {
                     for ( int j = 0; j < batchVertexCount; j++ )
