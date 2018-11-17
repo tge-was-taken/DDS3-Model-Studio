@@ -35,6 +35,20 @@ namespace DDS3ModelLibrary
             TexCoords = new Vector2[][] { null, null };
         }
 
+        public (Vector3[] Positions, Vector3[] Normals) GetProcessed( Matrix4x4 nodeWorldTransform )
+        {
+            var positions = new Vector3[VertexCount];
+            var normals   = new Vector3[positions.Length];
+
+            for ( int i = 0; i < Positions.Length; i++ )
+            {
+                positions[i] = Vector3.Transform( Positions[i], nodeWorldTransform );
+                normals[i]   = Vector3.TransformNormal( Normals[i], nodeWorldTransform );
+            }
+
+            return ( positions, normals );
+        }
+
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
             // Read header

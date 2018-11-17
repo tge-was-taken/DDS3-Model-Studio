@@ -120,22 +120,19 @@ typedef struct
                 if ( textureIndex == 0 )
                 {
                     FSeek( gBaseOffset + Offset );
-                    struct TTexture Value;
-                    FAlign( 64 );
-                    nextTextureOffset = FTell();
-                    FSeek( nextTextureOffsetOffset );
                 }
                 else
                 {
                     FSeek( nextTextureOffset );
-                    struct TTexture Value;
-                    FAlign( 64 );
+                }
 
-                    if ( ( textureIndex + 1 ) != TextureCount )
-                    {
-                        nextTextureOffset = FTell();
-                        FSeek( nextTextureOffsetOffset );
-                    }
+                struct TTexture Value;
+                FAlign( 64 );
+
+                if ( ( textureIndex + 1 ) != TextureCount )
+                {
+                    nextTextureOffset = FTell();
+                    FSeek( nextTextureOffsetOffset );
                 }
             } Texture;
         }
@@ -461,7 +458,7 @@ typedef struct
                                     //    (uint)VifPacket.Values[0].Value.Elements[2] | (uint)VifPacket.Values[0].Value.Elements[3] << 16 );
 
                                     local u32 flg = VifPacket.Values[0].Value.Elements[2];
-                                    if ( flg != 0x78 && flg != 0x68 && flg != 0x79 && flg != 0x878 && flg != 0x868 && flg != 0x4078 && flg != 0x479 && flg != 0x58 && flg != 0x4878 && flg != 0x858 && flg != 0x69 && flg != 0x7A ) Assert( false );
+                                    //if ( flg != 0x78 && flg != 0x68 && flg != 0x79 && flg != 0x878 && flg != 0x868 && flg != 0x4078 && flg != 0x479 && flg != 0x58 && flg != 0x4878 && flg != 0x858 && flg != 0x69 && flg != 0x7A ) Assert( false );
                                 }
                                 break;
             

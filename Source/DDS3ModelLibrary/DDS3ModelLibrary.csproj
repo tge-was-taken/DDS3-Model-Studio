@@ -90,6 +90,7 @@
     <Compile Include="Modeling\Utilities\TagNameParseException.cs" />
     <Compile Include="Modeling\Utilities\TagNameParser.cs" />
     <Compile Include="Node.cs" />
+    <Compile Include="NodeWeight.cs" />
     <Compile Include="Primitives\BoundingBox.cs" />
     <Compile Include="IO\Common\Bits.cs" />
     <Compile Include="Model.cs" />

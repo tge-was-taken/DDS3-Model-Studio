@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using DDS3ModelLibrary.IO.Common;
@@ -77,30 +78,30 @@ namespace DDS3ModelLibrary
         }
 
         #region IList
-        public Mesh this[int index] { get => ( ( IList<Mesh> )mList )[index]; set => ( ( IList<Mesh> )mList )[index] = value; }
+        public Mesh this[int index] { get => mList[index]; set => mList[index] = value; }
 
-        public int Count => ( ( IList<Mesh> )mList ).Count;
+        public int Count => mList.Count;
 
         public bool IsReadOnly => ( ( IList<Mesh> )mList ).IsReadOnly;
 
         public void Add( Mesh item )
         {
-            ( ( IList<Mesh> )mList ).Add( item );
+            mList.Add( item );
         }
 
         public void Clear()
         {
-            ( ( IList<Mesh> )mList ).Clear();
+            mList.Clear();
         }
 
         public bool Contains( Mesh item )
         {
-            return ( ( IList<Mesh> )mList ).Contains( item );
+            return mList.Contains( item );
         }
 
         public void CopyTo( Mesh[] array, int arrayIndex )
         {
-            ( ( IList<Mesh> )mList ).CopyTo( array, arrayIndex );
+            mList.CopyTo( array, arrayIndex );
         }
 
         public IEnumerator<Mesh> GetEnumerator()
@@ -110,27 +111,35 @@ namespace DDS3ModelLibrary
 
         public int IndexOf( Mesh item )
         {
-            return ( ( IList<Mesh> )mList ).IndexOf( item );
+            return mList.IndexOf( item );
         }
 
         public void Insert( int index, Mesh item )
         {
-            ( ( IList<Mesh> )mList ).Insert( index, item );
+            mList.Insert( index, item );
         }
 
         public bool Remove( Mesh item )
         {
-            return ( ( IList<Mesh> )mList ).Remove( item );
+            return mList.Remove( item );
         }
 
         public void RemoveAt( int index )
         {
-            ( ( IList<Mesh> )mList ).RemoveAt( index );
+            mList.RemoveAt( index );
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
             return ( ( IList<Mesh> )mList ).GetEnumerator();
+        }
+
+        public void AddRange( IEnumerable<MeshType7> list )
+        {
+            foreach ( var mesh in list )
+            {
+                Add( mesh );
+            }
         }
 
         #endregion

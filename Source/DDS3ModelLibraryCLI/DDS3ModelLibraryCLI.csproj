@@ -38,6 +38,9 @@
     <Reference Include="AssimpNet">
       <HintPath>..\..\..\GFDStudio\Dependencies\Assimp.Net\AssimpNet.dll</HintPath>
     </Reference>
+    <Reference Include="AtlusFileSystemLibrary">
+      <HintPath>..\..\..\AtlusFileSystemLibrary\Source\AtlusFileSystemLibrary\bin\Debug\AtlusFileSystemLibrary.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -61,6 +64,11 @@
       <Project>{d8d5b882-7d8f-4206-8dc7-df0f0eb59a55}</Project>
       <Name>DDS3ModelLibrary</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>12.0.1-beta1</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
