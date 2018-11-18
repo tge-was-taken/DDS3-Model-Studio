@@ -14,15 +14,15 @@ namespace DDS3ModelLibrary
 
         public override MeshType Type => MeshType.Type7;
 
-        public short TriangleCount => ( short )Triangles.Length;
+        public override short TriangleCount => ( short )Triangles.Length;
 
-        public short VertexCount => ( short )Batches.Sum( x => x.VertexCount );
+        public override short VertexCount => ( short )Batches.Sum( x => x.VertexCount );
 
         public MeshFlags Flags { get; set; }
 
         public short UsedNodeCount => Batches.Count == 0 ? ( short ) 0 : ( short ) Batches[ 0 ].NodeBatches.Count;
 
-        public IEnumerable<short> UsedNodeIndices => Batches.Count == 0 ? new short[] { } : Batches[ 0 ].NodeBatches.Select( x => x.NodeIndex );
+        public IEnumerable<short> UsedNodeIndices => Batches.Count == 0 ? Enumerable.Empty<short>() : Batches[ 0 ].NodeBatches.Select( x => x.NodeIndex );
 
         public Triangle[] Triangles { get; set; }
 

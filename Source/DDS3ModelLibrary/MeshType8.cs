@@ -14,9 +14,9 @@ namespace DDS3ModelLibrary
 
         public override MeshType Type => MeshType.Type8;
 
-        public short TriangleCount => ( short )Triangles.Length;
+        public override short TriangleCount => ( short )Triangles.Length;
 
-        public short VertexCount => ( short ) Batches.Sum( x => x.VertexCount );
+        public override short VertexCount => ( short ) Batches.Sum( x => x.VertexCount );
 
         public MeshFlags Flags { get; set; }
 

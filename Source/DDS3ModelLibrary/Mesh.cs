@@ -10,6 +10,10 @@ namespace DDS3ModelLibrary
 
         public short MaterialIndex { get; set; }
 
+        public abstract short VertexCount { get; }
+
+        public abstract short TriangleCount { get; }
+
         protected abstract void Read( EndianBinaryReader reader );
 
         protected abstract void Write( EndianBinaryWriter writer );

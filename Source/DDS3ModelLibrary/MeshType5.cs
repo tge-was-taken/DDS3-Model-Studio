@@ -15,9 +15,9 @@ namespace DDS3ModelLibrary
 
         public short Material2Index { get; set; }
 
-        public short TriangleCount => ( short )Triangles.Length;
+        public override short TriangleCount => ( short )Triangles.Length;
 
-        public short VertexCount => ( short ) ( BlendShapes.Count == 0 ? 0 : BlendShapes[ 0 ].Positions.Length );
+        public override short VertexCount => ( short ) ( BlendShapes.Count == 0 ? 0 : BlendShapes[ 0 ].Positions.Length );
 
         public MeshFlags Flags { get; set; }
 

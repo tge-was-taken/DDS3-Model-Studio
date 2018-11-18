@@ -130,7 +130,7 @@ namespace DDS3ModelLibrary
             var nextAddress = 8;
 
             // Triangles
-            vif.Unpack( nextAddress, Triangles.Select( x => new byte[] { ( byte ) x.A, ( byte ) x.B, ( byte ) x.C, 0 } ).ToArray() );
+            vif.Unpack( nextAddress, Triangles.Select( x => new sbyte[] { ( sbyte ) x.A, ( sbyte ) x.B, ( sbyte ) x.C, 0 } ).ToArray() );
             nextAddress = AlignmentHelper.Align( nextAddress + ( ( TriangleCount * 4 ) * 2 ), 8 );
 
             // Positions

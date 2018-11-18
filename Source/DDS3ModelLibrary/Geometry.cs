@@ -21,7 +21,7 @@ namespace DDS3ModelLibrary
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
         {
-            var canWrite = Meshes?.Count > 0 && Meshes.All( x => x.Type == MeshType.Type1 || x.Type == MeshType.Type5 || x.Type == MeshType.Type7 || x.Type == MeshType.Type8 );
+            var canWrite = Meshes?.Count > 0 && Meshes.All( x => x.Type == MeshType.Type1 || x.Type == MeshType.Type2 || x.Type == MeshType.Type5 || x.Type == MeshType.Type7 || x.Type == MeshType.Type8 );
 
             if ( canWrite )
             {
