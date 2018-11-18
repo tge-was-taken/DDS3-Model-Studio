@@ -9,6 +9,9 @@ namespace DDS3ModelLibrary
 {
     public class MeshType2Batch : IBinarySerializable
     {
+        private Triangle[] mTriangles;
+        private Vector2[] mTexCoords2;
+
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
         public short UsedNodeCount => ( short )NodeBatches.Count;
@@ -19,9 +22,25 @@ namespace DDS3ModelLibrary
 
         public List<MeshType2NodeBatch> NodeBatches { get; }
 
-        public Triangle[] Triangles { get; set; }
+        public Triangle[] Triangles
+        {
+            get => mTriangles;
+            set => mTriangles = value ?? throw new ArgumentNullException( nameof( value ) );
+        }
 
-        public Vector2[][] TexCoords { get; set; }
+        public Vector2[] TexCoords { get; set; }
+
+        public Vector2[] TexCoords2
+        {
+            get => mTexCoords2;
+            set
+            {
+                mTexCoords2 = value;
+                if ( mTexCoords2 != null && TexCoords == null )
+                    throw new InvalidOperationException( $"{nameof(TexCoords2)} can not be used when {nameof(TexCoords)} is null" );
+            }
+        }
+
 
         public Color[] Colors { get; set; }
 
@@ -72,12 +91,13 @@ namespace DDS3ModelLibrary
 
             Triangles = nodeBatchContext.Triangles;
             TexCoords = nodeBatchContext.TexCoords;
+            TexCoords2 = nodeBatchContext.TexCoords2;
             Colors = nodeBatchContext.Colors;
         }
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
         {
-            var nodeBatchContext = new MeshType2NodeBatchContext( Triangles, TexCoords, Colors, (VifCodeStreamBuilder)context );
+            var nodeBatchContext = new MeshType2NodeBatchContext( Triangles, TexCoords, TexCoords2, Colors, (VifCodeStreamBuilder)context );
 
             for ( var i = 0; i < NodeBatches.Count; i++ )
             {

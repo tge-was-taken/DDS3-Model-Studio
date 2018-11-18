@@ -9,7 +9,8 @@ namespace DDS3ModelLibrary
         public short       NodeIndex { get; }
         public bool        Last      { get; set; }
         public Triangle[]  Triangles { get; set; }
-        public Vector2[][] TexCoords { get; set; } = new Vector2[2][];
+        public Vector2[] TexCoords { get; set; }
+        public Vector2[] TexCoords2 { get; set; }
         public Color[]     Colors    { get; set; }
         public VifCodeStreamBuilder Vif { get; }
 
@@ -19,10 +20,11 @@ namespace DDS3ModelLibrary
             Last      = last;
         }
 
-        public MeshType2NodeBatchContext( Triangle[] triangles, Vector2[][] texCoords, Color[] colors, VifCodeStreamBuilder vif )
+        public MeshType2NodeBatchContext( Triangle[] triangles, Vector2[] texCoords, Vector2[] texCoords2, Color[] colors, VifCodeStreamBuilder vif )
         {
             Triangles = triangles;
             TexCoords = texCoords;
+            TexCoords2 = texCoords2;
             Colors = colors;
             Vif = vif;
         }

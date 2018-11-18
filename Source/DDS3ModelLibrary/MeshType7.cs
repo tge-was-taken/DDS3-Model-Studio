@@ -10,6 +10,7 @@ namespace DDS3ModelLibrary
 {
     public class MeshType7 : Mesh
     {
+        private Triangle[] mTriangles;
         private Vector2[] mTexCoords2;
 
         public override MeshType Type => MeshType.Type7;
@@ -24,20 +25,18 @@ namespace DDS3ModelLibrary
 
         public IEnumerable<short> UsedNodeIndices => Batches.Count == 0 ? Enumerable.Empty<short>() : Batches[ 0 ].NodeBatches.Select( x => x.NodeIndex );
 
-        public Triangle[] Triangles { get; set; }
+        public Triangle[] Triangles
+        {
+            get => mTriangles;
+            set => mTriangles = value ?? throw new ArgumentNullException( nameof( value ) );
+        }
 
         public List<MeshType7Batch> Batches { get; private set; }
 
         public Vector2[] TexCoords2
         {
             get => mTexCoords2;
-            set
-            {
-                if ( ( mTexCoords2 = value ) == null )
-                    Flags &= ~MeshFlags.TexCoord2;
-                else
-                    Flags |= MeshFlags.TexCoord2;
-            }
+            set => Flags = MeshFlagsHelper.Update( Flags, mTexCoords2 = value, MeshFlags.TexCoord2 );
         }
 
         public MeshType7()

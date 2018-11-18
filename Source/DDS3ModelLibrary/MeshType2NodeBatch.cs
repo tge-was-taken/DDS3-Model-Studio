@@ -9,8 +9,6 @@ namespace DDS3ModelLibrary
 {
     public class MeshType2NodeBatch : IBinarySerializable
     {
-        private int mIndicesAddress, mPositionsAddress, mNormalsAddress, mTexCoordsAddress, mColorsAddress;
-
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
         public short NodeIndex { get; set; }
@@ -24,6 +22,17 @@ namespace DDS3ModelLibrary
         public Vector3[] Normals { get; set; }
 
         public MeshType1BatchRenderMode RenderMode { get; set; }
+
+        public MeshType2NodeBatch()
+        {
+            // 111108 Bit3, TexCoord, Bit5, Bit6, Bit16, Bit17, Bit18, Bit21, Bit22, Normal, Bit24, Bit27
+            // 155909 Bit3, TexCoord, Bit5, Bit6, Bit22, Normal, Bit24, Bit26, Bit27, Bit29
+            Flags = MeshFlags.Bit3 | MeshFlags.TexCoord | MeshFlags.Bit5 | MeshFlags.Bit6 | MeshFlags.Bit22 | MeshFlags.Normal | MeshFlags.Bit24 | MeshFlags.Bit26 | MeshFlags.Bit27 | MeshFlags.Bit29;
+
+            // 215933 Mode1
+            // 221821 Mode2
+            RenderMode = MeshType1BatchRenderMode.Mode1;
+        }
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
@@ -49,13 +58,11 @@ namespace DDS3ModelLibrary
 
                     return new Triangle( ( byte )x[0], ( byte )x[1], ( byte )x[2] );
                 } ).ToArray();
-                mIndicesAddress = indicesPacket.Address * 8;
             }
 
             var positionsPacket = reader.ReadObject<VifPacket>();
             positionsPacket.Ensure( !ctx.Last ? 1 : ( int? ) null, true, true, vertexCount, VifUnpackElementFormat.Float, 4 );
             Positions = positionsPacket.Vector4s;
-            mPositionsAddress = positionsPacket.Address * 8;
 
             // Read normals
             if ( flags.HasFlag( MeshFlags.Normal ) )
@@ -63,7 +70,6 @@ namespace DDS3ModelLibrary
                 var normalsPacket = reader.ReadObject<VifPacket>();
                 normalsPacket.Ensure( null, true, true, vertexCount, VifUnpackElementFormat.Float, 3 );
                 Normals = normalsPacket.Vector3s;
-                mNormalsAddress = normalsPacket.Address * 8;
             }
 
             if ( ctx.Last )
@@ -71,19 +77,18 @@ namespace DDS3ModelLibrary
                 if ( flags.HasFlag( MeshFlags.TexCoord ) )
                 {
                     var texCoordsPacket = reader.ReadObject<VifPacket>();
-                    mTexCoordsAddress = texCoordsPacket.Address * 8;
 
                     // Read texture coords
                     if ( !flags.HasFlag( MeshFlags.TexCoord2 ) )
                     {
                         texCoordsPacket.Ensure( null, true, true, vertexCount, VifUnpackElementFormat.Float, 2 );
-                        ctx.TexCoords[0] = texCoordsPacket.Vector2s;
+                        ctx.TexCoords = texCoordsPacket.Vector2s;
                     }
                     else
                     {
                         texCoordsPacket.Ensure( null, true, true, vertexCount, VifUnpackElementFormat.Float, 4 );
-                        ctx.TexCoords[0] = texCoordsPacket.Vector4s.Select( x => new Vector2( x.X, x.Y ) ).ToArray();
-                        ctx.TexCoords[1] = texCoordsPacket.Vector4s.Select( x => new Vector2( x.Z, x.W ) ).ToArray();
+                        ctx.TexCoords = texCoordsPacket.Vector4s.Select( x => new Vector2( x.X, x.Y ) ).ToArray();
+                        ctx.TexCoords2 = texCoordsPacket.Vector4s.Select( x => new Vector2( x.Z, x.W ) ).ToArray();
                     }
                 }
 
@@ -94,7 +99,6 @@ namespace DDS3ModelLibrary
                     colorsPacket.Ensure( null, true, true, vertexCount, VifUnpackElementFormat.Byte, 4 );
                     ctx.Colors = colorsPacket.SignedByteArrays.Select( x => new Color( ( byte )x[0], ( byte )x[1], ( byte )x[2], ( byte )x[3] ) )
                                          .ToArray();
-                    mColorsAddress = colorsPacket.Address * 8;
                 }
             }
 
@@ -121,13 +125,11 @@ namespace DDS3ModelLibrary
             if ( context.Last )
             {
                 // Triangles
-                Debug.Assert( nextAddress == mIndicesAddress );
                 vif.Unpack( nextAddress, context.Triangles.Select( x => new sbyte[] { ( sbyte )x.A, ( sbyte )x.B, ( sbyte )x.C, 0 } ).ToArray() );
                 nextAddress = AlignmentHelper.Align( nextAddress + ( ( context.Triangles.Length * 4 ) * 2 ), 8 );
             }
 
             // Positions
-            Debug.Assert( nextAddress == mPositionsAddress );
             vif.Unpack( nextAddress, Positions );
             var effectiveVertexSize = ( int )( ( VertexCount * 12 ) / 1.5f );
             nextAddress = AlignmentHelper.Align( nextAddress + effectiveVertexSize, 8 );
@@ -135,7 +137,6 @@ namespace DDS3ModelLibrary
             if ( Flags.HasFlag( MeshFlags.Normal ) )
             {
                 // Normals
-                Debug.Assert( nextAddress == mNormalsAddress );
                 vif.Unpack( nextAddress, Normals );
                 nextAddress = AlignmentHelper.Align( nextAddress + effectiveVertexSize, 8 );
             }
@@ -144,7 +145,6 @@ namespace DDS3ModelLibrary
             {
                 if ( Flags.HasFlag( MeshFlags.TexCoord ) )
                 {
-                    Debug.Assert( nextAddress == mTexCoordsAddress );
                     if ( !Flags.HasFlag( MeshFlags.TexCoord2 ) )
                     {
                         // Texcoord 1
@@ -156,21 +156,20 @@ namespace DDS3ModelLibrary
                         var mergedTexCoords = new Vector4[VertexCount];
                         for ( int i = 0; i < mergedTexCoords.Length; i++ )
                         {
-                            mergedTexCoords[i].X = context.TexCoords[0][i].X;
-                            mergedTexCoords[i].Y = context.TexCoords[0][i].Y;
-                            mergedTexCoords[i].Z = context.TexCoords[1][i].X;
-                            mergedTexCoords[i].W = context.TexCoords[1][i].Y;
+                            mergedTexCoords[i].X = context.TexCoords[i].X;
+                            mergedTexCoords[i].Y = context.TexCoords[i].Y;
+                            mergedTexCoords[i].Z = context.TexCoords2[i].X;
+                            mergedTexCoords[i].W = context.TexCoords2[i].Y;
                         }
 
                         vif.Unpack( nextAddress, mergedTexCoords );
                     }
 
-                    nextAddress = AlignmentHelper.Align( nextAddress + ( context.TexCoords[0].Length * 8 ), 8 );
+                    nextAddress = AlignmentHelper.Align( nextAddress + ( context.TexCoords.Length * 8 ), 8 );
                 }
 
                 if ( Flags.HasFlag( MeshFlags.Color ) )
                 {
-                    Debug.Assert( nextAddress == mColorsAddress );
                     vif.Unpack( nextAddress,
                                 context.Colors.Select( x => new[] { ( sbyte ) x.R, ( sbyte ) x.G, ( sbyte ) x.B, ( sbyte ) x.A } ).ToArray() );
                 }

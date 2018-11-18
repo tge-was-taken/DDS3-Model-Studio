@@ -14,7 +14,7 @@ namespace DDS3ModelLibrary
 
         public override short TriangleCount => ( short )Batches.Sum( x => x.TriangleCount );
 
-        public List<MeshType1Batch> Batches { get; private set; }
+        public List<MeshType1Batch> Batches { get; }
 
         public MeshType1()
         {

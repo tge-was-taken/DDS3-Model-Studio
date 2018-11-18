@@ -9,6 +9,10 @@ namespace DDS3ModelLibrary
 {
     public class MeshType5 : Mesh
     {
+        private Triangle[] mTriangles;
+        private Vector2[] mTexCoords;
+        private Vector2[] mTexCoords2;
+
         public override MeshType Type => MeshType.Type5;
 
         public short BlendShapeCount => ( short )BlendShapes.Count;
@@ -24,31 +28,48 @@ namespace DDS3ModelLibrary
         /// <summary>
         /// Most likely deprecated, used only in a few odd files.
         /// </summary>
-        public short UsedNodeCount => ( short )NodeSplits.Count;
+        public short UsedNodeCount => ( short )NodeBatches.Count;
 
         /// <summary>
         /// Most likely deprecated, used only in a few odd files.
         /// </summary>
-        public IEnumerable<short> UsedNodeIndices => NodeSplits.Select( x => x.NodeIndex );
+        public IEnumerable<short> UsedNodeIndices => NodeBatches.Select( x => x.NodeIndex );
 
-        public Triangle[] Triangles { get; set; }
+        public Triangle[] Triangles
+        {
+            get => mTriangles;
+            set => mTriangles = value ?? throw new ArgumentNullException( nameof( value ) );
+        }
 
         public List<MeshType5BlendShape> BlendShapes { get; }
 
-        public Vector2[] TexCoords { get; set; }
+        public Vector2[] TexCoords
+        {
+            get => mTexCoords;
+            set => Flags = MeshFlagsHelper.Update( Flags, mTexCoords = value, MeshFlags.TexCoord );
+        }
 
-        public Vector2[] TexCoords2 { get; set; }
+        public Vector2[] TexCoords2
+        {
+            get => mTexCoords2;
+            set
+            {
+                Flags = MeshFlagsHelper.Update( Flags, mTexCoords2 = value, MeshFlags.TexCoord2 );
+                if ( mTexCoords2 != null && mTexCoords == null )
+                    throw new InvalidOperationException( "TexCoord2 can not be used when TexCoord is null" );
+            }
+        }
 
         /// <summary>
         /// Most likely deprecated, used only in a few odd files.
         /// </summary>
-        public List<MeshType5NodeSplit> NodeSplits { get; }
+        public List<MeshType5NodeBatch> NodeBatches { get; }
 
         public MeshType5()
         {
             BlendShapes = new List<MeshType5BlendShape>();
             Flags = MeshFlags.Bit3 | MeshFlags.Bit5 | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Bit24 | MeshFlags.Bit28;
-            NodeSplits = new List<MeshType5NodeSplit>();
+            NodeBatches = new List<MeshType5NodeBatch>();
         }
 
         protected override void Read( EndianBinaryReader reader )
@@ -83,11 +104,11 @@ namespace DDS3ModelLibrary
             if ( flags.HasFlag( MeshFlags.TexCoord2 ) )
                 TexCoords2 = reader.ReadVector2s( vertexCount );
 
-            // TODO: where does this go?
+            // TODO: where does this go? the only meshes that use this dont have blend shapes or even texcoords
             if ( usedNodeCount > 0 )
             {
                 foreach ( var nodeIndex in usedNodes )
-                    NodeSplits.Add( reader.ReadObject<MeshType5NodeSplit>( ( vertexCount, nodeIndex ) ) );
+                    NodeBatches.Add( reader.ReadObject<MeshType5NodeBatch>( ( vertexCount, nodeIndex ) ) );
             }
 
             Debug.Assert( Flags == flags, "Flags doesn't match value read from file" );
@@ -128,7 +149,7 @@ namespace DDS3ModelLibrary
                 writer.Write( TexCoords2 );
 
             // TODO: where does this go?
-            foreach ( var nodeBatch in NodeSplits )
+            foreach ( var nodeBatch in NodeBatches )
                 writer.WriteObject( nodeBatch );
         }
     }

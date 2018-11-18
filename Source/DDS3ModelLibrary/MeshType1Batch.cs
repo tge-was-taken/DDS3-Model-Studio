@@ -8,8 +8,16 @@ using DDS3ModelLibrary.PS2.VIF;
 
 namespace DDS3ModelLibrary
 {
+    // TODO: set flags properly
     public class MeshType1Batch : IBinarySerializable
     {
+        private Triangle[] mTriangles;
+        private Vector3[] mPositions;
+        private Vector3[] mNormals;
+        private Vector2[] mTexCoords;
+        private Vector2[] mTexCoords2;
+        private Color[] mColors;
+
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
         public short TriangleCount => ( short ) ( Triangles?.Length ?? 0 );
@@ -18,21 +26,58 @@ namespace DDS3ModelLibrary
 
         public MeshFlags Flags { get; set; }
 
-        public Triangle[] Triangles { get; set; }
+        public Triangle[] Triangles
+        {
+            get => mTriangles;
+            set => mTriangles = value ?? throw new ArgumentNullException( nameof( value ) );
+        }
 
-        public Vector3[] Positions { get; set; }
+        public Vector3[] Positions
+        {
+            get => mPositions;
+            set => mPositions = value ?? throw new ArgumentNullException( nameof( value ) );
+        }
 
-        public Vector3[] Normals { get; set; }
+        public Vector3[] Normals
+        {
+            get => mNormals;
+            set => Flags = MeshFlagsHelper.Update( Flags, mNormals = value, MeshFlags.Normal );
+        }
 
-        public Vector2[][] TexCoords { get; }
+        public Vector2[] TexCoords
+        {
+            get => mTexCoords;
+            set => Flags = MeshFlagsHelper.Update( Flags, mTexCoords = value, MeshFlags.TexCoord );
+        }
 
-        public Color[] Colors { get; set; }
+        public Vector2[] TexCoords2
+        {
+            get => mTexCoords2;
+            set
+            {
+                Flags = MeshFlagsHelper.Update( Flags, mTexCoords2 = value, MeshFlags.TexCoord2 );
+                if ( mTexCoords2 != null && mTexCoords == null )
+                    throw new InvalidOperationException( "TexCoord2 can not be used when TexCoord is null" );
+            }
+        }
+
+        public Color[] Colors
+        {
+            get => mColors;
+            set => Flags = MeshFlagsHelper.Update( Flags, mColors = value, MeshFlags.Color );
+        }
 
         public MeshType1BatchRenderMode RenderMode { get; set; }
 
         public MeshType1Batch()
         {
-            TexCoords = new Vector2[][] { null, null };
+            // 13284 Bit3, TexCoord, Bit5, Bit6, Bit14, Bit21, Bit22, Normal, Bit24
+            // 161915 Bit3, TexCoord, Bit5, Bit6, Bit21, Bit22, Normal, Bit24
+            Flags = MeshFlags.Bit3 | MeshFlags.Bit5 | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Bit24;
+
+            // 84507 Mode2
+            // 112539 Mode1
+            RenderMode = MeshType1BatchRenderMode.Mode1;
         }
 
         public (Vector3[] Positions, Vector3[] Normals) GetProcessed( Matrix4x4 nodeWorldTransform )
@@ -89,14 +134,14 @@ namespace DDS3ModelLibrary
                 {
                     var texCoordsPacket = reader.ReadObject<VifPacket>();
                     texCoordsPacket.Ensure( null, true, true, vertexCount, VifUnpackElementFormat.Float, 2 );
-                    TexCoords[ 0 ] = texCoordsPacket.Vector2s;
+                    TexCoords = texCoordsPacket.Vector2s;
                 }
                 else
                 {
                     var texCoordsPacket = reader.ReadObject<VifPacket>();
                     texCoordsPacket.Ensure( null, true, true, vertexCount, VifUnpackElementFormat.Float, 4 );
-                    TexCoords[ 0 ] = texCoordsPacket.Vector4s.Select( x => new Vector2( x.X, x.Y ) ).ToArray();
-                    TexCoords[ 1 ] = texCoordsPacket.Vector4s.Select( x => new Vector2( x.Z, x.W ) ).ToArray();
+                    TexCoords = texCoordsPacket.Vector4s.Select( x => new Vector2( x.X, x.Y ) ).ToArray();
+                    TexCoords2 = texCoordsPacket.Vector4s.Select( x => new Vector2( x.Z, x.W ) ).ToArray();
                 }
             }
 
@@ -158,16 +203,16 @@ namespace DDS3ModelLibrary
                     var mergedTexCoords = new Vector4[VertexCount];
                     for ( int i = 0; i < mergedTexCoords.Length; i++ )
                     {
-                        mergedTexCoords[ i ].X = TexCoords[ 0 ][ i ].X;
-                        mergedTexCoords[ i ].Y = TexCoords[ 0 ][ i ].Y;
-                        mergedTexCoords[ i ].Z = TexCoords[ 1 ][ i ].X;
-                        mergedTexCoords[ i ].W = TexCoords[ 1 ][ i ].Y;
+                        mergedTexCoords[ i ].X = TexCoords[ i ].X;
+                        mergedTexCoords[ i ].Y = TexCoords[ i ].Y;
+                        mergedTexCoords[ i ].Z = TexCoords2[ i ].X;
+                        mergedTexCoords[ i ].W = TexCoords2[ i ].Y;
                     }
 
                     vif.Unpack( nextAddress, mergedTexCoords );               
                 }
 
-                nextAddress = AlignmentHelper.Align( nextAddress + ( TexCoords[0].Length * 8 ), 8 );
+                nextAddress = AlignmentHelper.Align( nextAddress + ( TexCoords.Length * 8 ), 8 );
             }
 
             if ( Flags.HasFlag( MeshFlags.Color ) )

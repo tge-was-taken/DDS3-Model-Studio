@@ -3,7 +3,7 @@ using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary
 {
-    public class MeshType5NodeSplit : IBinarySerializable
+    public class MeshType5NodeBatch : IBinarySerializable
     {
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
@@ -13,11 +13,11 @@ namespace DDS3ModelLibrary
 
         public Vector3[] Normals { get; set; }
 
-        public MeshType5NodeSplit()
+        public MeshType5NodeBatch()
         {
         }
 
-        public MeshType5NodeSplit( Vector4[] positions, Vector3[] normals )
+        public MeshType5NodeBatch( Vector4[] positions, Vector3[] normals )
         {
             Positions = positions;
             Normals   = normals;

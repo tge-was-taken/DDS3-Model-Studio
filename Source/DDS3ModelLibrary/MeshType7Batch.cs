@@ -70,9 +70,10 @@ namespace DDS3ModelLibrary
             foreach ( short nodeId in usedNodeIds )
                 NodeBatches.Add( reader.ReadObject<MeshType7NodeBatch>( nodeId ) );
 
+            // @NOTE(TGE): Not a single mesh type 7 mesh does not have this flag set so I don't know if it should be checked for.
             var texCoordsPacket = reader.ReadObject<VifPacket>();
             texCoordsPacket.Ensure( null, true, false, vertexCount, VifUnpackElementFormat.Float, 2 );
-            TexCoords         = texCoordsPacket.Vector2s;
+            TexCoords = texCoordsPacket.Vector2s;
 
             var texCoordsKickTag = reader.ReadObject<VifCode>();
             texCoordsKickTag.Ensure( 0, 0, VifCommand.CntMicro );

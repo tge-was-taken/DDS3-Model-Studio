@@ -25,6 +25,7 @@ namespace DDS3ModelLibrary
             positionsPacket.Ensure( null, true, false, null, VifUnpackElementFormat.Float, 4 );
             Positions = positionsPacket.Vector4s;
 
+            // @NOTE(TGE): Not a single mesh type 7 mesh has the normals flag not set so I'm not sure if the flag is checked for.
             var normalsPacket = reader.ReadObject<VifPacket>();
             normalsPacket.Ensure( null, true, false, VertexCount, VifUnpackElementFormat.Float, 3 );
             Normals = normalsPacket.Vector3s;

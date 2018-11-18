@@ -311,7 +311,7 @@ namespace DDS3ModelLibraryCLI
                                             ( Vector3[] positions, Vector3[] normals ) = batch.GetProcessed( node.WorldTransform );
                                             WritePositions( writer, positions );
                                             WriteNormals( writer, normals );
-                                            WriteTexCoords( writer, batch.TexCoords[ 0 ] );
+                                            WriteTexCoords( writer, batch.TexCoords );
                                             WriteTriangles( writer, node, meshIndex, batch.Triangles, vertexBaseIndex );
                                             vertexBaseIndex += batch.VertexCount;
                                         }
@@ -325,7 +325,7 @@ namespace DDS3ModelLibraryCLI
                                             ( Vector3[] positions, Vector3[] normals, _ ) = batch.GetProcessed( model.Nodes );
                                             WritePositions( writer, positions );
                                             WriteNormals( writer, normals );
-                                            WriteTexCoords( writer, batch.TexCoords[0] );
+                                            WriteTexCoords( writer, batch.TexCoords );
                                             WriteTriangles( writer, node, meshIndex, batch.Triangles, vertexBaseIndex );
                                             vertexBaseIndex += batch.VertexCount;
                                         }
@@ -483,7 +483,8 @@ namespace DDS3ModelLibraryCLI
                 } );
             }
 
-            var uniqueValues = new HashSet<int>();
+            var uniqueValues = new HashSet<MeshFlags>();
+            var frequencyMap = new ConcurrentDictionary<MeshFlags, int>();
 
             var paths = Directory.EnumerateFiles( "unique_models", "*.PB", SearchOption.AllDirectories ).ToList();
             var done = 0;
@@ -491,8 +492,37 @@ namespace DDS3ModelLibraryCLI
             {
                 Console.WriteLine( Path.GetFileName( path ) );
                 var modelPack = new ModelPack( path );
-                new ModelPack( modelPack.Save() );
+                //new ModelPack( modelPack.Save() );
+
+                foreach ( var model in modelPack.Models )
+                {
+                    foreach ( var node in model.Nodes )
+                    {
+                        if ( node.Geometry?.Meshes == null )
+                            continue;
+
+                        foreach ( var _mesh in node.Geometry.Meshes )
+                        {
+                            if ( _mesh.Type != MeshType.Type1 )
+                                continue;
+
+                            var mesh = ( MeshType1 )_mesh;
+                            foreach ( var batch in mesh.Batches )
+                            {
+                                if ( !frequencyMap.ContainsKey( batch.Flags ) )
+                                    frequencyMap[batch.Flags] = 1;
+                                else
+                                    ++frequencyMap[batch.Flags];
+                            }
+                        }
+                    }
+                }
             } );
+
+            foreach ( var kvp in frequencyMap.OrderBy( x => x.Value ) )
+            {
+                Console.WriteLine( kvp.Value + " " + kvp.Key );
+            }
 
             //var paths = Directory.EnumerateFiles( "unique_models", "*.PB", SearchOption.AllDirectories ).ToList();
             //var done = 0;
