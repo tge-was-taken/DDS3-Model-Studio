@@ -74,6 +74,7 @@
     <Compile Include="MeshType2Batch.cs" />
     <Compile Include="MeshType2NodeBatch.cs" />
     <Compile Include="MeshType2NodeBatchContext.cs" />
+    <Compile Include="MeshType4.cs" />
     <Compile Include="MeshType5.cs" />
     <Compile Include="MeshType5BlendShape.cs" />
     <Compile Include="MeshType5NodeBatch.cs" />

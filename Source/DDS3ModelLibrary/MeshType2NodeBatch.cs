@@ -148,7 +148,7 @@ namespace DDS3ModelLibrary
                     if ( !Flags.HasFlag( MeshFlags.TexCoord2 ) )
                     {
                         // Texcoord 1
-                        vif.Unpack( nextAddress, context.TexCoords[0] );
+                        vif.Unpack( nextAddress, context.TexCoords );
                     }
                     else
                     {

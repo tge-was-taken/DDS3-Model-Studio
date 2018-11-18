@@ -40,9 +40,17 @@ namespace DDS3ModelLibrary
         /// This is only used in a handful of really old models, use the <see cref="Geometry"/> property instead.
         /// </summary>
         /// <remarks>
-        /// Used in hansya01.MB and kyusyu01.MB.
+        /// Used in shadow.MB
         /// </remarks>
         public MeshList DeprecatedMeshList { get; set; }
+
+        /// <summary>
+        /// This is only used in a handful of really old models, use the <see cref="Geometry"/> property instead.
+        /// </summary>
+        /// <remarks>
+        /// Used in hansya01.MB and kyusyu01.MB.
+        /// </remarks>
+        public MeshList DeprecatedMeshList2 { get; set; }
 
         public string Name { get; set; }
 
@@ -114,9 +122,18 @@ namespace DDS3ModelLibrary
             Scale = reader.ReadVector3();
             reader.ReadSingleExpects( 0f, "Node Scale W isnt 0" );
             BoundingBox = reader.ReadObjectOffset<BoundingBox>();
-            Geometry    = reader.ReadObjectOffset<Geometry>();
-            Field48     = reader.ReadInt32Expects( 0, "Node Field48 isnt 0" );
-            DeprecatedMeshList = reader.ReadObjectOffset<MeshList>();
+            var geometryOffset = reader.ReadInt32();
+
+            if ( geometryOffset != 0 )
+            {
+                if ( BoundingBox != null )
+                    Geometry = reader.ReadObjectAtOffset<Geometry>( geometryOffset );
+                else
+                    DeprecatedMeshList = reader.ReadObjectAtOffset<MeshList>( geometryOffset );
+            }
+
+            Field48 = reader.ReadInt32Expects( 0, "Node Field48 isnt 0" );
+            DeprecatedMeshList2 = reader.ReadObjectOffset<MeshList>();
         }
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
@@ -133,9 +150,16 @@ namespace DDS3ModelLibrary
             writer.Write( Scale );
             writer.Write( 0f );
             writer.ScheduleWriteObjectOffset( BoundingBox, 16 );
-            writer.ScheduleWriteObjectOffset( Geometry, 16 );
+
+            if ( Geometry != null )
+                writer.ScheduleWriteObjectOffset( Geometry, 16 );
+            else if ( DeprecatedMeshList != null )
+                writer.ScheduleWriteObjectOffset( DeprecatedMeshList, 16 );
+            else
+                writer.Write( 0 );
+
             writer.Write( Field48 );
-            writer.ScheduleWriteObjectOffset( DeprecatedMeshList, 16 );
+            writer.ScheduleWriteObjectOffset( DeprecatedMeshList2, 16 );
         }
     }
 }

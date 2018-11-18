@@ -326,14 +326,18 @@ typedef struct
     {
         SetRandomBackColor();
         FSeek( gBaseOffset + GeometryOffset );
-        struct TGeometry Geometry;
+
+        if ( BoundingBoxOffset != 0 )
+            struct TGeometry Geometry;
+        else
+            struct TMeshList DeprecatedMeshList; 
     }
 
     if ( Field4C != 0 )
     {
         SetRandomBackColor();
         FSeek( gBaseOffset + Field4C );
-        struct TMeshList DeprecatedMeshList; // only used in 1 really old model
+        struct TMeshList DeprecatedMeshList2; // only used in 1 really old model
     }
 
     FSeek( end );
@@ -342,10 +346,17 @@ typedef struct
 typedef struct
 {
     u32 MeshesOffset;
+    u32 Meshes2Offset;
 
     if ( MeshesOffset != 0 )
     {
         FSeek( gBaseOffset + MeshesOffset );
+        struct TMeshList Meshes;
+    }
+
+    if ( MeshesOffset != 0 && Meshes2Offset != 0 )
+    {
+        FSeek( gBaseOffset + Meshes2Offset );
         struct TMeshList Meshes;
     }
 } TGeometry;
@@ -380,6 +391,7 @@ typedef struct
                 {
                     case 1: struct TMeshType1 Mesh; break;
                     case 2: struct TMeshType2 Mesh; break;
+                    case 4: struct TMeshType4 Mesh; break;
                     case 5: struct TMeshType5 Mesh; break;
                     case 7: struct TMeshType7 Mesh; break;
                     case 8: struct TMeshType8 Mesh; break;
@@ -566,6 +578,42 @@ typedef struct
 {
     u16 Field00;
     u16 MaterialId;
+    u16 Field04;
+    u16 Field06;
+    u32 Field08;
+    u16 TriangleCount;
+    u16 VertexCount;
+    u32 Flags;
+    FAlign( 16 );
+    
+    struct
+    {
+        SetRandomBackColor();
+        local u32 triangleIndex;
+        for ( triangleIndex = 0; triangleIndex < TriangleCount; ++triangleIndex )
+        {
+            struct
+            {
+                u16 A;
+                u16 B;
+                u16 C;
+            } Triangle;
+        }
+    } Triangles;
+    FAlign( 16 );
+
+    Vector3 Positions[ VertexCount ];
+    FAlign( 16 );
+
+    Vector3 Normals[ VertexCount ];
+    FAlign( 16 );
+    
+} TMeshType4;
+
+typedef struct
+{
+    u16 Field00;
+    u16 MaterialId;
     u16 ShapeCount;
     u16 MaterialId2;
     u32 Field08;
@@ -734,6 +782,9 @@ typedef struct
     {
         Vector2 TexCoords2[ VertexCount ];
     }
+
+    //if ( FTell() == 0x423B0 )
+    //    Assert( false );
     
 } TMeshType7;
 

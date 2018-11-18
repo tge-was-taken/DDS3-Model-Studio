@@ -25,7 +25,7 @@ namespace DDS3ModelLibrary
             NodeBatches = new List<MeshType7NodeBatch>();
         }
 
-        public (Vector3[] Positions, Vector3[] Normals, NodeWeight[][] Weights) GetProcessed( List<Node> nodes )
+        public (Vector3[] Positions, Vector3[] Normals, NodeWeight[][] Weights) Transform( List<Node> nodes )
         {
             var positions = new Vector3[VertexCount];
             var normals   = new Vector3[positions.Length];

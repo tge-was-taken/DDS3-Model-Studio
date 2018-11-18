@@ -72,6 +72,65 @@ namespace DDS3ModelLibrary
             NodeBatches = new List<MeshType5NodeBatch>();
         }
 
+        public (Vector3[] Positions, Vector3[] Normals)[] Transform( Matrix4x4 nodeWorldTransform )
+        {
+            var transformed = new (Vector3[] Positions, Vector3[] Normals)[BlendShapeCount];
+            for ( var i = 0; i < BlendShapes.Count; i++ )
+            {
+                var blendShape = BlendShapes[i];
+                var positions = new Vector3[VertexCount];
+                var normals = new Vector3[positions.Length];
+
+                for ( int j = 0; j < blendShape.Positions.Length; j++ )
+                {
+                    var position = blendShape.Positions[j];
+                    if ( i > 0 )
+                        position += BlendShapes[0].Positions[j];
+
+                    var normal = blendShape.Normals[j];
+                    if ( i > 0 )
+                        normal += BlendShapes[0].Normals[j];
+
+                    positions[j] = Vector3.Transform( position, nodeWorldTransform );
+                    normals[j] = Vector3.TransformNormal( normal, nodeWorldTransform );
+                }
+
+                transformed[i] = (positions, normals);
+            }
+
+            return transformed;
+        }
+
+
+        public (Vector3[] Positions, Vector3[] Normals, NodeWeight[][] Weights) Transform( List<Node> nodes )
+        {
+            var positions = new Vector3[VertexCount];
+            var normals   = new Vector3[positions.Length];
+            var weights   = new NodeWeight[positions.Length][];
+            for ( int i = 0; i < weights.Length; i++ )
+                weights[i] = new NodeWeight[UsedNodeCount];
+
+            for ( var nodeBatchIndex = 0; nodeBatchIndex < NodeBatches.Count; nodeBatchIndex++ )
+            {
+                var nodeBatch          = NodeBatches[nodeBatchIndex];
+                var nodeWorldTransform = nodes[nodeBatch.NodeIndex].WorldTransform;
+
+                for ( int i = 0; i < nodeBatch.Positions.Length; i++ )
+                {
+                    var position = new Vector3( nodeBatch.Positions[i].X, nodeBatch.Positions[i].Y,
+                                                nodeBatch.Positions[i].Z );
+                    var weight                     = nodeBatch.Positions[i].W;
+                    var weightedNodeWorldTransform = nodeWorldTransform * weight;
+                    var weightedWorldPosition      = Vector3.Transform( position, weightedNodeWorldTransform );
+                    positions[i]               += weightedWorldPosition;
+                    normals[i]                 += Vector3.TransformNormal( nodeBatch.Normals[i], weightedNodeWorldTransform );
+                    weights[i][nodeBatchIndex] =  new NodeWeight( nodeBatch.NodeIndex, weight );
+                }
+            }
+
+            return ( positions, normals, weights );
+        }
+
         protected override void Read( EndianBinaryReader reader )
         {
             // Read header

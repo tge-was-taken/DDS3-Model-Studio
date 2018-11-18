@@ -80,7 +80,7 @@ namespace DDS3ModelLibrary
             RenderMode = MeshType1BatchRenderMode.Mode1;
         }
 
-        public (Vector3[] Positions, Vector3[] Normals) GetProcessed( Matrix4x4 nodeWorldTransform )
+        public (Vector3[] Positions, Vector3[] Normals) Transform( Matrix4x4 nodeWorldTransform )
         {
             var positions = new Vector3[VertexCount];
             var normals   = new Vector3[positions.Length];
@@ -195,7 +195,7 @@ namespace DDS3ModelLibrary
                 if ( !Flags.HasFlag( MeshFlags.TexCoord2 ) )
                 {
                     // Texcoord 1
-                    vif.Unpack( nextAddress, TexCoords[ 0 ] );
+                    vif.Unpack( nextAddress, TexCoords );
                 }
                 else
                 {

@@ -20,7 +20,7 @@ namespace DDS3ModelLibraryCLI
     {
         private static void Main( string[] args )
         {
-            //ExportObj( new ModelPack( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\devil\0x00\0x0a\0x0a.PB" ) );
+            //ExportObj( new ModelPack( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_b.PB" ) );
             //return;
             OpenAndSaveModelPackBatchTest();return;
             //ReplaceModelTest();return;
@@ -257,38 +257,136 @@ namespace DDS3ModelLibraryCLI
 
         public static void ExportObj( ModelPack modelPack )
         {
-            void WritePositions( StreamWriter writer, Vector3[] positions )
-            {
-                foreach ( var position in positions )
-                    writer.WriteLine( $"v {position.X} {position.Y} {position.Z}" );
-            }
+            var vertexBaseIndex = 0;
 
-            void WriteTexCoords( StreamWriter writer, Vector2[] texCoords )
+            void WriteMesh( StreamWriter streamWriter, Model model, Node node1, Mesh _mesh, int meshIndex1, bool isMesh2 )
             {
-                foreach ( var texCoord in texCoords )
-                    writer.WriteLine( $"vt {texCoord.X} {texCoord.Y}" );
-            }
-
-            void WriteNormals( StreamWriter writer, Vector3[] normals )
-            {
-                foreach ( var normal in normals )
-                    writer.WriteLine( $"vn {normal.X} {normal.Y} {normal.Z}" );
-            }
-
-            void WriteTriangles( StreamWriter writer, Node node, int meshIndex, Triangle[] triangles, int vertexBaseIndex )
-            {
-                writer.WriteLine( $"o node_{node.Name}_mesh_{meshIndex}" );
-                foreach ( var triangle in triangles )
+                void WritePositions( StreamWriter writer, Vector3[] positions )
                 {
-                    writer.WriteLine( "f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}", vertexBaseIndex + triangle.A + 1,
-                                      vertexBaseIndex + triangle.B + 1, vertexBaseIndex + triangle.C + 1 );
+                    foreach ( var position in positions )
+                        writer.WriteLine( $"v {position.X} {position.Y} {position.Z}" );
+                }
+
+                void WriteNormals( StreamWriter writer, Vector3[] normals )
+                {
+                    foreach ( var normal in normals )
+                        writer.WriteLine( $"vn {normal.X} {normal.Y} {normal.Z}" );
+                }
+
+                void WriteTexCoords( StreamWriter writer, Vector2[] texCoords )
+                {
+                    foreach ( var texCoord in texCoords )
+                        writer.WriteLine( $"vt {texCoord.X} {texCoord.Y}" );
+                }
+
+                void WriteTriangles( StreamWriter writer, Node node, int meshIndex, Triangle[] triangles, MeshType meshType,
+                                     int          shapeIndex = 0 )
+                {
+                    writer.WriteLine( $"o node_{node.Name}_mesh{(isMesh2 ? "2" : "")}_{meshIndex}_{meshType}_{shapeIndex}" );
+                    foreach ( var triangle in triangles )
+                    {
+                        writer.WriteLine( "f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}", vertexBaseIndex + triangle.A + 1,
+                                          vertexBaseIndex + triangle.B + 1, vertexBaseIndex + triangle.C + 1 );
+                    }
+                }
+
+                {
+                    switch ( _mesh.Type )
+                    {
+                        case MeshType.Type1:
+                            {
+                                var mesh = ( MeshType1 ) _mesh;
+                                foreach ( var batch in mesh.Batches )
+                                {
+                                    ( Vector3[] positions, Vector3[] normals ) = batch.Transform( node1.WorldTransform );
+                                    WritePositions( streamWriter, positions );
+
+                                    WriteNormals( streamWriter, batch.Normals != null ? normals : new Vector3[positions.Length] );
+                                    WriteTexCoords( streamWriter, batch.TexCoords ?? new Vector2[positions.Length] );
+                                    WriteTriangles( streamWriter, node1, meshIndex1, batch.Triangles, MeshType.Type1 );
+                                    vertexBaseIndex += batch.VertexCount;
+                                }
+                            }
+                            break;
+                        case MeshType.Type2:
+                            {
+                                var mesh = ( MeshType2 ) _mesh;
+                                foreach ( var batch in mesh.Batches )
+                                {
+                                    ( Vector3[] positions, Vector3[] normals, _ ) = batch.Transform( model.Nodes );
+                                    WritePositions( streamWriter, positions );
+                                    WriteNormals( streamWriter, normals );
+                                    WriteTexCoords( streamWriter, batch.TexCoords );
+                                    WriteTriangles( streamWriter, node1, meshIndex1, batch.Triangles, MeshType.Type2 );
+                                    vertexBaseIndex += batch.VertexCount;
+                                }
+                            }
+                            break;
+                        case MeshType.Type3:
+                            break;
+                        case MeshType.Type4:
+                            {
+                                var mesh = ( MeshType4 ) _mesh;
+                                ( Vector3[] positions, Vector3[] normals ) = mesh.Transform( node1.WorldTransform );
+                                WritePositions( streamWriter, positions );
+                                WriteNormals( streamWriter, normals );
+                                WriteTexCoords( streamWriter, new Vector2[positions.Length] );
+                                WriteTriangles( streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type4 );
+                                vertexBaseIndex += mesh.VertexCount;
+                            }
+                            break;
+                        case MeshType.Type5:
+                            {
+                                var mesh   = ( MeshType5 ) _mesh;
+                                var shapes = mesh.Transform( node1.WorldTransform );
+                                for ( var i = 0; i < shapes.Length; i++ )
+                                {
+                                    var shape = shapes[ i ];
+                                    WritePositions( streamWriter, shape.Positions );
+                                    WriteNormals( streamWriter, shape.Normals );
+                                    WriteTexCoords( streamWriter, mesh.TexCoords );
+                                    WriteTriangles( streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type5, i );
+                                    vertexBaseIndex += shape.Positions.Length;
+                                }
+                            }
+                            break;
+                        case MeshType.Type7:
+                            {
+                                var mesh = ( MeshType7 ) _mesh;
+                                foreach ( var batch in mesh.Batches )
+                                {
+                                    ( Vector3[] positions, Vector3[] normals, _ ) = batch.Transform( model.Nodes );
+
+                                    WritePositions( streamWriter, positions );
+                                    WriteNormals( streamWriter, normals );
+                                    WriteTexCoords( streamWriter, batch.TexCoords );
+                                }
+
+                                WriteTriangles( streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type7 );
+                                vertexBaseIndex += _mesh.VertexCount;
+                            }
+                            break;
+                        case MeshType.Type8:
+                            {
+                                var mesh = ( MeshType8 ) _mesh;
+                                foreach ( var batch in mesh.Batches )
+                                {
+                                    ( Vector3[] positions, Vector3[] normals ) = batch.Transform( node1.WorldTransform );
+                                    WritePositions( streamWriter, positions );
+                                    WriteNormals( streamWriter, normals );
+                                    WriteTexCoords( streamWriter, batch.TexCoords );
+                                }
+
+                                WriteTriangles( streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type8 );
+                                vertexBaseIndex += _mesh.VertexCount;
+                            }
+                            break;
+                    }
                 }
             }
 
             using ( var writer = File.CreateText( "test.obj" ) )
             {
-                var vertexBaseIndex = 0;
-
                 foreach ( var model in modelPack.Models )
                 {
                     foreach ( var node in model.Nodes )
@@ -296,78 +394,23 @@ namespace DDS3ModelLibraryCLI
                         if ( node.Geometry == null )
                             continue;
 
-                        for ( var meshIndex = 0; meshIndex < node.Geometry.Meshes.Count; meshIndex++ )
+                        if ( node.Geometry.Meshes != null )
                         {
-                            var _mesh = node.Geometry.Meshes[meshIndex];
-                            writer.WriteLine( $"// node '{node.Name}' mesh ({_mesh.Type}) #{meshIndex}" );
-
-                            switch ( _mesh.Type )
+                            for ( var meshIndex = 0; meshIndex < node.Geometry.Meshes.Count; meshIndex++ )
                             {
-                                case MeshType.Type1:
-                                    {
-                                        var mesh = ( MeshType1 )_mesh;
-                                        foreach ( var batch in mesh.Batches )
-                                        {
-                                            ( Vector3[] positions, Vector3[] normals ) = batch.GetProcessed( node.WorldTransform );
-                                            WritePositions( writer, positions );
-                                            WriteNormals( writer, normals );
-                                            WriteTexCoords( writer, batch.TexCoords );
-                                            WriteTriangles( writer, node, meshIndex, batch.Triangles, vertexBaseIndex );
-                                            vertexBaseIndex += batch.VertexCount;
-                                        }
-                                    }
-                                    break;
-                                case MeshType.Type2:
-                                    {
-                                        var mesh = ( MeshType2 )_mesh;
-                                        foreach ( var batch in mesh.Batches )
-                                        {
-                                            ( Vector3[] positions, Vector3[] normals, _ ) = batch.GetProcessed( model.Nodes );
-                                            WritePositions( writer, positions );
-                                            WriteNormals( writer, normals );
-                                            WriteTexCoords( writer, batch.TexCoords );
-                                            WriteTriangles( writer, node, meshIndex, batch.Triangles, vertexBaseIndex );
-                                            vertexBaseIndex += batch.VertexCount;
-                                        }
-                                    }
-                                    break;
-                                case MeshType.Type3:
-                                    break;
-                                case MeshType.Type4:
-                                    break;
-                                case MeshType.Type5:
-                                    break;
-                                case MeshType.Type7:
-                                    {
-                                        var mesh = ( MeshType7 )_mesh;
-                                        foreach ( var batch in mesh.Batches )
-                                        {
-                                            (Vector3[] positions, Vector3[] normals, _) = batch.GetProcessed( model.Nodes );
+                                var mesh = node.Geometry.Meshes[meshIndex];
+                                writer.WriteLine( $"// node '{node.Name}' mesh ({mesh.Type}) #{meshIndex}" );
+                                WriteMesh( writer, model, node, mesh, meshIndex, false );
+                            }
+                        }
 
-                                            WritePositions( writer, positions );
-                                            WriteNormals( writer, normals );
-                                            WriteTexCoords( writer, batch.TexCoords );
-                                        }
-
-                                        WriteTriangles( writer, node, meshIndex, mesh.Triangles, vertexBaseIndex );
-                                        vertexBaseIndex += _mesh.VertexCount;
-                                    }
-                                    break;
-                                case MeshType.Type8:
-                                    {
-                                        var mesh = ( MeshType8 )_mesh;
-                                        foreach ( var batch in mesh.Batches )
-                                        {
-                                            ( Vector3[] positions, Vector3[] normals ) = batch.GetProcessed( node.WorldTransform );
-                                            WritePositions( writer, positions );
-                                            WriteNormals( writer, normals );
-                                            WriteTexCoords( writer, batch.TexCoords );
-                                        }
-
-                                        WriteTriangles( writer, node, meshIndex, mesh.Triangles, vertexBaseIndex );
-                                        vertexBaseIndex += _mesh.VertexCount;
-                                    }
-                                    break;
+                        if ( node.Geometry.TranslucentMeshes != null )
+                        {
+                            for ( var meshIndex = 0; meshIndex < node.Geometry.TranslucentMeshes.Count; meshIndex++ )
+                            {
+                                var mesh = node.Geometry.TranslucentMeshes[meshIndex];
+                                writer.WriteLine( $"// node '{node.Name}' mesh(XLU) ({mesh.Type}) #{meshIndex}" );
+                                WriteMesh( writer, model, node, mesh, meshIndex, true );
                             }
                         }
                     }
@@ -492,31 +535,28 @@ namespace DDS3ModelLibraryCLI
             {
                 Console.WriteLine( Path.GetFileName( path ) );
                 var modelPack = new ModelPack( path );
-                //new ModelPack( modelPack.Save() );
+                new ModelPack( modelPack.Save() );
 
-                foreach ( var model in modelPack.Models )
-                {
-                    foreach ( var node in model.Nodes )
-                    {
-                        if ( node.Geometry?.Meshes == null )
-                            continue;
+                //foreach ( var model in modelPack.Models )
+                //{
+                //    foreach ( var node in model.Nodes )
+                //    {
+                //        if ( node.Geometry?.Meshes == null )
+                //            continue;
 
-                        foreach ( var _mesh in node.Geometry.Meshes )
-                        {
-                            if ( _mesh.Type != MeshType.Type1 )
-                                continue;
+                //        foreach ( var _mesh in node.Geometry.Meshes )
+                //        {
+                //            if ( _mesh.Type != MeshType.Type4 )
+                //                continue;
 
-                            var mesh = ( MeshType1 )_mesh;
-                            foreach ( var batch in mesh.Batches )
-                            {
-                                if ( !frequencyMap.ContainsKey( batch.Flags ) )
-                                    frequencyMap[batch.Flags] = 1;
-                                else
-                                    ++frequencyMap[batch.Flags];
-                            }
-                        }
-                    }
-                }
+                //            var mesh = ( MeshType4 )_mesh;
+                //            //if ( !frequencyMap.ContainsKey( mesh.Flags ) )
+                //            //    frequencyMap[mesh.Flags] = 1;
+                //            //else
+                //            //    ++frequencyMap[mesh.Flags];
+                //        }
+                //    }
+                //}
             } );
 
             foreach ( var kvp in frequencyMap.OrderBy( x => x.Value ) )

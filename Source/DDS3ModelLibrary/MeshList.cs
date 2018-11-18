@@ -42,6 +42,7 @@ namespace DDS3ModelLibrary
                         case MeshType.Type3:
                             break;
                         case MeshType.Type4:
+                            mesh = reader.ReadObject<MeshType4>();
                             break;
                         case MeshType.Type5:
                             mesh = reader.ReadObject<MeshType5>();
