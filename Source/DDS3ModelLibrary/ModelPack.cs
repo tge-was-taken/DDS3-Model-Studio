@@ -11,11 +11,15 @@ using DDS3ModelLibrary.Modeling.Utilities;
 using DDS3ModelLibrary.Primitives;
 using DDS3ModelLibrary.Texturing;
 using Color = DDS3ModelLibrary.Primitives.Color;
+using Matrix4x4 = System.Numerics.Matrix4x4;
 
 namespace DDS3ModelLibrary
 {
     public class ModelPack : IBinarySerializable
     {
+        private const int BATCH_VERTEX_LIMIT = 24;
+        private const int MESH_WEIGHT_LIMIT = 4;
+
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
         public ModelPackInfo Info { get; set; }
@@ -105,7 +109,62 @@ namespace DDS3ModelLibrary
             return textureId;
         }
 
-        private const int BATCH_VERTEX_LIMIT     = 24;
+        private static void RemoveExcessiveNodeInfluences( int vertexCount, List<short> usedNodeIndices, List<List<(short NodeIndex, float Weight)>> vertexWeights, Dictionary<short, float> nodeScores )
+        {
+            var excessiveNodeCount = usedNodeIndices.Count - MESH_WEIGHT_LIMIT;
+            var maxScore = vertexCount;
+
+            for ( int i = 4; i < ( 4 + excessiveNodeCount ); i++ )
+            {
+                foreach ( var weights in vertexWeights )
+                {
+                    if ( weights.Any( x => x.NodeIndex == usedNodeIndices[i] ) )
+                    {
+                        var excessiveWeight = weights.First( x => x.NodeIndex == usedNodeIndices[i] );
+                        weights.Remove( excessiveWeight );
+
+                        for ( int j = 0; j < 4; j++ )
+                        {
+                            var nodeIndex = usedNodeIndices[j];
+                            var weight = 0f;
+                            var index = -1;
+
+                            // Find existing weight
+                            for ( int k = 0; k < weights.Count; k++ )
+                            {
+                                if ( weights[k].NodeIndex == nodeIndex )
+                                {
+                                    weight = weights[k].Weight;
+                                    index = k;
+                                    break;
+                                }
+                            }
+
+                            var newWeight = weight + excessiveWeight.Weight * ( nodeScores[nodeIndex] / ( float )maxScore );
+
+                            if ( index != -1 )
+                                weights[index] = (nodeIndex, newWeight);
+                            else
+                                weights.Add( (nodeIndex, newWeight) );
+                        }
+                    }
+
+                    var weightSum = weights.Sum( x => x.Weight );
+                    if ( weightSum < 1f )
+                    {
+                        var remainder = 1f - weightSum;
+                        for ( var k = 0; k < weights.Count; k++ )
+                        {
+                            weights[k] = (weights[k].NodeIndex, weights[k].Weight + ( remainder / 4f ));
+                        }
+                    }
+
+                    //Debug.Assert( weightSum >= 0.998f && weightSum <= 1.002f );
+                }
+            }
+
+            usedNodeIndices.RemoveRange( 4, excessiveNodeCount );
+        }
 
         private static MeshType7 ConvertToMeshType7( Assimp.Mesh aiMesh, bool hasTexture, List<Node> nodes, Matrix4x4 aiNodeWorldTransform, ref Matrix4x4 nodeInvWorldTransform, List<Vector3> localPositions )
         {
@@ -123,6 +182,7 @@ namespace DDS3ModelLibrary
 
             // Get vertex weights
             var vertexWeights = new List<List<(short NodeIndex, float Weight)>>();
+            var nodeScores = new Dictionary<short, float>();
             for ( int i = 0; i < aiMesh.VertexCount; i++ )
             {
                 var weights = new List<(short, float)>();
@@ -135,6 +195,11 @@ namespace DDS3ModelLibrary
                             var nodeIndex = nodes.FindIndex( x => x.Name == aiBone.Name );
                             Debug.Assert( nodeIndex != -1 );
                             weights.Add( (( short )nodeIndex, aiVertexWeight.Weight) );
+
+                            if ( !nodeScores.ContainsKey( ( short ) nodeIndex ) )
+                                nodeScores[ ( short ) nodeIndex ] = 0;
+
+                            nodeScores[(short)nodeIndex] += aiVertexWeight.Weight;
                         }
                     }
                 }
@@ -143,8 +208,12 @@ namespace DDS3ModelLibrary
             }
 
             // Find unique node indices used by the mesh (max 4 per mesh!)
-            var usedNodeIndices = vertexWeights.SelectMany( x => x.Select( y => y.NodeIndex ) ).Distinct().ToList();
+            var usedNodeIndices = vertexWeights.SelectMany( x => x.Select( y => y.NodeIndex ) ).Distinct().OrderByDescending( x => nodeScores[ x ] )
+                                               .ToList();
+
             Trace.Assert( usedNodeIndices.Count > 1 );
+            if ( usedNodeIndices.Count > 4 )
+                RemoveExcessiveNodeInfluences( aiMesh.VertexCount, usedNodeIndices, vertexWeights, nodeScores );
 
             // Start building batches
             var batchVertexBaseIndex = 0;
@@ -286,13 +355,14 @@ namespace DDS3ModelLibrary
             var baseDirectory = Path.GetDirectoryName( Path.GetFullPath( filePath ) );
             var aiContext = new Assimp.AssimpContext();
             aiContext.SetConfig( new Assimp.Configs.FBXPreservePivotsConfig( false ) );
-            aiContext.SetConfig( new Assimp.Configs.MeshVertexLimitConfig( 1000 ) );
             aiContext.SetConfig( new Assimp.Configs.MaxBoneCountConfig( 4 ) );
+            aiContext.SetConfig( new Assimp.Configs.VertexBoneWeightLimitConfig( 4 ) );
+            aiContext.SetConfig( new Assimp.Configs.MeshVertexLimitConfig( 100 ) );
             var aiScene = aiContext.ImportFile( filePath, Assimp.PostProcessSteps.JoinIdenticalVertices |
                                                           Assimp.PostProcessSteps.FindDegenerates |
                                                           Assimp.PostProcessSteps.FindInvalidData | Assimp.PostProcessSteps.FlipUVs |
                                                           Assimp.PostProcessSteps.ImproveCacheLocality |
-                                                          Assimp.PostProcessSteps.Triangulate | Assimp.PostProcessSteps.SplitByBoneCount
+                                                          Assimp.PostProcessSteps.Triangulate | Assimp.PostProcessSteps.LimitBoneWeights // | Assimp.PostProcessSteps.SplitLargeMeshes // | Assimp.PostProcessSteps.SplitByBoneCount
                                               );
 
             // Clear stuff we're going to replace
@@ -361,10 +431,23 @@ namespace DDS3ModelLibrary
                 var aiNodeWorldTransform = aiParentNodeWorldTransform * aiNode.Transform.FromAssimp();
                 if ( aiNode.HasMeshes )
                 {
-                    foreach ( int aiMeshIndex in aiNode.MeshIndices )
+                    var aiMeshes = new List<Assimp.Mesh>();
+                    foreach ( var aiMesh in aiNode.MeshIndices.Select( x => aiScene.Meshes[x] ) )
                     {
-                        var aiMesh = aiScene.Meshes[ aiMeshIndex ];
-                        var node = DetermineBestTargetNode( aiMesh, aiNode, model.Nodes );
+                        if ( aiMesh.BoneCount > MESH_WEIGHT_LIMIT )
+                        {
+                            aiMeshes.AddRange( AssimpHelper.SplitMesh( aiScene, aiMesh, MESH_WEIGHT_LIMIT ) );
+                        }
+                        else
+                        {
+                            aiMeshes.Add( aiMesh );
+                        }
+                    }
+
+                    foreach ( var aiMesh in aiMeshes )
+                    {
+                        var node = AssimpHelper.DetermineBestTargetNode( aiMesh, aiNode, name => model.Nodes.Find( x => x.Name == name ),
+                                                                         model.Nodes[ 1 ] );
                         var nodeWorldTransform = node.WorldTransform;
                         var nodeInvWorldTransform = nodeWorldTransform.Inverted();
                         var hasTexture = model.Materials[aiMesh.MaterialIndex].TextureId != null;
@@ -372,18 +455,20 @@ namespace DDS3ModelLibrary
                             localPositions = nodeLocalPositions[ node ] = new List<Vector3>();
 
                         Mesh mesh;
-
                         if ( aiMesh.BoneCount > 1 )
                         {
                             // Weighted mesh
                             // TODO: decide between type 2 and 7?
-                            mesh = ConvertToMeshType7( aiMesh, hasTexture, model.Nodes, aiNodeWorldTransform, ref nodeInvWorldTransform, localPositions );
+                            Debug.Assert( aiMesh.BoneCount <= MESH_WEIGHT_LIMIT );
+                            mesh = ConvertToMeshType7( aiMesh, hasTexture, model.Nodes, aiNodeWorldTransform, ref nodeInvWorldTransform,
+                                                       localPositions );
                         }
                         else
                         {
                             // Unweighted mesh
                             // TODO: decide between type 1 and 8?
-                            mesh = ConvertToMeshType8( aiMesh, hasTexture, aiNodeWorldTransform, localPositions, ref nodeInvWorldTransform );
+                            mesh = ConvertToMeshType8( aiMesh, hasTexture, aiNodeWorldTransform, localPositions,
+                                                       ref nodeInvWorldTransform );
                         }
 
                         if ( node.Geometry == null )
@@ -409,54 +494,6 @@ namespace DDS3ModelLibrary
                 kvp.Key.BoundingBox = BoundingBox.Calculate( kvp.Value );
                 Debug.Assert( kvp.Key.Geometry != null );
             }
-        }
-
-        private static Node DetermineBestTargetNode( Assimp.Mesh aiMesh, Assimp.Node aiNode, List<Node> nodes )
-        {
-            if ( aiMesh.BoneCount > 1 )
-            {
-                // Select node to which the mesh is weighted most
-                var boneConveragePercents = CalculateBoneWeightCoverage( aiMesh );
-                var maxCoverage = boneConveragePercents.Max( x => x.Coverage );
-                var bestTargetBone = boneConveragePercents.First( x => x.Coverage == maxCoverage ).Bone;
-                return nodes.Find( x => x.Name == bestTargetBone.Name );
-            }
-            else if ( aiMesh.BoneCount == 1 )
-            {
-                // Use our only bone as the target node
-                return nodes.Find( x => x.Name == aiMesh.Bones[0].Name );
-            }
-            else
-            {
-                // Try to find a parent of the mesh's ainode that exists within the existing hierarchy
-                var aiNodeParent = aiNode.Parent;
-                while ( aiNodeParent != null )
-                {
-                    var nodeParent = nodes.FirstOrDefault( x => x.Name == aiNodeParent.Name );
-                    if ( nodeParent != null )
-                        return nodeParent;
-                }
-
-                // Return second node as a fallback
-                return nodes[ 1 ];
-            }
-        }
-
-        private static List<(float Coverage, Assimp.Bone Bone)> CalculateBoneWeightCoverage( Assimp.Mesh aiMesh )
-        {
-            var boneScores = new List<(float Coverage, Assimp.Bone Bone)>();
-
-            foreach ( var bone in aiMesh.Bones )
-            {
-                float weightTotal = 0;
-                foreach ( var vertexWeight in bone.VertexWeights )
-                    weightTotal += vertexWeight.Weight;
-
-                float weightCoverage = ( weightTotal / aiMesh.VertexCount );
-                boneScores.Add( (weightCoverage, bone) );
-            }
-
-            return boneScores;
         }
 
         private void Read( EndianBinaryReader reader )
