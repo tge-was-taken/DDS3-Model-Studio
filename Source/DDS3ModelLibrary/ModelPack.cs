@@ -521,7 +521,7 @@ namespace DDS3ModelLibrary
                         break;
 
                     case ResourceIdentifier.Model:
-                        Models.Add( reader.ReadObject<Model>( header ) );
+                        Models.Add( reader.ReadObject<Model>( ( header, false ) ) );
                         break;
 
                     case ResourceIdentifier.AnimationPack:
@@ -555,7 +555,7 @@ namespace DDS3ModelLibrary
             if ( TexturePack != null )
                 writer.WriteObject( TexturePack );
 
-            writer.WriteObjects( Models );
+            writer.WriteObjects( Models, false );
             writer.WriteObjects( AnimationPacks );
 
             // write dummy end chunk

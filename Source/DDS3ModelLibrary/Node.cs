@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Numerics;
 using DDS3ModelLibrary.IO.Common;
+using DDS3ModelLibrary.Modeling.Utilities;
 using DDS3ModelLibrary.Primitives;
 
 namespace DDS3ModelLibrary
@@ -13,6 +14,16 @@ namespace DDS3ModelLibrary
         private int mIndex;
         private int mParentIndex;
 
+        private Vector3   mPosition;
+        private Vector3   mRotation;
+        private Vector3   mScale;
+        private Matrix4x4 mLocalTransform;
+        private Matrix4x4 mWorldTransform;
+        private Node mParent;
+        private bool mLocalTransformDirty;
+        private bool mWorldTransformDirty;
+        private bool mPRSDirty;
+
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
         /// <summary>
@@ -22,13 +33,75 @@ namespace DDS3ModelLibrary
 
         public int Field04 { get; set; }
 
-        public Node Parent { get; private set; }
+        public Node Parent
+        {
+            get => mParent;
+            set
+            {
+                if ( mParent != value )
+                {
+                    mParent = value;
+                    mWorldTransformDirty = true;
+                }
+            }
+        }
 
-        public Vector3 Rotation { get; set; }
+        public Vector3 Rotation
+        {
+            get
+            {
+                if ( mPRSDirty )
+                    UpdatePRS();
 
-        public Vector3 Position { get; set; }
+                return mRotation;
+            }
+            set
+            {
+                if ( mRotation != value )
+                {
+                    mRotation = value;
+                    mLocalTransformDirty = true;
+                }
+            }
+        }
 
-        public Vector3 Scale { get; set; }
+        public Vector3 Position
+        {
+            get
+            {
+                if ( mPRSDirty )
+                    UpdatePRS();
+
+                return mPosition;
+            }
+            set
+            {
+                if ( mPosition != value )
+                {
+                    mPosition = value;
+                    mLocalTransformDirty = true;
+                }
+            }
+        }
+
+        public Vector3 Scale
+        {
+            get
+            {
+                if ( mPRSDirty )
+                    UpdatePRS();
+
+                return mScale;
+            }
+            set
+            {
+                if ( mScale != value )
+                {
+                    mScale = value;
+                    mLocalTransformDirty = true;
+                }
+            }
+        }
 
         public BoundingBox BoundingBox { get; set; }
 
@@ -61,13 +134,18 @@ namespace DDS3ModelLibrary
         {
             get
             {
-                var transform = Matrix4x4.CreateRotationX( Rotation.X ) * Matrix4x4.CreateRotationY( Rotation.Y ) *
-                                Matrix4x4.CreateRotationZ( Rotation.Z );
+                if ( mLocalTransformDirty )
+                    UpdateLocalTransform();
 
-                transform *= Matrix4x4.CreateScale( Scale );
-                transform.Translation = Position;
-
-                return transform;
+                return mLocalTransform;
+            }
+            set
+            {
+                if ( mLocalTransform != value )
+                {
+                    mLocalTransform = value;
+                    mPRSDirty = mWorldTransformDirty = true;
+                }
             }
         }
 
@@ -78,11 +156,10 @@ namespace DDS3ModelLibrary
         {
             get
             {
-                var transform = Transform;
-                if ( Parent != null )
-                    transform *= Parent.WorldTransform;
+                if ( mWorldTransformDirty )
+                    UpdateWorldTransform();
 
-                return transform;
+                return mWorldTransform;
             }
         }
 
@@ -91,12 +168,41 @@ namespace DDS3ModelLibrary
             Field00     = 1;
             Field04     = 0;
             Parent      = null;
-            Rotation    = Vector3.Zero;
-            Position    = Vector3.Zero;
-            Scale       = Vector3.One;
+            mRotation    = Vector3.Zero;
+            mPosition    = Vector3.Zero;
+            mScale       = Vector3.One;
             BoundingBox = null;
             Geometry    = null;
             Field48     = 0;
+            mLocalTransform = mWorldTransform = Matrix4x4.Identity;
+        }
+
+        private void UpdateLocalTransform()
+        {
+            mLocalTransform = Matrix4x4.CreateRotationX( Rotation.X ) * Matrix4x4.CreateRotationY( Rotation.Y ) *
+                      Matrix4x4.CreateRotationZ( Rotation.Z );
+
+            mLocalTransform *= Matrix4x4.CreateScale( Scale );
+            mLocalTransform.Translation =  Position;
+            mLocalTransformDirty = false;
+        }
+
+        private void UpdateWorldTransform()
+        {
+            mWorldTransform = Transform;
+            if ( Parent != null )
+                mWorldTransform *= Parent.WorldTransform;
+
+            mWorldTransformDirty = false;
+        }
+
+        private void UpdatePRS()
+        {
+            Matrix4x4.Decompose( mLocalTransform, out var scale, out var rotation, out var translation );
+            mPosition = translation;
+            mRotation = rotation.ToEulerAngles();
+            mScale    = scale;
+            mPRSDirty = false;
         }
 
         public override string ToString()
@@ -121,6 +227,7 @@ namespace DDS3ModelLibrary
             reader.ReadSingleExpects( 1f, "Node Position W isnt 1" );
             Scale = reader.ReadVector3();
             reader.ReadSingleExpects( 0f, "Node Scale W isnt 0" );
+
             BoundingBox = reader.ReadObjectOffset<BoundingBox>();
             var geometryOffset = reader.ReadInt32();
 

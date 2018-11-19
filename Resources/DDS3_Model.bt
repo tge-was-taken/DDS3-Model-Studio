@@ -1006,17 +1006,76 @@ typedef struct
     u32 Magic;
     u32 DataSize;
     u32 RelocationTableOffset;
-    u32 Field10;
+    u32 RelocationTableSize;
     u32 ResourceListCount;
     u32 ResourceListOffset;
     u32 Field1C;
+
+    if ( Magic == MakeFourCC( "FLD2" ) )
+    {
+        u32 Field20;
+        u32 Field24;
+        u32 Field28;
+        u32 Field2C;
+
+        if ( Field24 != 0 )
+        {
+            FSeek( gBaseOffset + Field24 );
+            struct TFieldUnknownStruct2 Field20Data;
+        }
+    }
+
+    if ( RelocationTableOffset != 0 )
+    {
+        FSeek( gBaseOffset + RelocationTableOffset );
+        SetRandomBackColor();
+        u8 RelocationTable[ RelocationTableSize ];
+    }
 
     if ( ResourceListOffset != 0 )
     {
         FSeek( gBaseOffset + ResourceListOffset );
         struct TFieldResourceList ResourceLists[ ResourceListCount ];
     }
+
+    if ( Field1C != 0 )
+    {
+        FSeek( gBaseOffset + Field1C );
+
+        if ( Magic == MakeFourCC( "FLD1" ) )
+            struct TFieldSceneField1CStruct Field1CData;
+        else
+            struct TField2Field1CStruct Field1CData;
+    }
 } TFieldScene;
+
+typedef struct
+{
+    SetRandomBackColor();
+    u32 Field00;
+    u32 Field04; // 63, 100, ... count?
+    u32 Field08;
+    u32 Field0C;
+    u32 Field10;
+    u32 Field14;
+    u32 Field18;
+    u32 Field1C;
+} TFieldSceneField1CStruct;
+
+typedef struct
+{
+    SetRandomBackColor();
+    u32 Field00;
+    u32 Field04; // 63, 100, ... count?
+    u32 Field08;
+    u32 Field0C;
+
+    if ( Field04 != 0 )
+    {
+        FSeek( gBaseOffset + Field04 );
+        struct TFieldUnknownStruct1 Field14Data;                
+    }
+} TField2Field1CStruct;
 
 typedef struct
 {
@@ -1047,22 +1106,75 @@ typedef struct
     u32 Field18;
     u32 Field1C;
     u32 DataOffset;
-
     local u32 resourceEnd = FTell();
+
+    if ( TransformOffset != 0 )
+    {
+        FSeek( gBaseOffset + TransformOffset );
+        struct
+        {
+            SetRandomBackColor();
+            Vector4 Position;
+            Vector4 Rotation;
+            Vector4 Scale;
+        } Transform;
+    }
+
+    if ( Field14 != 0 )
+    {
+        FSeek( gBaseOffset + Field14 );
+        struct TFieldUnknownStruct2 Field14Data;
+    }
 
     if ( DataOffset != 0 )
     {
         FSeek( gBaseOffset + DataOffset );
         switch ( Type )
         {
-            case 2:
+            case 2: // mobj
                 TModel Model( false );
+                break;
+
+            case 5: // TEX_LIST
+                SetRandomBackColor();
+                string TextureListFileName;
+                break;
+
+            case 0xC: // light, FieldObj
+                struct
+                {
+                    SetRandomBackColor();
+                    f32 Data[ 13 ];
+                } Light;
                 break;
         }
     }
 
     FSeek( resourceEnd );
 } TFieldResource <optimize=false>;
+
+typedef struct
+{
+    SetRandomBackColor();
+    u32 Field00; // 1, count?
+    u32 Field04; // offset
+    u32 Field08; // 0, maybe padding
+    u32 Field0C; // .
+
+    if ( Field04 != 0 )
+    {
+        struct TFieldUnknownStruct1 Field04Data;
+    }
+} TFieldUnknownStruct2;
+
+typedef struct
+{
+    SetRandomBackColor();
+    u32 Field00; // 0x3130
+    u32 Field04; // 0, maybe padding
+    u32 Field08; // .
+    u32 Field0C; // .
+} TFieldUnknownStruct1;
 
 
 // Read file

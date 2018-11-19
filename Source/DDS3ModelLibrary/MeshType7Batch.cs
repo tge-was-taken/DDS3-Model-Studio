@@ -46,7 +46,10 @@ namespace DDS3ModelLibrary
                     var weightedNodeWorldTransform = nodeWorldTransform * weight;
                     var weightedWorldPosition      = Vector3.Transform( position, weightedNodeWorldTransform );
                     positions[ i ] += weightedWorldPosition;
-                    normals[ i ] += Vector3.TransformNormal( nodeBatch.Normals[ i ], weightedNodeWorldTransform );
+
+                    if ( nodeBatch.Normals != null )
+                        normals[ i ] += Vector3.TransformNormal( nodeBatch.Normals[ i ], weightedNodeWorldTransform );
+
                     weights[ i ][ nodeBatchIndex ] = new NodeWeight( nodeBatch.NodeIndex, weight );
                 }
             }

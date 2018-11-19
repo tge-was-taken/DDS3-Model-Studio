@@ -634,7 +634,7 @@ namespace DDS3ModelLibrary.IO.Common
 
             return count;
         }
-        public int ScheduleWriteListOffset<T>( List<T> list, int alignment, Action<T> write )
+        public int ScheduleWriteListOffset<T>( IList<T> list, int alignment, Action<T> write )
         {
             var count = 0;
             if ( list != null && list.Count != 0 )
@@ -659,7 +659,7 @@ namespace DDS3ModelLibrary.IO.Common
             return count;
         }
 
-        public int ScheduleWriteListOffset<T>( List<T> list, int alignment = 4, object context = null ) where T : IBinarySerializable
+        public int ScheduleWriteListOffset<T>( IList<T> list, int alignment = 4, object context = null ) where T : IBinarySerializable
         {
             var count = 0;
             if ( list != null && list.Count != 0 )

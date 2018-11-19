@@ -22,7 +22,7 @@ namespace DDS3ModelLibraryCLI
         {
             //ExportObj( new ModelPack( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_b.PB" ) );
             //return;
-            OpenAndSaveModelPackBatchTest();return;
+            OpenAndSaveFieldSceneBatchTest();return;
             //ReplaceModelTest();return;
 
             //var modelPack = new ModelPack( @"..\..\..\..\Resources\player_a.PB" );
@@ -255,135 +255,151 @@ namespace DDS3ModelLibraryCLI
             //OpenAndSaveModelPackBatchTest();
         }
 
+
+        private static void WriteMesh( StreamWriter streamWriter, Model model, Node node1, Mesh _mesh, int meshIndex1, bool isMesh2, ref int _vertexBaseIndex, FieldObject fieldObj = null )
+        {
+            var vertexBaseIndex = _vertexBaseIndex;
+            void WritePositions( StreamWriter writer, Vector3[] positions )
+            {
+                for ( var i = 0; i < positions.Length; i++ )
+                {
+                    var position = positions[ i ];
+                    if ( fieldObj?.Transform != null )
+                        position = Vector3.Transform( position, fieldObj.Transform.Matrix );
+
+                    writer.WriteLine( $"v {position.X} {position.Y} {position.Z}" );
+                }
+            }
+
+            void WriteNormals( StreamWriter writer, Vector3[] normals )
+            {
+                for ( var i = 0; i < normals.Length; i++ )
+                {
+                    var normal = normals[ i ];
+                    if ( fieldObj?.Transform != null )
+                        normal = Vector3.TransformNormal( normal, fieldObj.Transform.Matrix );
+
+                    writer.WriteLine( $"vn {normal.X} {normal.Y} {normal.Z}" );
+                }
+            }
+
+            void WriteTexCoords( StreamWriter writer, Vector2[] texCoords )
+            {
+                foreach ( var texCoord in texCoords )
+                    writer.WriteLine( $"vt {texCoord.X} {texCoord.Y}" );
+            }
+
+            void WriteTriangles( StreamWriter writer, Node node, int meshIndex, Triangle[] triangles, MeshType meshType,
+                                 int shapeIndex = 0 )
+            {
+                writer.WriteLine( $"o {fieldObj?.Name ?? ""}_node_{node.Name}_mesh{( isMesh2 ? "2" : "" )}_{meshIndex}_{meshType}_{shapeIndex}" );
+                foreach ( var triangle in triangles )
+                {
+                    writer.WriteLine( "f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}", vertexBaseIndex + triangle.A + 1,
+                                      vertexBaseIndex + triangle.B + 1, vertexBaseIndex + triangle.C + 1 );
+                }
+            }
+
+            {
+                switch ( _mesh.Type )
+                {
+                    case MeshType.Type1:
+                        {
+                            var mesh = ( MeshType1 )_mesh;
+                            foreach ( var batch in mesh.Batches )
+                            {
+                                (Vector3[] positions, Vector3[] normals) = batch.Transform( node1.WorldTransform );
+                                WritePositions( streamWriter, positions );
+
+                                WriteNormals( streamWriter, batch.Normals != null ? normals : new Vector3[positions.Length] );
+                                WriteTexCoords( streamWriter, batch.TexCoords ?? new Vector2[positions.Length] );
+                                WriteTriangles( streamWriter, node1, meshIndex1, batch.Triangles, MeshType.Type1 );
+                                vertexBaseIndex += batch.VertexCount;
+                            }
+                        }
+                        break;
+                    case MeshType.Type2:
+                        {
+                            var mesh = ( MeshType2 )_mesh;
+                            foreach ( var batch in mesh.Batches )
+                            {
+                                (Vector3[] positions, Vector3[] normals, _) = batch.Transform( model.Nodes );
+                                WritePositions( streamWriter, positions );
+                                WriteNormals( streamWriter, normals );
+                                WriteTexCoords( streamWriter, batch.TexCoords );
+                                WriteTriangles( streamWriter, node1, meshIndex1, batch.Triangles, MeshType.Type2 );
+                                vertexBaseIndex += batch.VertexCount;
+                            }
+                        }
+                        break;
+                    case MeshType.Type3:
+                        break;
+                    case MeshType.Type4:
+                        {
+                            var mesh = ( MeshType4 )_mesh;
+                            (Vector3[] positions, Vector3[] normals) = mesh.Transform( node1.WorldTransform );
+                            WritePositions( streamWriter, positions );
+                            WriteNormals( streamWriter, normals );
+                            WriteTexCoords( streamWriter, new Vector2[positions.Length] );
+                            WriteTriangles( streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type4 );
+                            vertexBaseIndex += mesh.VertexCount;
+                        }
+                        break;
+                    case MeshType.Type5:
+                        {
+                            var mesh = ( MeshType5 )_mesh;
+                            var shapes = mesh.Transform( node1.WorldTransform );
+                            for ( var i = 0; i < shapes.Length; i++ )
+                            {
+                                var shape = shapes[i];
+                                WritePositions( streamWriter, shape.Positions );
+                                WriteNormals( streamWriter, shape.Normals );
+                                WriteTexCoords( streamWriter, mesh.TexCoords );
+                                WriteTriangles( streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type5, i );
+                                vertexBaseIndex += shape.Positions.Length;
+                            }
+                        }
+                        break;
+                    case MeshType.Type7:
+                        {
+                            var mesh = ( MeshType7 )_mesh;
+                            foreach ( var batch in mesh.Batches )
+                            {
+                                (Vector3[] positions, Vector3[] normals, _) = batch.Transform( model.Nodes );
+
+                                WritePositions( streamWriter, positions );
+                                WriteNormals( streamWriter, normals );
+                                WriteTexCoords( streamWriter, batch.TexCoords );
+                            }
+
+                            WriteTriangles( streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type7 );
+                            vertexBaseIndex += _mesh.VertexCount;
+                        }
+                        break;
+                    case MeshType.Type8:
+                        {
+                            var mesh = ( MeshType8 )_mesh;
+                            foreach ( var batch in mesh.Batches )
+                            {
+                                (Vector3[] positions, Vector3[] normals) = batch.Transform( node1.WorldTransform );
+                                WritePositions( streamWriter, positions );
+                                WriteNormals( streamWriter, normals );
+                                WriteTexCoords( streamWriter, batch.TexCoords );
+                            }
+
+                            WriteTriangles( streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type8 );
+                            vertexBaseIndex += _mesh.VertexCount;
+                        }
+                        break;
+                }
+            }
+
+            _vertexBaseIndex = vertexBaseIndex;
+        }
+
         public static void ExportObj( ModelPack modelPack )
         {
             var vertexBaseIndex = 0;
-
-            void WriteMesh( StreamWriter streamWriter, Model model, Node node1, Mesh _mesh, int meshIndex1, bool isMesh2 )
-            {
-                void WritePositions( StreamWriter writer, Vector3[] positions )
-                {
-                    foreach ( var position in positions )
-                        writer.WriteLine( $"v {position.X} {position.Y} {position.Z}" );
-                }
-
-                void WriteNormals( StreamWriter writer, Vector3[] normals )
-                {
-                    foreach ( var normal in normals )
-                        writer.WriteLine( $"vn {normal.X} {normal.Y} {normal.Z}" );
-                }
-
-                void WriteTexCoords( StreamWriter writer, Vector2[] texCoords )
-                {
-                    foreach ( var texCoord in texCoords )
-                        writer.WriteLine( $"vt {texCoord.X} {texCoord.Y}" );
-                }
-
-                void WriteTriangles( StreamWriter writer, Node node, int meshIndex, Triangle[] triangles, MeshType meshType,
-                                     int          shapeIndex = 0 )
-                {
-                    writer.WriteLine( $"o node_{node.Name}_mesh{(isMesh2 ? "2" : "")}_{meshIndex}_{meshType}_{shapeIndex}" );
-                    foreach ( var triangle in triangles )
-                    {
-                        writer.WriteLine( "f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}", vertexBaseIndex + triangle.A + 1,
-                                          vertexBaseIndex + triangle.B + 1, vertexBaseIndex + triangle.C + 1 );
-                    }
-                }
-
-                {
-                    switch ( _mesh.Type )
-                    {
-                        case MeshType.Type1:
-                            {
-                                var mesh = ( MeshType1 ) _mesh;
-                                foreach ( var batch in mesh.Batches )
-                                {
-                                    ( Vector3[] positions, Vector3[] normals ) = batch.Transform( node1.WorldTransform );
-                                    WritePositions( streamWriter, positions );
-
-                                    WriteNormals( streamWriter, batch.Normals != null ? normals : new Vector3[positions.Length] );
-                                    WriteTexCoords( streamWriter, batch.TexCoords ?? new Vector2[positions.Length] );
-                                    WriteTriangles( streamWriter, node1, meshIndex1, batch.Triangles, MeshType.Type1 );
-                                    vertexBaseIndex += batch.VertexCount;
-                                }
-                            }
-                            break;
-                        case MeshType.Type2:
-                            {
-                                var mesh = ( MeshType2 ) _mesh;
-                                foreach ( var batch in mesh.Batches )
-                                {
-                                    ( Vector3[] positions, Vector3[] normals, _ ) = batch.Transform( model.Nodes );
-                                    WritePositions( streamWriter, positions );
-                                    WriteNormals( streamWriter, normals );
-                                    WriteTexCoords( streamWriter, batch.TexCoords );
-                                    WriteTriangles( streamWriter, node1, meshIndex1, batch.Triangles, MeshType.Type2 );
-                                    vertexBaseIndex += batch.VertexCount;
-                                }
-                            }
-                            break;
-                        case MeshType.Type3:
-                            break;
-                        case MeshType.Type4:
-                            {
-                                var mesh = ( MeshType4 ) _mesh;
-                                ( Vector3[] positions, Vector3[] normals ) = mesh.Transform( node1.WorldTransform );
-                                WritePositions( streamWriter, positions );
-                                WriteNormals( streamWriter, normals );
-                                WriteTexCoords( streamWriter, new Vector2[positions.Length] );
-                                WriteTriangles( streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type4 );
-                                vertexBaseIndex += mesh.VertexCount;
-                            }
-                            break;
-                        case MeshType.Type5:
-                            {
-                                var mesh   = ( MeshType5 ) _mesh;
-                                var shapes = mesh.Transform( node1.WorldTransform );
-                                for ( var i = 0; i < shapes.Length; i++ )
-                                {
-                                    var shape = shapes[ i ];
-                                    WritePositions( streamWriter, shape.Positions );
-                                    WriteNormals( streamWriter, shape.Normals );
-                                    WriteTexCoords( streamWriter, mesh.TexCoords );
-                                    WriteTriangles( streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type5, i );
-                                    vertexBaseIndex += shape.Positions.Length;
-                                }
-                            }
-                            break;
-                        case MeshType.Type7:
-                            {
-                                var mesh = ( MeshType7 ) _mesh;
-                                foreach ( var batch in mesh.Batches )
-                                {
-                                    ( Vector3[] positions, Vector3[] normals, _ ) = batch.Transform( model.Nodes );
-
-                                    WritePositions( streamWriter, positions );
-                                    WriteNormals( streamWriter, normals );
-                                    WriteTexCoords( streamWriter, batch.TexCoords );
-                                }
-
-                                WriteTriangles( streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type7 );
-                                vertexBaseIndex += _mesh.VertexCount;
-                            }
-                            break;
-                        case MeshType.Type8:
-                            {
-                                var mesh = ( MeshType8 ) _mesh;
-                                foreach ( var batch in mesh.Batches )
-                                {
-                                    ( Vector3[] positions, Vector3[] normals ) = batch.Transform( node1.WorldTransform );
-                                    WritePositions( streamWriter, positions );
-                                    WriteNormals( streamWriter, normals );
-                                    WriteTexCoords( streamWriter, batch.TexCoords );
-                                }
-
-                                WriteTriangles( streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type8 );
-                                vertexBaseIndex += _mesh.VertexCount;
-                            }
-                            break;
-                    }
-                }
-            }
 
             using ( var writer = File.CreateText( "test.obj" ) )
             {
@@ -400,7 +416,7 @@ namespace DDS3ModelLibraryCLI
                             {
                                 var mesh = node.Geometry.Meshes[meshIndex];
                                 writer.WriteLine( $"// node '{node.Name}' mesh ({mesh.Type}) #{meshIndex}" );
-                                WriteMesh( writer, model, node, mesh, meshIndex, false );
+                                WriteMesh( writer, model, node, mesh, meshIndex, false, ref vertexBaseIndex );
                             }
                         }
 
@@ -410,7 +426,86 @@ namespace DDS3ModelLibraryCLI
                             {
                                 var mesh = node.Geometry.TranslucentMeshes[meshIndex];
                                 writer.WriteLine( $"// node '{node.Name}' mesh(XLU) ({mesh.Type}) #{meshIndex}" );
-                                WriteMesh( writer, model, node, mesh, meshIndex, true );
+                                WriteMesh( writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void ExportObj( Model model )
+        {
+            var vertexBaseIndex = 0;
+
+            using ( var writer = File.CreateText( "test.obj" ) )
+            {
+                foreach ( var node in model.Nodes )
+                {
+                    if ( node.Geometry == null )
+                        continue;
+
+                    if ( node.Geometry.Meshes != null )
+                    {
+                        for ( var meshIndex = 0; meshIndex < node.Geometry.Meshes.Count; meshIndex++ )
+                        {
+                            var mesh = node.Geometry.Meshes[meshIndex];
+                            writer.WriteLine( $"// node '{node.Name}' mesh ({mesh.Type}) #{meshIndex}" );
+                            WriteMesh( writer, model, node, mesh, meshIndex, false, ref vertexBaseIndex );
+                        }
+                    }
+
+                    if ( node.Geometry.TranslucentMeshes != null )
+                    {
+                        for ( var meshIndex = 0; meshIndex < node.Geometry.TranslucentMeshes.Count; meshIndex++ )
+                        {
+                            var mesh = node.Geometry.TranslucentMeshes[meshIndex];
+                            writer.WriteLine( $"// node '{node.Name}' mesh(XLU) ({mesh.Type}) #{meshIndex}" );
+                            WriteMesh( writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex );
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void ExportObj( FieldScene field, string fileName = "test.obj" )
+        {
+            var vertexBaseIndex = 0;
+            Directory.CreateDirectory( "obj" );
+
+            using ( var writer = File.CreateText( Path.Combine( "obj\\", fileName ) ) )
+            {
+                foreach ( var obj in field.Objects )
+                {
+                    if ( obj.Type != FieldObjectType.Model || obj.Resource == null )
+                    {
+                        continue;
+                    }
+
+                    var model = ( Model )obj.Resource;
+                    writer.WriteLine( $"// field model '{obj.Name}'" );
+                    foreach ( var node in model.Nodes )
+                    {
+                        if ( node.Geometry == null )
+                            continue;
+
+                        if ( node.Geometry.Meshes != null )
+                        {
+                            for ( var meshIndex = 0; meshIndex < node.Geometry.Meshes.Count; meshIndex++ )
+                            {
+                                var mesh = node.Geometry.Meshes[meshIndex];
+                                writer.WriteLine( $"// node '{node.Name}' mesh ({mesh.Type}) #{meshIndex}" );
+                                WriteMesh( writer, model, node, mesh, meshIndex, false, ref vertexBaseIndex, obj );
+                            }
+                        }
+
+                        if ( node.Geometry.TranslucentMeshes != null )
+                        {
+                            for ( var meshIndex = 0; meshIndex < node.Geometry.TranslucentMeshes.Count; meshIndex++ )
+                            {
+                                var mesh = node.Geometry.TranslucentMeshes[meshIndex];
+                                writer.WriteLine( $"// node '{node.Name}' mesh(XLU) ({mesh.Type}) #{meshIndex}" );
+                                WriteMesh( writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex, obj );
                             }
                         }
                     }
@@ -599,6 +694,90 @@ namespace DDS3ModelLibraryCLI
             //        File.Copy( path, outPath, true );
             //    }
             //} );
+        }
+
+        private static void OpenAndSaveFieldSceneBatchTest()
+        {
+            if ( !Directory.Exists( "unique_f1" ) )
+                FindUniqueFiles( "unique_f1", @"D:\Modding\DDS3", ".F1" );
+
+            if ( !Directory.Exists( "unique_lb" ) )
+                FindUniqueFiles( "unique_lb", @"D:\Modding\DDS3", ".LB" );
+
+            if ( !Directory.Exists( "unique_lb_extracted" ) )
+            {
+                Directory.CreateDirectory( "unique_lb_extracted" );
+                var checksums = new HashSet<string>();
+                Parallel.ForEach( Directory.EnumerateFiles( "unique_lb" ), ( path ) =>
+                {
+                    var fileName = Path.GetFileNameWithoutExtension( path );
+                    var outPath = $"unique_lb_extracted\\";
+                    Directory.CreateDirectory( outPath );
+
+                    using ( var lb = new AtlusFileSystemLibrary.FileSystems.LB.LBFileSystem() )
+                    {
+                        lb.Load( path );
+
+                        foreach ( var file in lb.EnumerateFiles() )
+                        {
+                            var info = lb.GetInfo( file );
+                            using ( var stream = lb.OpenFile( file ) )
+                            {
+                                var checksum = GetChecksum( stream );
+                                stream.Position = 0;
+                                var extract = false;
+
+                                lock ( checksums )
+                                {
+                                    if ( !checksums.Contains( checksum ) )
+                                    {
+                                        checksums.Add( checksum );
+                                        extract = true;
+                                    }
+                                }
+
+                                if ( extract )
+                                {
+                                    var nameParts = Path.GetFileNameWithoutExtension( path ).Split( new[] { '_' } );
+                                    Array.Resize( ref nameParts, nameParts.Length - 1 );
+
+                                    using ( var fileStream =
+                                        File.Create( Path.Combine( outPath, string.Concat( nameParts ) + "_" + file + "_" + checksum + "." + info.Extension )
+                                                   ) )
+                                    {
+                                        Console.WriteLine( $"Extracting: {fileName} #{file} ({info.UserId:D2}, {info.Extension})" );
+                                        stream.CopyTo( fileStream );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } );
+            }
+
+            //FindUniqueFiles( "unique_f1", "unique_lb_extracted", ".F1" );
+
+
+            var uniqueValues = new HashSet<MeshFlags>();
+            var frequencyMap = new ConcurrentDictionary<MeshFlags, int>();
+
+            var paths = Directory.EnumerateFiles( "unique_f1", "*.F1", SearchOption.AllDirectories ).ToList();
+            var done = 0;
+            Parallel.ForEach( paths, new ParallelOptions() { MaxDegreeOfParallelism = 16 }, ( path ) =>
+            {
+                if ( path != "unique_f1\\f500_001_9E6A1BA4D63DD8AA05144CEF3768A380EEAFD2E6D620C24CE85DC173533B5992.F1" )
+                {
+                    Console.WriteLine( Path.GetFileName( path ) );
+                    var field = new FieldScene( path );
+                    ExportObj( field, Path.GetFileNameWithoutExtension( path ) + ".obj" );
+                    //new FieldScene( modelPack.Save() );
+                }
+            } );
+
+            foreach ( var kvp in frequencyMap.OrderBy( x => x.Value ) )
+            {
+                Console.WriteLine( kvp.Value + " " + kvp.Key );
+            }
         }
 
         private static void GenerateMaterialPresets()

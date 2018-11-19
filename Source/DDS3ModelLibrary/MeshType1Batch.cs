@@ -83,12 +83,14 @@ namespace DDS3ModelLibrary
         public (Vector3[] Positions, Vector3[] Normals) Transform( Matrix4x4 nodeWorldTransform )
         {
             var positions = new Vector3[VertexCount];
-            var normals   = new Vector3[positions.Length];
+            var normals = Normals != null ? new Vector3[positions.Length] : null;
 
             for ( int i = 0; i < Positions.Length; i++ )
             {
                 positions[i] = Vector3.Transform( Positions[i], nodeWorldTransform );
-                normals[i]   = Vector3.TransformNormal( Normals[i], nodeWorldTransform );
+
+                if ( normals != null )
+                    normals[ i ] = Vector3.TransformNormal( Normals[ i ], nodeWorldTransform );
             }
 
             return ( positions, normals );

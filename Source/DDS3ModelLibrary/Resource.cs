@@ -95,14 +95,14 @@ namespace DDS3ModelLibrary
 
         protected void Read( EndianBinaryReader reader )
         {
-            Read( reader, null );
+            Read( reader, null, false );
         }
 
-        private void Read( EndianBinaryReader reader, ResourceHeader header )
+        private void Read( EndianBinaryReader reader, ResourceHeader header, bool isFieldObj )
         {
             var start = reader.Position;
 
-            if ( header == null )
+            if ( header == null && !isFieldObj )
             {
                 // Read the resource header and make sure that we're reading the right type of resource
                 header = reader.ReadObject<ResourceHeader>();
@@ -116,17 +116,24 @@ namespace DDS3ModelLibrary
                 start -= ResourceHeader.SIZE;
             }
 
-            reader.PushBaseOffset( start );
+            if ( !isFieldObj )
+                reader.PushBaseOffset( start );
 
-            var end = start + header.FileSize;
-            UserId = header.UserId;
+            var end = 0L;
+            if ( header != null )
+            {
+                end = start + header.FileSize;
+                UserId = header.UserId;
+            }
+
             ReadContent( reader, header );
 
             // Some files have broken offsets & filesize in their texture pack (f021_aljira.PB)
-            if ( header.Identifier != ResourceIdentifier.TexturePack )
+            if ( header != null && header.Identifier != ResourceIdentifier.TexturePack )
                 reader.SeekBegin( end );
 
-            reader.PopBaseOffset();
+            if ( !isFieldObj )
+                reader.PopBaseOffset();
         }
 
         // IBinarySerializable
@@ -138,7 +145,8 @@ namespace DDS3ModelLibrary
         /// <param name="context"><see cref="ResourceHeader"/>, if null then it will be read from the stream.</param>
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Read( reader, context as ResourceHeader );
+            (var header, var isFieldObj) = ( (ResourceHeader, bool) )context;
+            Read( reader, header, isFieldObj );
         }
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )

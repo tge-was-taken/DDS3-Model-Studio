@@ -7,7 +7,7 @@ namespace DDS3ModelLibrary
     {
         public const int SIZE = 16;
 
-        public BinarySourceInfo SourceInfo { get; set; }
+        BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
         public ResourceFileType FileType { get; set; }
         public bool IsCompressed { get; set; }

@@ -8,9 +8,11 @@ using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary
 {
-    public class Model : Resource
+    public class Model : Resource, IFieldObjectResource
     {
         public override ResourceDescriptor ResourceDescriptor { get; } = new ResourceDescriptor( ResourceFileType.Model, ResourceIdentifier.Model );
+
+        FieldObjectType IFieldObjectResource.FieldObjectType => FieldObjectType.Model;
 
         public List<Node> Nodes { get; private set; }
 
@@ -89,29 +91,44 @@ namespace DDS3ModelLibrary
 
         internal override void WriteContent( EndianBinaryWriter writer, object context )
         {
-            // TODO: fix this
-            writer.OffsetPositions.Clear();
+            var isFieldObj = ( bool ) context;
+
+            if ( !isFieldObj )
+            {
+                // TODO: implement this properly
+                writer.OffsetPositions.Clear();
+            }
 
             var start = writer.Position;
 
-            // Relocation table needs this base offset
-            writer.PushBaseOffset( start + 16 );
-
-            // Write relocation table last (lowest priority)
-            writer.ScheduleWriteOffsetAligned( -1, 16, () =>
+            if ( !isFieldObj )
             {
-                // Encode & write relocation table
-                var encodedRelocationTable = RelocationTableEncoding.Encode( writer.OffsetPositions.Select( x => ( int )x ).ToList(), ( int )writer.BaseOffset );
-                writer.Write( encodedRelocationTable );
+                // Relocation table needs this base offset
+                writer.PushBaseOffset( start + 16 );
 
-                // Kind of a hack here, but we need to write the relocation table size after the offset
-                // Seeing as we have the offset positions required to encode the relocation table only at the very end
-                // I can't really think of a better solution
-                var end = writer.Position;
-                writer.SeekBegin( start + 4 );
-                writer.Write( encodedRelocationTable.Length );
-                writer.SeekBegin( end );
-            } );
+                // Write relocation table last (lowest priority)
+                writer.ScheduleWriteOffsetAligned( -1, 16, () =>
+                {
+                    // Encode & write relocation table
+                    var encodedRelocationTable =
+                        RelocationTableEncoding.Encode( writer.OffsetPositions.Select( x => ( int ) x ).ToList(), ( int ) writer.BaseOffset );
+                    writer.Write( encodedRelocationTable );
+
+                    // Kind of a hack here, but we need to write the relocation table size after the offset
+                    // Seeing as we have the offset positions required to encode the relocation table only at the very end
+                    // I can't really think of a better solution
+                    var end = writer.Position;
+                    writer.SeekBegin( start + 4 );
+                    writer.Write( encodedRelocationTable.Length );
+                    writer.SeekBegin( end );
+                } );
+            }
+            else
+            {
+                writer.Write( 0 );
+                writer.Write( 0 );
+            }
+
             writer.Align( 16 );
 
             writer.ScheduleWriteOffsetAligned( 16, () =>
@@ -160,7 +177,11 @@ namespace DDS3ModelLibrary
                 writer.Align( 16 );
             } );
 
-            writer.PerformScheduledWrites();
+            if ( !isFieldObj )
+            {
+                // TODO(TGE): implement this properly
+                writer.PerformScheduledWrites();
+            }
         }
 
         private static void WriteExtension( EndianBinaryWriter writer, ModelExtensionIdentifier extensionIdentifier, Action writeAction )
