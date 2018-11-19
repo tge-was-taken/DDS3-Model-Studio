@@ -508,16 +508,16 @@ namespace DDS3ModelLibrary
                 switch ( header.Identifier )
                 {
                     case ResourceIdentifier.ModelPackInfo:
-                        Info = reader.ReadObject<ModelPackInfo>( header );
+                        Info = reader.ReadObject<ModelPackInfo>( (header, false) );
                         break;
 
                     case ResourceIdentifier.Particle:
                     case ResourceIdentifier.Video:
-                        Effects.Add( reader.ReadObject<BinaryResource>( header ) );
+                        Effects.Add( reader.ReadObject<BinaryResource>( (header, false) ) );
                         break;
 
                     case ResourceIdentifier.TexturePack:
-                        TexturePack = reader.ReadObject<TexturePack>( header );
+                        TexturePack = reader.ReadObject<TexturePack>( (header, false) );
                         break;
 
                     case ResourceIdentifier.Model:
@@ -525,7 +525,7 @@ namespace DDS3ModelLibrary
                         break;
 
                     case ResourceIdentifier.AnimationPack:
-                        AnimationPacks.Add( reader.ReadObject<BinaryResource>( header ) );
+                        AnimationPacks.Add( reader.ReadObject<BinaryResource>( (header, false) ) );
                         break;
 
                     case ResourceIdentifier.ModelPackEnd:

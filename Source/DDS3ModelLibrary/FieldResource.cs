@@ -27,36 +27,39 @@ namespace DDS3ModelLibrary
 
         protected virtual void Write( EndianBinaryWriter writer, object context = null )
         {
+            int size = 0;
+
             // Skip header
             writer.PushBaseOffset();
             var start = writer.Position;
-            writer.SeekCurrent( 16 );
-
-            // Write resource content
-            WriteContent( writer, context );
-
-            // Calculate content size 
-            var end  = writer.Position;
-            var size = end - start;
-
-            // Seek back to write the header
-            writer.SeekBegin( start );
             writer.Write( ( int )ResourceDescriptor.FileType );
             writer.Write( ( uint )ResourceDescriptor.Identifier );
-            writer.Write( ( uint )size );
-            writer.ScheduleWriteOffsetAligned( 16, () =>
+            writer.Write( 0 ); // dummy data size
+            writer.ScheduleWriteOffsetAligned( -1, 16, () =>
             {
+                // Write data size
+                var relocationTableStart = writer.Position;
+                writer.SeekBegin( start + 8 );
+                writer.Write( ( int ) relocationTableStart - start );
+
                 // Encode & write relocation table
+                writer.SeekBegin( relocationTableStart );
                 var encodedRelocationTable = RelocationTableEncoding.Encode( writer.OffsetPositions.Select( x => ( int )x ).ToList(), ( int )writer.BaseOffset );
                 writer.Write( encodedRelocationTable );
+
+                // Write relocation table size
                 var relocationTableEnd = writer.Position;
                 writer.SeekBegin( start + 16 );
                 writer.Write( encodedRelocationTable.Length );
                 writer.SeekBegin( relocationTableEnd );
-            } );
+            });
+            writer.Write( 0 ); // dummy relocation table size
+
+            // Write resource content
+            WriteContent( writer, context );
+            writer.PerformScheduledWrites();
 
             // Seek back to the end and align to 64 bytes
-            writer.SeekBegin( end );
             writer.PopBaseOffset();
         }
 

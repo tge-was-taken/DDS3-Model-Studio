@@ -12,13 +12,13 @@ namespace DDS3ModelLibrary
     {
         public override ResourceDescriptor ResourceDescriptor { get; } = new ResourceDescriptor( ResourceFileType.Model, ResourceIdentifier.Model );
 
-        FieldObjectType IFieldObjectResource.FieldObjectType => FieldObjectType.Model;
+        FieldObjectResourceType IFieldObjectResource.FieldObjectResourceType => FieldObjectResourceType.Model;
 
-        public List<Node> Nodes { get; private set; }
+        public List<Node> Nodes { get; }
 
         public List<Material> Materials { get; private set; }
 
-        public List<ModelExtension> Extensions { get; private set; }
+        public List<ModelExtension> Extensions { get; }
 
         public Model()
         {

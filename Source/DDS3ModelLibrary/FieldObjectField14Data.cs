@@ -37,6 +37,10 @@ namespace DDS3ModelLibrary
             public int Field08 { get; set; }
             public int Field0C { get; set; }
 
+            public Field04Data()
+            {
+                Field00 = 0x3130;
+            }
 
             void IBinarySerializable.Read( EndianBinaryReader reader, object context )
             {

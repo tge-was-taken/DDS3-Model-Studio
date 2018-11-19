@@ -27,7 +27,7 @@ namespace DDS3ModelLibrary
         {
             ( short vertexCount, short nodeIndex ) = ( (short, short) ) context;
             NodeIndex = nodeIndex;
-            Positions = reader.ReadVector4s( vertexCount );
+            Positions = reader.ReadVector4Array( vertexCount );
             Normals   = reader.ReadVector3s( vertexCount );
             reader.Align( 16 );
         }

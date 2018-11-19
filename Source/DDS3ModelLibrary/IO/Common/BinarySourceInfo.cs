@@ -5,23 +5,23 @@
         /// <summary>
         /// Path to the file from which the object was read.
         /// </summary>
-        public string SourceFilePath { get; }
+        public string FilePath { get; }
 
         /// <summary>
         /// Offset from which the object was read.
         /// </summary>
-        public long SourceOffset { get; }
+        public long Offset { get; }
 
         /// <summary>
-        /// Endiannes in which the object was read.
+        /// Endianness in which the object was read.
         /// </summary>
-        public Endianness SourceEndianness { get; }
+        public Endianness Endianness { get; }
 
         internal BinarySourceInfo( string filePath, long offset, Endianness endianness )
         {
-            SourceFilePath   = filePath;
-            SourceOffset     = offset;
-            SourceEndianness = endianness;
+            FilePath   = filePath;
+            Offset     = offset;
+            Endianness = endianness;
         }
     }
 }

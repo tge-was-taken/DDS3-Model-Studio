@@ -60,15 +60,21 @@ namespace DDS3ModelLibrary
             }
         }
 
-        protected virtual void Write( EndianBinaryWriter writer, object context = null )
+        protected virtual void Write( EndianBinaryWriter writer, bool isFieldObj = false )
         {
+            if ( isFieldObj )
+            {
+                WriteContent( writer, isFieldObj );
+                return;
+            }
+
             // Skip header
             writer.PushBaseOffset();
             var start = writer.Position;
             writer.SeekCurrent( 16 );
 
             // Write resource content
-            WriteContent( writer, context );
+            WriteContent( writer, isFieldObj );
 
             // Calculate content size 
             var end = writer.Position;
@@ -145,13 +151,20 @@ namespace DDS3ModelLibrary
         /// <param name="context"><see cref="ResourceHeader"/>, if null then it will be read from the stream.</param>
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            (var header, var isFieldObj) = ( (ResourceHeader, bool) )context;
-            Read( reader, header, isFieldObj );
+            if ( context != null )
+            {
+                ( var header, var isFieldObj ) = ( (ResourceHeader, bool) ) context;
+                Read( reader, header, isFieldObj );
+            }
+            else
+            {
+                Read( reader, null, false );
+            }
         }
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
         {
-            Write( writer, context );
+            Write( writer, ( bool ) context );
         }
     }
 }

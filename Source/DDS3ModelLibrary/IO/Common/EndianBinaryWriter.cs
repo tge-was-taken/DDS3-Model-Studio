@@ -59,7 +59,7 @@ namespace DDS3ModelLibrary.IO.Common
             set
             {
                 mEncoding = value;
-                mEncodingMinByteCount = mEncoding.GetByteCount( " " );
+                mEncodingMinByteCount = mEncoding.GetByteCount( "\0" );
             }
         }
 
@@ -329,20 +329,10 @@ namespace DDS3ModelLibrary.IO.Common
 
         public void Write( Color color )
         {
-            if ( Endianness == Endianness.Little )
-            {
-                Write( color.A );
-                Write( color.B );
-                Write( color.G );
-                Write( color.R );
-            }
-            else
-            {
-                Write( color.R );
-                Write( color.G );
-                Write( color.B );
-                Write( color.A );
-            }
+            Write( color.R );
+            Write( color.G );
+            Write( color.B );
+            Write( color.A );
         }
 
 
@@ -363,7 +353,7 @@ namespace DDS3ModelLibrary.IO.Common
                     {
                         Write( Encoding.GetBytes( value ) );
 
-                        for ( int i = 0; i < Encoding.GetByteCount( "1" ); i++ )
+                        for ( int i = 0; i < mEncodingMinByteCount; i++ )
                             Write( ( byte )0 );
                     }
                     break;
@@ -375,11 +365,11 @@ namespace DDS3ModelLibrary.IO.Common
                         }
 
                         var bytes = Encoding.GetBytes( value );
-                        if ( bytes.Length > fixedLength )
-                            Array.Resize( ref bytes, fixedLength );
+                        var bytesToWrite = Math.Min( bytes.Length, fixedLength );
+                        for ( int i = 0; i < bytesToWrite; i++ )
+                            Write( bytes[ i ] );
 
-                        Write( bytes );
-                        fixedLength -= bytes.Length;
+                        fixedLength -= bytesToWrite;
 
                         while ( fixedLength-- > 0 )
                             Write( ( byte )0 );
@@ -552,6 +542,24 @@ namespace DDS3ModelLibrary.IO.Common
             foreach ( var obj in collection )
             {
                 obj.Write( this, context );
+            }
+        }
+
+        internal void ScheduleWriteObjectListOffset( IEnumerable<IBinarySerializable> list, int alignment = 4, object context = null )
+        {
+            if ( list == null )
+            {
+                Write( 0 );
+            }
+            else
+            {
+                ScheduleWriteOffset( 0, list, () =>
+                {
+                    Align( alignment );
+                    long current = BaseStream.Position;
+                    WriteObjects( list, context );
+                    return current;
+                } );
             }
         }
 

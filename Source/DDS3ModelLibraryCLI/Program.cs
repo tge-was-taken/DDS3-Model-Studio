@@ -22,6 +22,7 @@ namespace DDS3ModelLibraryCLI
         {
             //ExportObj( new ModelPack( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_b.PB" ) );
             //return;
+            //OpenAndSaveModelPackBatchTest();return;
             OpenAndSaveFieldSceneBatchTest();return;
             //ReplaceModelTest();return;
 
@@ -326,7 +327,7 @@ namespace DDS3ModelLibraryCLI
                                 (Vector3[] positions, Vector3[] normals, _) = batch.Transform( model.Nodes );
                                 WritePositions( streamWriter, positions );
                                 WriteNormals( streamWriter, normals );
-                                WriteTexCoords( streamWriter, batch.TexCoords );
+                                WriteTexCoords( streamWriter, batch.TexCoords ?? new Vector2[positions.Length] );
                                 WriteTriangles( streamWriter, node1, meshIndex1, batch.Triangles, MeshType.Type2 );
                                 vertexBaseIndex += batch.VertexCount;
                             }
@@ -397,11 +398,11 @@ namespace DDS3ModelLibraryCLI
             _vertexBaseIndex = vertexBaseIndex;
         }
 
-        public static void ExportObj( ModelPack modelPack )
+        public static void ExportObj( ModelPack modelPack, string fileName = "test.obj" )
         {
             var vertexBaseIndex = 0;
 
-            using ( var writer = File.CreateText( "test.obj" ) )
+            using ( var writer = File.CreateText( fileName ) )
             {
                 foreach ( var model in modelPack.Models )
                 {
@@ -477,7 +478,7 @@ namespace DDS3ModelLibraryCLI
             {
                 foreach ( var obj in field.Objects )
                 {
-                    if ( obj.Type != FieldObjectType.Model || obj.Resource == null )
+                    if ( obj.ResourceType != FieldObjectResourceType.Model || obj.Resource == null )
                     {
                         continue;
                     }
@@ -630,34 +631,14 @@ namespace DDS3ModelLibraryCLI
             {
                 Console.WriteLine( Path.GetFileName( path ) );
                 var modelPack = new ModelPack( path );
-                new ModelPack( modelPack.Save() );
-
-                //foreach ( var model in modelPack.Models )
-                //{
-                //    foreach ( var node in model.Nodes )
-                //    {
-                //        if ( node.Geometry?.Meshes == null )
-                //            continue;
-
-                //        foreach ( var _mesh in node.Geometry.Meshes )
-                //        {
-                //            if ( _mesh.Type != MeshType.Type4 )
-                //                continue;
-
-                //            var mesh = ( MeshType4 )_mesh;
-                //            //if ( !frequencyMap.ContainsKey( mesh.Flags ) )
-                //            //    frequencyMap[mesh.Flags] = 1;
-                //            //else
-                //            //    ++frequencyMap[mesh.Flags];
-                //        }
-                //    }
-                //}
+                //new ModelPack( modelPack.Save() );
+                ExportObj( modelPack, Path.GetFileNameWithoutExtension( path ) + ".obj" );
             } );
 
-            foreach ( var kvp in frequencyMap.OrderBy( x => x.Value ) )
-            {
-                Console.WriteLine( kvp.Value + " " + kvp.Key );
-            }
+            //foreach ( var kvp in frequencyMap.OrderBy( x => x.Value ) )
+            //{
+            //    Console.WriteLine( kvp.Value + " " + kvp.Key );
+            //}
 
             //var paths = Directory.EnumerateFiles( "unique_models", "*.PB", SearchOption.AllDirectories ).ToList();
             //var done = 0;
@@ -769,8 +750,11 @@ namespace DDS3ModelLibraryCLI
                 {
                     Console.WriteLine( Path.GetFileName( path ) );
                     var field = new FieldScene( path );
-                    ExportObj( field, Path.GetFileNameWithoutExtension( path ) + ".obj" );
-                    //new FieldScene( modelPack.Save() );
+                    //ExportObj( field, Path.GetFileNameWithoutExtension( path ) + ".obj" );
+                    //new FieldScene( field.Save() );
+                    //field.Save( path + ".out" );
+                    //new FieldScene( path + ".out" );
+                    //File.Delete( path + ".out" );
                 }
             } );
 

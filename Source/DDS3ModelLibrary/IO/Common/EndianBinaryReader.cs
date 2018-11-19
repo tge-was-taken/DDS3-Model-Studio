@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using System.Text;
@@ -347,7 +348,7 @@ namespace DDS3ModelLibrary.IO.Common
             return SwapBytes ? EndiannessHelper.Swap( base.ReadInt32() ) : base.ReadInt32();
         }
 
-        public int ReadInt32Expects( int expected, string message )
+        public int ReadInt32Expects( int expected, string message = "Unexpected value" )
         {
             var actual = ReadInt32();
             if ( actual != expected )
@@ -436,20 +437,10 @@ namespace DDS3ModelLibrary.IO.Common
         public Color ReadColor()
         {
             Color color;
-            if ( Endianness == Endianness.Little )
-            {
-                color.B = ReadByte();
-                color.G = ReadByte();
-                color.R = ReadByte();
-                color.A = ReadByte();
-            }
-            else
-            {
-                color.A = ReadByte();
-                color.R = ReadByte();
-                color.G = ReadByte();
-                color.B = ReadByte();
-            }
+            color.R = ReadByte();
+            color.G = ReadByte();
+            color.B = ReadByte();
+            color.A = ReadByte();
 
             return color;
         }
@@ -512,13 +503,22 @@ namespace DDS3ModelLibrary.IO.Common
             return new Vector4( ReadSingle(), ReadSingle(), ReadSingle(), ReadSingle() );
         }
 
-        public Vector4[] ReadVector4s( int count )
+        public Vector4[] ReadVector4Array( int count )
         {
             var array = new Vector4[count];
             for ( var i = 0; i < array.Length; i++ )
                 array[i] = ReadVector4();
 
             return array;
+        }
+
+        public List<Vector4> ReadVector4List( int count )
+        {
+            var list = new List<Vector4>( count );
+            for ( var i = 0; i < count; i++ )
+                list.Add( ReadVector4() );
+
+            return list;
         }
 
         public string ReadString( StringBinaryFormat format, int fixedLength = -1 )
@@ -629,6 +629,13 @@ namespace DDS3ModelLibrary.IO.Common
 
             obj.Read( this, context );
             return obj;
+        }
+
+        public List<T> ReadObjectListOffset<T>( int count, object context = null ) where T : IBinarySerializable, new()
+        {
+            List<T> list = null;
+            ReadOffset( () => { list = ReadObjectList<T>( count, context ); } );
+            return list;
         }
 
         public List<T> ReadObjectList<T>( int count, object context = null ) where T : IBinarySerializable, new()

@@ -1135,16 +1135,51 @@ typedef struct
                 TModel Model( false );
                 break;
 
+            case 3: // 01xxx_01
+                struct TFieldResourceType3 Type3;
+                break;           
+
             case 5: // TEX_LIST
                 SetRandomBackColor();
                 string TextureListFileName;
                 break;
 
-            case 0xC: // light, FieldObj
+            case 0xB:
                 struct
                 {
                     SetRandomBackColor();
-                    f32 Data[ 13 ];
+                    s32 Field00;
+                    s32 Field04;
+                    s32 Field08;
+                    f32 Field0C;
+                    f32 Field10;
+                    f32 Field14;
+                    s32 Field18;
+                    s32 Field1C;
+                    s32 Field20;
+                    s32 Field24;
+                    s32 Field28;
+                    s32 Field2C;
+                } Effect;
+                break;
+
+            case 0xC: // light, FieldObj
+                typedef struct
+                {
+                    SetRandomBackColor();
+                    s32 Field00;
+                    s32 Field04;
+                    s32 Field08;
+                    f32 Field0C;
+                    f32 Field10;
+                    f32 Field14;
+                    s32 Field18;
+                    f32 Field1C;
+                    f32 Field20;
+                    f32 Field24;
+                    f32 Field28;
+                    f32 Field2C;
+                    f32 Field30;
                 } Light;
                 break;
         }
@@ -1152,6 +1187,76 @@ typedef struct
 
     FSeek( resourceEnd );
 } TFieldResource <optimize=false>;
+
+typedef struct
+{
+    SetRandomBackColor();
+    s32 Field00;
+    s32 Field04;
+    s32 Field08;
+    s32 Field0C;
+
+    if ( Field08 != 0 )
+    {
+        FSeek( gBaseOffset + Field08 );
+        struct
+        {
+            SetRandomBackColor();
+            s32 Field00;
+            s32 Field04;
+            s32 Field08;
+            s32 Field0C; // offset
+            s32 Field10; // offset
+            s32 Field14; // offset
+            s32 Field18;
+            s32 Field1C;
+
+            if ( Field0C != 0 )
+            {
+                FSeek( gBaseOffset + Field0C );
+                SetRandomBackColor();
+                Vector4 Field0CData[ Field00 ];
+            }
+
+            if ( Field10 != 0 )
+            {
+                FSeek( gBaseOffset + Field10 );
+                struct
+                {
+                    SetRandomBackColor();
+                    s32 Field00;
+                    s32 Field04;
+                    s32 Field08;
+                    s32 Field0C;
+                    s32 Field10;
+                    s32 Field14;
+                    s32 Field18;
+                    s32 Field1C;
+                    s16 Field20;
+                    s16 Field22;
+                } Field10Data[ Field04 ];
+            }
+
+            if ( Field14 != 0 )
+            {
+                FSeek ( gBaseOffset + Field14 );
+                struct
+                {
+                    SetRandomBackColor();
+                    s32 Field00;
+                    s32 Field04;
+                    s32 Field08;
+                    s32 Field0C;
+                    s32 Field10;
+                    s32 Field14;
+                    s32 Field18;
+                    s32 Field1C;
+                } Field14Data;
+
+            }
+        } Field04Data;
+    }
+} TFieldResourceType3;
 
 typedef struct
 {

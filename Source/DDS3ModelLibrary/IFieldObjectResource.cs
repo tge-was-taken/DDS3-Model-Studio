@@ -4,6 +4,6 @@ namespace DDS3ModelLibrary
 {
     public interface IFieldObjectResource : IBinarySerializable
     {
-        FieldObjectType FieldObjectType { get; }
+        FieldObjectResourceType FieldObjectResourceType { get; }
     }
 }

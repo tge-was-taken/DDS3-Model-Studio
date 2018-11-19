@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using DDS3ModelLibrary.IO.Common;
 
@@ -10,16 +11,37 @@ namespace DDS3ModelLibrary
 
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        public FieldObjectType Type { get; set; }
+        public FieldObjectResourceType Type { get; set; }
 
         public FieldObjectList()
         {
             mList = new List<FieldObject>();
         }
 
+        public FieldObjectList( IEnumerable<FieldObject> objects )
+        {
+            mList = new List<FieldObject>();
+
+            var typeKnown = false;
+            foreach ( var fieldObject in objects )
+            {
+                if ( !typeKnown )
+                {
+                    Type = fieldObject.ResourceType;
+                    typeKnown = true;
+                }
+                else if ( Type != fieldObject.ResourceType )
+                {
+                    throw new InvalidOperationException( $"{nameof( FieldObjectList )} only supports a list of field objects of the same type" );
+                }
+
+                Add( fieldObject );
+            }
+        }
+
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Type = ( FieldObjectType )reader.ReadInt32();
+            Type = ( FieldObjectResourceType )reader.ReadInt32();
             var count = reader.ReadInt32();
             reader.ReadOffset( () =>
             {

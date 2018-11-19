@@ -61,15 +61,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FieldEffect.cs" />
+    <Compile Include="FieldLight.cs" />
     <Compile Include="FieldObject.cs" />
     <Compile Include="FieldObjectField14Data.cs" />
-    <Compile Include="FieldObjectField14DataField04Data.cs" />
     <Compile Include="FieldObjectList.cs" />
+    <Compile Include="FieldObjectResourceType3.cs" />
     <Compile Include="FieldObjectTransform.cs" />
-    <Compile Include="FieldObjectType.cs" />
+    <Compile Include="FieldObjectResourceType.cs" />
     <Compile Include="FieldResource.cs" />
     <Compile Include="FieldResourceHeader.cs" />
     <Compile Include="FieldScene.cs" />
+    <Compile Include="FieldSceneField1CData.cs" />
+    <Compile Include="FieldTextureListFileName.cs" />
     <Compile Include="Geometry.cs" />
     <Compile Include="IFieldObjectResource.cs" />
     <Compile Include="IO\Common\BinarySourceInfo.cs" />

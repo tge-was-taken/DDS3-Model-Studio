@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary
@@ -10,6 +11,8 @@ namespace DDS3ModelLibrary
         public override ResourceDescriptor ResourceDescriptor { get; } = new ResourceDescriptor( ResourceFileType.FieldResource, ResourceIdentifier.FieldScene );
 
         public List<FieldObject> Objects { get; }
+
+        public FieldSceneField1CData Field1C { get; set; }
 
         public FieldScene()
         {
@@ -66,15 +69,15 @@ namespace DDS3ModelLibrary
                     Objects.AddRange( list );
                 }
             });
-            reader.ReadOffset( () =>
-            {
-                // TODO
-            });
+            Field1C = reader.ReadObjectOffset<FieldSceneField1CData>();
         }
 
         internal override void WriteContent( EndianBinaryWriter writer, object context )
         {
-            throw new NotImplementedException();
+            var objectLists = Objects.GroupBy( x => x.ResourceType ).Select( x => new FieldObjectList( x ) ).OrderBy( x => x.Type ).ToList();
+            writer.Write( objectLists.Count );
+            writer.ScheduleWriteListOffset( objectLists, 16 );
+            writer.ScheduleWriteObjectOffset( Field1C, 16 );
         }
     }
 }

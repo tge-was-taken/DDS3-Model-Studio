@@ -263,7 +263,7 @@ namespace DDS3ModelLibrary.PS2.VIF
                             Vector3s = reader.ReadVector3s( Count );
                             break;
                         case 4:
-                            Vector4s = reader.ReadVector4s( Count );
+                            Vector4s = reader.ReadVector4Array( Count );
                             break;
                     }
                     break;
