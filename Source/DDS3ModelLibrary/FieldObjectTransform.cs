@@ -66,7 +66,8 @@ namespace DDS3ModelLibrary
         }
 
         public FieldObjectTransform()
-        {          
+        {
+            mMatrix = Matrix4x4.Identity;
         }
 
         public FieldObjectTransform( Vector3 position, Vector3 rotation, Vector3 scale )

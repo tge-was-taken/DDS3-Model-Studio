@@ -166,6 +166,84 @@ namespace DDS3ModelLibrary
             usedNodeIndices.RemoveRange( 4, excessiveNodeCount );
         }
 
+        private static MeshType1 ConvertToMeshType1( Assimp.Mesh aiMesh, bool hasTexture, Matrix4x4 aiNodeWorldTransform, List<Vector3> localPositions, ref Matrix4x4 nodeInvWorldTransform )
+        {
+            var mesh = new MeshType1
+            {
+                MaterialIndex = ( short )aiMesh.MaterialIndex,
+            };
+
+            var processedVertexCount = 0;
+            while ( processedVertexCount < aiMesh.VertexCount )
+            {
+                var batchVertexCount = Math.Min( BATCH_VERTEX_LIMIT, aiMesh.VertexCount - processedVertexCount );
+                var batch = new MeshType1Batch();
+                batch.Flags = 0;
+                batch.Triangles = aiMesh
+                                  .Faces.Select( x => new Triangle( ( ushort ) x.Indices[ 0 ], ( ushort ) x.Indices[ 1 ],
+                                                                    ( ushort ) ( x.IndexCount > 2 ? x.Indices[ 2 ] : x.Indices[ 1 ] ) ) )
+                                  .ToArray();
+
+                batch.Positions = new Vector3[batchVertexCount];
+
+                // Convert positions
+                if ( aiMesh.HasVertices )
+                {
+                    for ( int j = 0; j < batch.Positions.Length; j++ )
+                    {
+                        var position = aiMesh.Vertices[processedVertexCount + j].FromAssimp();
+                        var worldPosition = Vector3.Transform( position, aiNodeWorldTransform );
+                        var localPosition = Vector3.Transform( worldPosition, nodeInvWorldTransform );
+                        batch.Positions[j] = localPosition;
+                        localPositions.Add( localPosition );
+                    }
+                }
+
+                // Convert normals
+                if ( aiMesh.HasNormals )
+                {
+                    batch.Normals = new Vector3[batchVertexCount];
+                    for ( int j = 0; j < batch.Normals.Length; j++ )
+                    {
+                        var normal      = aiMesh.Normals[processedVertexCount + j].FromAssimp();
+                        var worldNormal = Vector3.Normalize( Vector3.TransformNormal( normal, aiNodeWorldTransform ) );
+                        var localNormal = Vector3.Normalize( Vector3.TransformNormal( worldNormal, nodeInvWorldTransform ) );
+                        batch.Normals[j] = localNormal;
+                    }
+                }
+
+                // Convert texture coords
+                if ( hasTexture && aiMesh.HasTextureCoords( 0 ) )
+                {
+                    batch.TexCoords = new Vector2[batchVertexCount];
+                    for ( int j = 0; j < batch.TexCoords.Length; j++ )
+                        batch.TexCoords[j] = aiMesh.TextureCoordinateChannels[0][processedVertexCount + j].FromAssimpAsVector2();
+                }
+
+                if ( hasTexture && aiMesh.HasTextureCoords( 1 ) )
+                {
+                    batch.TexCoords2 = new Vector2[batchVertexCount];
+                    for ( int j = 0; j < batch.TexCoords2.Length; j++ )
+                        batch.TexCoords2[j] = aiMesh.TextureCoordinateChannels[1][processedVertexCount + j].FromAssimpAsVector2();
+                }
+
+                if ( aiMesh.HasVertexColors( 0 ) )
+                {
+                    batch.Colors = new Color[batchVertexCount];
+                    for ( int j = 0; j < batch.Colors.Length; j++ )
+                        batch.Colors[j] = aiMesh.VertexColorChannels[0][processedVertexCount + j].FromAssimp();
+                }
+
+                // Add batch to mesh
+                mesh.Batches.Add( batch );
+                processedVertexCount += batchVertexCount;
+            }
+
+            Debug.Assert( processedVertexCount == aiMesh.VertexCount );
+
+            return mesh;
+        }
+
         private static MeshType7 ConvertToMeshType7( Assimp.Mesh aiMesh, bool hasTexture, List<Node> nodes, Matrix4x4 aiNodeWorldTransform, ref Matrix4x4 nodeInvWorldTransform, List<Vector3> localPositions )
         {
             var mesh = new MeshType7
@@ -357,12 +435,12 @@ namespace DDS3ModelLibrary
             aiContext.SetConfig( new Assimp.Configs.FBXPreservePivotsConfig( false ) );
             aiContext.SetConfig( new Assimp.Configs.MaxBoneCountConfig( 4 ) );
             aiContext.SetConfig( new Assimp.Configs.VertexBoneWeightLimitConfig( 4 ) );
-            aiContext.SetConfig( new Assimp.Configs.MeshVertexLimitConfig( 100 ) );
+            aiContext.SetConfig( new Assimp.Configs.MeshVertexLimitConfig( 24 ) );
             var aiScene = aiContext.ImportFile( filePath, Assimp.PostProcessSteps.JoinIdenticalVertices |
                                                           Assimp.PostProcessSteps.FindDegenerates |
                                                           Assimp.PostProcessSteps.FindInvalidData | Assimp.PostProcessSteps.FlipUVs |
                                                           Assimp.PostProcessSteps.ImproveCacheLocality |
-                                                          Assimp.PostProcessSteps.Triangulate | Assimp.PostProcessSteps.LimitBoneWeights // | Assimp.PostProcessSteps.SplitLargeMeshes // | Assimp.PostProcessSteps.SplitByBoneCount
+                                                          Assimp.PostProcessSteps.Triangulate | Assimp.PostProcessSteps.LimitBoneWeights  | Assimp.PostProcessSteps.SplitLargeMeshes // | Assimp.PostProcessSteps.SplitByBoneCount
                                               );
 
             // Clear stuff we're going to replace
@@ -436,7 +514,7 @@ namespace DDS3ModelLibrary
                     {
                         if ( aiMesh.BoneCount > MESH_WEIGHT_LIMIT )
                         {
-                            aiMeshes.AddRange( AssimpHelper.SplitMesh( aiScene, aiMesh, MESH_WEIGHT_LIMIT ) );
+                            aiMeshes.AddRange( AssimpHelper.SplitMeshByBoneCount( aiScene, aiMesh, MESH_WEIGHT_LIMIT ) );
                         }
                         else
                         {
@@ -447,7 +525,7 @@ namespace DDS3ModelLibrary
                     foreach ( var aiMesh in aiMeshes )
                     {
                         var node = AssimpHelper.DetermineBestTargetNode( aiMesh, aiNode, name => model.Nodes.Find( x => x.Name == name ),
-                                                                         model.Nodes[ 1 ] );
+                                                                         model.Nodes[ model.Nodes.Count > 1 ? 1 : 0 ] );
                         var nodeWorldTransform = node.WorldTransform;
                         var nodeInvWorldTransform = nodeWorldTransform.Inverted();
                         var hasTexture = model.Materials[aiMesh.MaterialIndex].TextureId != null;
@@ -467,7 +545,9 @@ namespace DDS3ModelLibrary
                         {
                             // Unweighted mesh
                             // TODO: decide between type 1 and 8?
-                            mesh = ConvertToMeshType8( aiMesh, hasTexture, aiNodeWorldTransform, localPositions,
+                            //mesh = ConvertToMeshType8( aiMesh, hasTexture, aiNodeWorldTransform, localPositions,
+                            //                           ref nodeInvWorldTransform );
+                            mesh = ConvertToMeshType1( aiMesh, hasTexture, aiNodeWorldTransform, localPositions, 
                                                        ref nodeInvWorldTransform );
                         }
 
@@ -498,6 +578,8 @@ namespace DDS3ModelLibrary
 
         private void Read( EndianBinaryReader reader )
         {
+            Info = null;
+
             var foundEnd = false;
             while ( !foundEnd && reader.Position < reader.BaseStream.Length )
             {

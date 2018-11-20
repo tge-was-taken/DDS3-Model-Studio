@@ -189,7 +189,7 @@ namespace DDS3ModelLibrary.Modeling.Utilities
             return boneScores;
         }
 
-        public static List<Assimp.Mesh> SplitMesh( Assimp.Scene scene, Assimp.Mesh mesh, int maxNodeCount )
+        public static List<Assimp.Mesh> SplitMeshByBoneCount( Assimp.Scene scene, Assimp.Mesh mesh, int maxNodeCount )
         {
             var vertexWeights = new List<(Assimp.Node, float)>[mesh.VertexCount];
             var missingVertexWeights = new List<int>();
@@ -368,6 +368,12 @@ namespace DDS3ModelLibrary.Modeling.Utilities
             }
 
             return subMeshes;
+        }
+
+        public static List<Assimp.Mesh> SplitMeshByVertexCount( Assimp.Mesh mesh, int vertexCount )
+        {
+            // todo
+            return null;
         }
     }
 }

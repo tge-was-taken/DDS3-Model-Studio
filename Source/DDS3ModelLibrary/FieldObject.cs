@@ -25,6 +25,11 @@ namespace DDS3ModelLibrary
 
         public IFieldObjectResource Resource { get; set; }
 
+        public FieldObject()
+        {
+            Field14 = new FieldObjectField14Data();
+        }
+
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
             Id        = reader.ReadInt32();

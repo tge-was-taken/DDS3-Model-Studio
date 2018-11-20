@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary
@@ -16,10 +17,43 @@ namespace DDS3ModelLibrary
             Textures = new List<Texture>();
         }
 
-        public TexturePack( string path ) : this()
+        public TexturePack( string filePath ) : this()
         {
-            using ( var reader = new EndianBinaryReader( path, Endianness.Little ) )
+            using ( var reader = new EndianBinaryReader( new MemoryStream( File.ReadAllBytes( filePath ) ), filePath, Endianness.Little ) )
                 Read( reader );
+        }
+
+        public TexturePack( Stream stream, bool leaveOpen = false ) : this()
+        {
+            using ( var reader = new EndianBinaryReader( stream, leaveOpen, Endianness.Little ) )
+                Read( reader );
+        }
+
+        public void Save( string filePath )
+        {
+            using ( var writer = new EndianBinaryWriter( new MemoryStream(), Endianness.Little ) )
+            {
+                Write( writer );
+                using ( var fileStream = File.Create( filePath ) )
+                {
+                    writer.BaseStream.Position = 0;
+                    writer.BaseStream.CopyTo( fileStream );
+                }
+            }
+        }
+
+        public void Save( Stream stream, bool leaveOpen = true )
+        {
+            using ( var writer = new EndianBinaryWriter( stream, leaveOpen, Endianness.Little ) )
+                Write( writer );
+        }
+
+        public MemoryStream Save()
+        {
+            var stream = new MemoryStream();
+            Save( stream );
+            stream.Position = 0;
+            return stream;
         }
 
         internal override void ReadContent( EndianBinaryReader reader, ResourceHeader header )
@@ -41,7 +75,7 @@ namespace DDS3ModelLibrary
                     reader.SeekBegin( nextTextureOffset );
                 }
 
-                Textures.Add( reader.ReadObject<Texture>() );
+                Textures.Add( reader.ReadObject<Texture>( (header, false) ) );
                 reader.Align( 64 );
 
                 if ( ( i + 1 ) != textureCount )
@@ -58,7 +92,7 @@ namespace DDS3ModelLibrary
         {
             writer.Write( Textures.Count );
             foreach ( var texture in Textures )
-                writer.ScheduleWriteObjectOffset( texture, 64 );
+                writer.ScheduleWriteObjectOffset( texture, 64, false );
 
             writer.PerformScheduledWrites();
         }

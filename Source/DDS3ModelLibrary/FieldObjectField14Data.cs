@@ -11,6 +11,10 @@ namespace DDS3ModelLibrary
         public int Field08 { get; set; }
         public int Field0C { get; set; }
 
+        public FieldObjectField14Data()
+        {
+            Field04 = new Field04Data();
+        }
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
