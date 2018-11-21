@@ -39,9 +39,9 @@ namespace DDS3ModelLibrary
 
         public MeshType4()
         {
-            // 1 Bit0, Bit3, Bit5, Bit6, Bit21, Bit22, Normal
-            // 7 Bit3, Bit5, Bit6, Bit21, Bit22, Normal
-            Flags = MeshFlags.Bit3 | MeshFlags.Bit5 | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Normal;
+            // 1 Bit0, SmoothShading, Bit5, Bit6, RequiredForField, Bit22, Normal
+            // 7 SmoothShading, Bit5, Bit6, RequiredForField, Bit22, Normal
+            Flags = MeshFlags.SmoothShading | MeshFlags.Bit5 | MeshFlags.Bit6 | MeshFlags.RequiredForField | MeshFlags.Bit22 | MeshFlags.Normal;
         }
 
         public (Vector3[] Positions, Vector3[] Normals) Transform( Matrix4x4 nodeWorldTransform )

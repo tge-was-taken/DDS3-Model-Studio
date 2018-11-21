@@ -16,6 +16,7 @@ namespace DDS3ModelLibrary
 
         public FieldTextureListFileName( string fileName )
         {
+            FileName = fileName;
         }
 
         public static implicit operator FieldTextureListFileName( string fileName ) => new FieldTextureListFileName( fileName );

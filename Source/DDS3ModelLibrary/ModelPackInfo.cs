@@ -25,7 +25,7 @@ namespace DDS3ModelLibrary
         }
 
         // IBinarySerializable
-        internal override void ReadContent( EndianBinaryReader reader, ResourceHeader header )
+        internal override void ReadContent( EndianBinaryReader reader, IOContext context )
         {
             var bom = reader.ReadUInt32Expects( BOM, "Model pack info BOM value does not match expected value" );
             var infoOffset = reader.ReadUInt32Expects( INFO_OFFSET, "Model pack info info offset value does match expected value" );
@@ -38,9 +38,9 @@ namespace DDS3ModelLibrary
             EffectInfos = reader.ReadObjectList<ModelPackEffectInfo>( effectInfoCount );
         }
 
-        internal override void WriteContent( EndianBinaryWriter writer, object context )
+        internal override void WriteContent( EndianBinaryWriter writer, IOContext context )
         {
-            if ( !( context is ModelPack modelPack ) )
+            if ( !( context.Context is ModelPack modelPack ) )
                 throw new InvalidOperationException();
 
             writer.Write( BOM );

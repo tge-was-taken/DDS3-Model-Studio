@@ -68,7 +68,7 @@ namespace DDS3ModelLibrary
         public MeshType5()
         {
             BlendShapes = new List<MeshType5BlendShape>();
-            Flags = MeshFlags.Bit3 | MeshFlags.Bit5 | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Bit24 | MeshFlags.Bit28;
+            Flags = MeshFlags.SmoothShading | MeshFlags.Bit5 | MeshFlags.Bit6 | MeshFlags.RequiredForField | MeshFlags.Bit22 | MeshFlags.FieldTexture | MeshFlags.Bit28;
             NodeBatches = new List<MeshType5NodeBatch>();
         }
 

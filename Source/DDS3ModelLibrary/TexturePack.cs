@@ -56,7 +56,7 @@ namespace DDS3ModelLibrary
             return stream;
         }
 
-        internal override void ReadContent( EndianBinaryReader reader, ResourceHeader header )
+        internal override void ReadContent( EndianBinaryReader reader, IOContext context )
         {
             var textureCount = reader.ReadInt32();
             long nextTextureOffset = 0;
@@ -75,7 +75,7 @@ namespace DDS3ModelLibrary
                     reader.SeekBegin( nextTextureOffset );
                 }
 
-                Textures.Add( reader.ReadObject<Texture>( (header, false) ) );
+                Textures.Add( reader.ReadObject<Texture>() );
                 reader.Align( 64 );
 
                 if ( ( i + 1 ) != textureCount )
@@ -88,11 +88,11 @@ namespace DDS3ModelLibrary
             // Make sure we end at the end of the last texture
         }
 
-        internal override void WriteContent( EndianBinaryWriter writer, object context )
+        internal override void WriteContent( EndianBinaryWriter writer, IOContext context )
         {
             writer.Write( Textures.Count );
             foreach ( var texture in Textures )
-                writer.ScheduleWriteObjectOffset( texture, 64, false );
+                writer.ScheduleWriteObjectOffset( texture, 64 );
 
             writer.PerformScheduledWrites();
         }

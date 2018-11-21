@@ -39,8 +39,8 @@ namespace DDS3ModelLibrary
         public MeshType8()
         {
             Batches = new List<MeshType8Batch>();
-            Flags = MeshFlags.Bit3 | MeshFlags.TexCoord | MeshFlags.Bit5 | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Normal |
-                    MeshFlags.Bit24;
+            Flags = MeshFlags.SmoothShading | MeshFlags.TexCoord | MeshFlags.Bit5 | MeshFlags.Bit6 | MeshFlags.RequiredForField | MeshFlags.Bit22 | MeshFlags.Normal |
+                    MeshFlags.FieldTexture;
         }
 
         protected override void Read( EndianBinaryReader reader )

@@ -1065,21 +1065,6 @@ typedef struct
 typedef struct
 {
     SetRandomBackColor();
-    u32 Field00;
-    u32 Field04; // 63, 100, ... count?
-    u32 Field08;
-    u32 Field0C;
-
-    if ( Field04 != 0 )
-    {
-        FSeek( gBaseOffset + Field04 );
-        struct TFieldUnknownStruct1 Field14Data;                
-    }
-} TField2Field1CStruct;
-
-typedef struct
-{
-    SetRandomBackColor();
     u32 Type;
     u32 Count;
     u32 Offset;
@@ -1280,6 +1265,21 @@ typedef struct
     u32 Field08; // .
     u32 Field0C; // .
 } TFieldUnknownStruct1;
+
+typedef struct
+{
+    SetRandomBackColor();
+    u32 Field00;
+    u32 Field04; // 63, 100, ... count?
+    u32 Field08;
+    u32 Field0C;
+
+    if ( Field04 != 0 )
+    {
+        FSeek( gBaseOffset + Field04 );
+        struct TFieldUnknownStruct1 Field14Data;                
+    }
+} TField2Field1CStruct;
 
 
 // Read file

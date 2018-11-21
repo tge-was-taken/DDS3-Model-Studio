@@ -25,13 +25,13 @@ namespace DDS3ModelLibrary
             Data               = data;
         }
 
-        internal override void ReadContent( EndianBinaryReader reader, ResourceHeader header )
+        internal override void ReadContent( EndianBinaryReader reader, IOContext context )
         {
-            mResourceDescriptor = new ResourceDescriptor( header.FileType, header.Identifier );
-            Data = reader.ReadBytes( ( int ) ( header.FileSize - ResourceHeader.SIZE ) );
+            mResourceDescriptor = new ResourceDescriptor( context.Header.FileType, context.Header.Identifier );
+            Data = reader.ReadBytes( ( int ) ( context.Header.FileSize - ResourceHeader.SIZE ) );
         }
 
-        internal override void WriteContent( EndianBinaryWriter writer, object context )
+        internal override void WriteContent( EndianBinaryWriter writer, IOContext context )
         {
             writer.Write( Data );
         }

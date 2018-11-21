@@ -27,7 +27,7 @@ namespace DDS3ModelLibrary
             Extensions = new List<ModelExtension>();
         }
 
-        internal override void ReadContent( EndianBinaryReader reader, ResourceHeader header )
+        internal override void ReadContent( EndianBinaryReader reader, IOContext context )
         {
             var relocationTableOffset = reader.ReadInt32();
             var relocationTableSize = reader.ReadInt32();
@@ -36,7 +36,7 @@ namespace DDS3ModelLibrary
                 reader.ReadUInt32Expects( 0, "Model header padding is not 0" );
 
             // Hacky fix for field models
-            if ( header != null )
+            if ( !context.IsFieldObject )
                 reader.PushBaseOffset();
 
             reader.ReadOffset( () =>
@@ -85,15 +85,13 @@ namespace DDS3ModelLibrary
                 }
             } );
 
-            if ( header != null )
+            if ( !context.IsFieldObject )
                 reader.PopBaseOffset();
         }
 
-        internal override void WriteContent( EndianBinaryWriter writer, object context )
+        internal override void WriteContent( EndianBinaryWriter writer, IOContext context )
         {
-            var isFieldObj = ( bool ) context;
-
-            if ( !isFieldObj )
+            if ( !context.IsFieldObject )
             {
                 // TODO: implement this properly
                 writer.OffsetPositions.Clear();
@@ -101,7 +99,7 @@ namespace DDS3ModelLibrary
 
             var start = writer.Position;
 
-            if ( !isFieldObj )
+            if ( !context.IsFieldObject )
             {
                 // Relocation table needs this base offset
                 writer.PushBaseOffset( start + 16 );
@@ -177,7 +175,7 @@ namespace DDS3ModelLibrary
                 writer.Align( 16 );
             } );
 
-            if ( !isFieldObj )
+            if ( !context.IsFieldObject )
             {
                 // TODO(TGE): implement this properly
                 writer.PerformScheduledWrites();

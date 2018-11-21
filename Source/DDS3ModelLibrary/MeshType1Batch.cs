@@ -71,9 +71,9 @@ namespace DDS3ModelLibrary
 
         public MeshType1Batch()
         {
-            // 13284 Bit3, TexCoord, Bit5, Bit6, Bit14, Bit21, Bit22, Normal, Bit24
-            // 161915 Bit3, TexCoord, Bit5, Bit6, Bit21, Bit22, Normal, Bit24
-            Flags = MeshFlags.Bit3 | MeshFlags.Bit5 | MeshFlags.Bit6 | MeshFlags.Bit21 | MeshFlags.Bit22 | MeshFlags.Bit24;
+            // 13284 SmoothShading, TexCoord, Bit5, Bit6, Bit14, RequiredForField, Bit22, Normal, FieldTexture
+            // 161915 SmoothShading, TexCoord, Bit5, Bit6, RequiredForField, Bit22, Normal, FieldTexture
+            Flags = MeshFlags.SmoothShading | MeshFlags.Bit5 | MeshFlags.Bit6 | MeshFlags.RequiredForField | MeshFlags.Bit22 | MeshFlags.FieldTexture;
 
             // 84507 Mode2
             // 112539 Mode1

@@ -56,15 +56,18 @@ namespace DDS3ModelLibrary
         {
             using ( var writer = new EndianBinaryWriter( path, Endianness.Little ) )
             {
-                Write( writer );
+                Write( writer, new IOContext( null, false, null ) );
             }
         }
 
-        protected virtual void Write( EndianBinaryWriter writer, bool isFieldObj = false )
+        protected virtual void Write( EndianBinaryWriter writer, IOContext context = null )
         {
-            if ( isFieldObj )
+            if ( context == null )
+                context = new IOContext();
+
+            if ( context.IsFieldObject )
             {
-                WriteContent( writer, isFieldObj );
+                WriteContent( writer, context );
                 return;
             }
 
@@ -74,7 +77,7 @@ namespace DDS3ModelLibrary
             writer.SeekCurrent( 16 );
 
             // Write resource content
-            WriteContent( writer, isFieldObj );
+            WriteContent( writer, context );
 
             // Calculate content size 
             var end = writer.Position;
@@ -95,25 +98,25 @@ namespace DDS3ModelLibrary
             writer.PopBaseOffset();
         }
 
-        internal abstract void ReadContent( EndianBinaryReader reader, ResourceHeader header );
+        internal abstract void ReadContent( EndianBinaryReader reader, IOContext context );
 
-        internal abstract void WriteContent( EndianBinaryWriter writer, object context );
+        internal abstract void WriteContent( EndianBinaryWriter writer, IOContext context );
 
         protected void Read( EndianBinaryReader reader )
         {
-            Read( reader, null, false );
+            Read( reader, new IOContext( null, false, null ) );
         }
 
-        private void Read( EndianBinaryReader reader, ResourceHeader header, bool isFieldObj )
+        private void Read( EndianBinaryReader reader, IOContext context )
         {
             var start = reader.Position;
 
-            if ( header == null && !isFieldObj )
+            if ( context.Header == null && !context.IsFieldObject )
             {
                 // Read the resource header and make sure that we're reading the right type of resource
-                header = reader.ReadObject<ResourceHeader>();
-                if ( header.FileType != ResourceDescriptor.FileType ||
-                     header.Identifier != ResourceDescriptor.Identifier )
+                context.Header = reader.ReadObject<ResourceHeader>();
+                if ( context.Header.FileType != ResourceDescriptor.FileType ||
+                     context.Header.Identifier != ResourceDescriptor.Identifier )
                     throw new InvalidOperationException( "Resource header does not match resource type" );
             }
             else
@@ -122,23 +125,23 @@ namespace DDS3ModelLibrary
                 start -= ResourceHeader.SIZE;
             }
 
-            if ( !isFieldObj )
+            if ( !context.IsFieldObject )
                 reader.PushBaseOffset( start );
 
             var end = 0L;
-            if ( header != null )
+            if ( context.Header != null )
             {
-                end = start + header.FileSize;
-                UserId = header.UserId;
+                end = start + context.Header.FileSize;
+                UserId = context.Header.UserId;
             }
 
-            ReadContent( reader, header );
+            ReadContent( reader, context );
 
             // Some files have broken offsets & filesize in their texture pack (f021_aljira.PB)
-            if ( header != null && header.Identifier != ResourceIdentifier.TexturePack )
+            if ( context.Header != null && context.Header.Identifier != ResourceIdentifier.TexturePack )
                 reader.SeekBegin( end );
 
-            if ( !isFieldObj )
+            if ( !context.IsFieldObject )
                 reader.PopBaseOffset();
         }
 
@@ -151,20 +154,33 @@ namespace DDS3ModelLibrary
         /// <param name="context"><see cref="ResourceHeader"/>, if null then it will be read from the stream.</param>
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            if ( context != null )
-            {
-                ( var header, var isFieldObj ) = ( (ResourceHeader, bool) ) context;
-                Read( reader, header, isFieldObj );
-            }
-            else
-            {
-                Read( reader, null, false );
-            }
+            Read( reader, ( IOContext ) ( context ?? new IOContext() ) );
         }
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
         {
-            Write( writer, ( bool ) context );
+            Write( writer, ( IOContext )( context ?? new IOContext() ) );
+        }
+
+        public class IOContext
+        {
+            public ResourceHeader Header;
+            public readonly bool IsFieldObject;
+            public readonly object Context;
+
+            public IOContext() { }
+
+            public IOContext( ResourceHeader header, bool isFieldObject, object context )
+            {
+                Header = header;
+                IsFieldObject = isFieldObject;
+                Context = context;
+            }
+
+            public IOContext( object context )
+            {
+                Context = context;
+            }
         }
     }
 }

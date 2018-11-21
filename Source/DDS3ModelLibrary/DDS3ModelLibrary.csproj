@@ -106,6 +106,7 @@
     <Compile Include="ModelExtensionHeader.cs" />
     <Compile Include="ModelBinaryExtension.cs" />
     <Compile Include="ModelExtensionIdentifier.cs" />
+    <Compile Include="Modeling\Utilities\AssimpExtensions.cs" />
     <Compile Include="Modeling\Utilities\AssimpHelper.cs" />
     <Compile Include="Modeling\Utilities\Matrix4x4Extension.cs" />
     <Compile Include="Modeling\Utilities\QuaternionExtensions.cs" />

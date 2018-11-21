@@ -22,32 +22,8 @@ namespace DDS3ModelLibraryCLI
     {
         private static void Main( string[] args )
         {
-            var modelPack = new ModelPack();
-            var model = new Model();
-            model.Nodes.Add( new Node { Name = "model" } );
-            modelPack.Models.Add( model );
-            modelPack.Replace( "f1test.fbx" );
-
-            var lb = new LBFileSystem();
-            lb.Load( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\fld\f\f037\_f037_027.LB" );
-
-            var f1Handle = lb.GetHandle( "F1" );
-
-            FieldScene f1;
-            using ( var stream = lb.OpenFile( f1Handle ) )
-                f1 = new FieldScene( stream, true );
-
-            f1.Objects.RemoveAll( x => x.ResourceType == FieldObjectResourceType.Model );
-            f1.Objects.Clear();
-            f1.Objects.Add( new FieldObject() { Id = 0, Name = "model", Transform = new FieldObjectTransform(), Resource = modelPack.Models[ 0 ] } );
-            ExportObj( f1 );
-
-            lb.AddFile( f1Handle, f1.Save(), true, ConflictPolicy.Replace );
-
-            var tbHandle = lb.GetHandle( "TBN" );
-            lb.AddFile( tbHandle, modelPack.TexturePack.Save(), true, ConflictPolicy.Replace );
-
-            lb.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\fld\f\f037\f037_027.LB" );
+            //ReplaceF1Test();
+            ReplaceModelTest();
             return;
             //ExportObj( new ModelPack( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_b.PB" ) );
             //return;
@@ -259,9 +235,9 @@ namespace DDS3ModelLibraryCLI
             //    }
             //}
 
-            
 
-            modelPack.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_a.PB" );
+
+            //modelPack.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_a.PB" );
 
 
             //ReplaceModelTest();
@@ -285,6 +261,38 @@ namespace DDS3ModelLibraryCLI
             //OpenAndSaveModelPackBatchTest();
         }
 
+        private static void ReplaceF1Test()
+        {
+            var modelPack = new ModelPack();
+            var model = new Model();
+            model.Nodes.Add( new Node { Name = "model" } );
+            modelPack.Models.Add( model );
+            modelPack.Replace( "f1test.fbx" );
+
+            var lb = new LBFileSystem();
+            lb.Load( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\fld\f\f037\_f037_027.LB" );
+
+            var f1Handle = lb.GetHandle( "F1" );
+
+            FieldScene f1;
+            using ( var stream = lb.OpenFile( f1Handle ) )
+                f1 = new FieldScene( stream, true );
+
+            f1.Objects.RemoveAll( x => x.ResourceType == FieldObjectResourceType.Model );
+            f1.Objects.Clear();
+            f1.Objects.Add( new FieldObject() { Id = 0, Name = "model", Transform = new FieldObjectTransform(), Resource = modelPack.Models[0] } );
+            ExportObj( f1 );
+
+            lb.AddFile( f1Handle, f1.Save(), true, ConflictPolicy.Replace );
+
+            if ( modelPack.TexturePack != null )
+            {
+                var tbHandle = lb.GetHandle( "TBN" );
+                lb.AddFile( tbHandle, modelPack.TexturePack.Save(), true, ConflictPolicy.Replace );
+            }
+
+            lb.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\fld\f\f037\f037_027.LB" );
+        }
 
         private static void WriteMesh( StreamWriter streamWriter, Model model, Node node1, Mesh _mesh, int meshIndex1, bool isMesh2, ref int _vertexBaseIndex, FieldObject fieldObj = null )
         {
@@ -859,7 +867,6 @@ namespace DDS3ModelLibraryCLI
             var modelPack = new ModelPack( @"..\..\..\..\Resources\player_a.PB" );
             modelPack.Replace( "player_a_test.fbx" );
             modelPack.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_a.PB" );
-            return;
         }
     }
 }

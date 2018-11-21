@@ -2,143 +2,55 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Numerics;
-using DDS3ModelLibrary.Primitives;
+using Assimp;
 
 namespace DDS3ModelLibrary.Modeling.Utilities
 {
+    /// <summary>
+    /// Provides various useful utilities for working with Assimp .
+    /// </summary>
     public static class AssimpHelper
     {
-        public static Assimp.Vector3D ToAssimp( this Vector3 value )
+        /// <summary>
+        /// Creates a default, empty scene with a root node.
+        /// </summary>
+        /// <returns></returns>
+        public static Scene CreateDefaultScene()
         {
-            return new Assimp.Vector3D( value.X, value.Y, value.Z );
-        }
-
-        public static Assimp.Vector3D ToAssimp( this Vector2 value )
-        {
-            return new Assimp.Vector3D( value.X, value.Y, 0 );
-        }
-
-        public static Assimp.Color4D ToAssimp( this Vector4 value )
-        {
-            return new Assimp.Color4D( value.X, value.Y, value.Z, value.W );
-        }
-
-        public static Assimp.Matrix4x4 ToAssimp( this Matrix4x4 matrix )
-        {
-            return new Assimp.Matrix4x4( matrix.M11, matrix.M21, matrix.M31, matrix.M41,
-                                         matrix.M12, matrix.M22, matrix.M32, matrix.M42,
-                                         matrix.M13, matrix.M23, matrix.M33, matrix.M43,
-                                         matrix.M14, matrix.M24, matrix.M34, matrix.M44 );
-        }
-
-        public static Assimp.Color4D ToAssimp( this Color value )
-        {
-            return new Assimp.Color4D( value.R / 255f,
-                                       value.G / 255f,
-                                       value.B / 255f,
-                                       value.A / 255f );
-        }
-
-        public static Assimp.Scene CreateDefaultScene()
-        {
-            var aiScene = new Assimp.Scene { RootNode = new Assimp.Node( "RootNode" ) };
+            var aiScene = new Scene { RootNode = new Assimp.Node( "RootNode" ) };
             return aiScene;
         }
 
-        public static void ExportCollada( this Assimp.Scene aiScene, string path )
+        /// <summary>
+        /// Imports an Assimp scene with default settings.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static Scene ImportScene( string path )
         {
-            using ( var aiContext = new Assimp.AssimpContext() )
-                aiContext.ExportFile( aiScene, path, "collada", Assimp.PostProcessSteps.JoinIdenticalVertices | Assimp.PostProcessSteps.FlipUVs | Assimp.PostProcessSteps.GenerateSmoothNormals );
-        }
-
-        public static Color FromAssimp( this Assimp.Color4D value )
-        {
-            return new Color( ( byte )( value.R * 255f ),
-                              ( byte )( value.G * 255f ),
-                              ( byte )( value.B * 255f ),
-                              ( byte )( value.A * 255f ) );
-        }
-
-        public static Matrix4x4 FromAssimp( this Assimp.Matrix4x4 matrix )
-        {
-            return new Matrix4x4( matrix.A1, matrix.B1, matrix.C1, matrix.D1,
-                                  matrix.A2, matrix.B2, matrix.C2, matrix.D2,
-                                  matrix.A3, matrix.B3, matrix.C3, matrix.D3,
-                                  matrix.A4, matrix.B4, matrix.C4, matrix.D4 );
-        }
-
-        public static Assimp.Scene ImportScene( string path )
-        {
-            using ( var aiContext = new Assimp.AssimpContext() )
+            using ( var aiContext = new AssimpContext() )
             {
                 aiContext.SetConfig( new Assimp.Configs.VertexBoneWeightLimitConfig( 4 ) );
                 aiContext.SetConfig( new Assimp.Configs.FBXPreservePivotsConfig( false ) );
                 return aiContext.ImportFile( path,
-                                             Assimp.PostProcessSteps.FindDegenerates | Assimp.PostProcessSteps.FindInvalidData |
-                                             Assimp.PostProcessSteps.FlipUVs | Assimp.PostProcessSteps.ImproveCacheLocality |
-                                             Assimp.PostProcessSteps.JoinIdenticalVertices | Assimp.PostProcessSteps.LimitBoneWeights |
-                                             Assimp.PostProcessSteps.SplitByBoneCount | Assimp.PostProcessSteps.Triangulate |
-                                             Assimp.PostProcessSteps.ValidateDataStructure | Assimp.PostProcessSteps.GenerateUVCoords |
-                                             Assimp.PostProcessSteps.GenerateSmoothNormals );
+                                             PostProcessSteps.FindDegenerates | PostProcessSteps.FindInvalidData |
+                                             PostProcessSteps.FlipUVs | PostProcessSteps.ImproveCacheLocality |
+                                             PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.LimitBoneWeights |
+                                             PostProcessSteps.SplitByBoneCount | PostProcessSteps.Triangulate |
+                                             PostProcessSteps.ValidateDataStructure | PostProcessSteps.GenerateUVCoords |
+                                             PostProcessSteps.GenerateSmoothNormals );
             }
         }
 
-        public static Vector3 FromAssimp( this Assimp.Vector3D value )
-        {
-            return new Vector3( value.X, value.Y, value.Z );
-        }
-
-        public static Vector2 FromAssimpAsVector2( this Assimp.Vector3D value )
-        {
-            return new Vector2( value.X, value.Y );
-        }
-
-        public static Quaternion FromAssimp( this Assimp.Quaternion value )
-        {
-            return new Quaternion( value.X, value.Y, value.Z, value.W );
-        }
-
-        public static Matrix4x4 CalculateWorldTransform( this Assimp.Node node )
-        {
-            Assimp.Matrix4x4 CalculateWorldTransformInternal( Assimp.Node currentNode )
-            {
-                var transform = currentNode.Transform;
-                if ( currentNode.Parent != null )
-                    transform *= CalculateWorldTransformInternal( currentNode.Parent );
-
-                return transform;
-            }
-
-            return FromAssimp( CalculateWorldTransformInternal( node ) );
-        }
-
-        public static Assimp.Node FindHierarchyRootNode( this Assimp.Node aiSceneRootNode )
-        {
-            // Pretty naiive for now.
-            return aiSceneRootNode.Children.Single( x => !x.HasMeshes );
-        }
-
-        public static List<Assimp.Node> FindMeshNodes( this Assimp.Node aiSceneRootNode )
-        {
-            var meshNodes = new List<Assimp.Node>();
-
-            void FindMeshNodesRecursively( Assimp.Node aiParentNode )
-            {
-                foreach ( var aiNode in aiParentNode.Children )
-                {
-                    if ( aiNode.HasMeshes )
-                        meshNodes.Add( aiNode );
-                    else
-                        FindMeshNodesRecursively( aiNode );
-                }
-            }
-
-            FindMeshNodesRecursively( aiSceneRootNode );
-
-            return meshNodes;
-        }
-
+        /// <summary>
+        /// Determines the best target scene node for the mesh.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="aiMesh"></param>
+        /// <param name="aiNode"></param>
+        /// <param name="nodeSearchFunc"></param>
+        /// <param name="fallback"></param>
+        /// <returns></returns>
         public static T DetermineBestTargetNode<T>( Assimp.Mesh aiMesh, Assimp.Node aiNode, Func<string,T> nodeSearchFunc, T fallback )
         {
             if ( aiMesh.BoneCount > 1 )
@@ -172,9 +84,40 @@ namespace DDS3ModelLibrary.Modeling.Utilities
             }
         }
 
-        public static List<(float Coverage, Assimp.Bone Bone)> CalculateBoneWeightCoverage( Assimp.Mesh aiMesh )
+        public static Assimp.Node GetHierarchyRootNode( Assimp.Node aiSceneRootNode )
         {
-            var boneScores = new List<(float Coverage, Assimp.Bone Bone)>();
+            // Pretty naiive for now.
+            return aiSceneRootNode.Children.Single( x => !x.HasMeshes );
+        }
+
+        public static List<Assimp.Node> GetMeshNodes( Assimp.Node aiSceneRootNode )
+        {
+            var meshNodes = new List<Assimp.Node>();
+
+            void FindMeshNodesRecursively( Assimp.Node aiParentNode )
+            {
+                foreach ( var aiNode in aiParentNode.Children )
+                {
+                    if ( aiNode.HasMeshes )
+                        meshNodes.Add( aiNode );
+                    else
+                        FindMeshNodesRecursively( aiNode );
+                }
+            }
+
+            FindMeshNodesRecursively( aiSceneRootNode );
+
+            return meshNodes;
+        }
+
+        /// <summary>
+        /// Calculate the weight coverage (in percent) of each bone in the mesh.
+        /// </summary>
+        /// <param name="aiMesh"></param>
+        /// <returns></returns>
+        public static List<(float Coverage, Bone Bone)> CalculateBoneWeightCoverage( Assimp.Mesh aiMesh )
+        {
+            var boneScores = new List<(float Coverage, Bone Bone)>();
 
             foreach ( var bone in aiMesh.Bones )
             {
@@ -189,86 +132,33 @@ namespace DDS3ModelLibrary.Modeling.Utilities
             return boneScores;
         }
 
-        public static List<Assimp.Mesh> SplitMeshByBoneCount( Assimp.Scene scene, Assimp.Mesh mesh, int maxNodeCount )
+        /// <summary>
+        /// Splits the mesh into submeshes that use <paramref name="maxBoneCount"/> or less bones.
+        /// </summary>
+        /// <param name="scene"></param>
+        /// <param name="mesh"></param>
+        /// <param name="maxBoneCount"></param>
+        /// <returns></returns>
+        public static List<Assimp.Mesh> SplitMeshByBoneCount( Assimp.Mesh mesh, int maxBoneCount )
         {
-            var vertexWeights = new List<(Assimp.Node, float)>[mesh.VertexCount];
-            var missingVertexWeights = new List<int>();
-            for ( int i = 0; i < mesh.VertexCount; i++ )
-            {
-                var weights = new List<(Assimp.Node, float)>();
-                foreach ( var bone in mesh.Bones )
-                {
-                    foreach ( var vertexWeight in bone.VertexWeights )
-                    {
-                        if ( vertexWeight.VertexID == i )
-                        {
-                            var node = scene.RootNode.FindNode( bone.Name );
-                            Debug.Assert( node != null );
-                            weights.Add( (node, vertexWeight.Weight) );
-                        }
-                    }
-                }
+            if ( mesh.BoneCount <= maxBoneCount )
+                return new List<Assimp.Mesh> { mesh };
 
-                if ( weights.Count == 0 )
-                {
-                    weights = null;
-                    missingVertexWeights.Add( i );
-                    continue;
-                }
-
-                Debug.Assert( weights.Count > 0 );
-                vertexWeights[i] = weights;
-            }
-
-            // Resolve vertices without any weights by finding the closest vertex next to it that does, and taking its weights
-            foreach ( var i in missingVertexWeights )
-            {
-                var position = mesh.Vertices[i];
-                var tolerance = 0.001f;
-                List<(Assimp.Node, float)> weights = null;
-
-                while ( weights == null )
-                {
-                    for ( var j = 0; j < mesh.Vertices.Count; j++ )
-                    {
-                        if ( missingVertexWeights.Contains( j ) )
-                            continue;
-
-                        // ＤＥＬＴＡ
-                        var otherPosition = mesh.Vertices[j];
-                        var delta = position - otherPosition;
-                        if ( ( delta.X < 0 ? delta.X >= -tolerance : delta.X <= tolerance ) &&
-                             ( delta.Y < 0 ? delta.Y >= -tolerance : delta.Y <= tolerance ) &&
-                             ( delta.Z < 0 ? delta.Z >= -tolerance : delta.Z <= tolerance ) )
-                        {
-                            weights = vertexWeights[j];
-                            break;
-                        }
-                    }
-
-                    tolerance *= 2f;
-                }
-
-                vertexWeights[i] = weights;
-            }
-
-            Debug.Assert( vertexWeights.All( x => x != null ) );
-
+            var vertexWeights = mesh.GetVertexWeights();
             var subMeshes = new List<Assimp.Mesh>();
-            var meshFaces = mesh.Faces.ToList();
-            while ( meshFaces.Count > 0 )
+            var remainingFaces = mesh.Faces.ToList();
+
+            while ( remainingFaces.Count > 0 )
             {
-                var usedNodes = new HashSet<Assimp.Node>();
-                var faces = new List<Assimp.Face>();
+                var usedBones = new HashSet<Bone>();
+                var faces = new List<Face>();
 
                 // Get faces that fit inside the new mesh
-                for ( var faceIndex = 0; faceIndex < meshFaces.Count; faceIndex++ )
+                foreach ( var face in remainingFaces )
                 {
-                    var face = meshFaces[faceIndex];
-                    var faceUsedNodes = face.Indices.SelectMany( y => vertexWeights[y].Select( z => z.Item1 ) ).ToList();
-                    Debug.Assert( faceUsedNodes.Count <= maxNodeCount, "faceUsedNodes.Count <= maxNodeCount" ); // would need averaging..
-                    var faceUniqueUsedNodeCount = faceUsedNodes.Count( x => !usedNodes.Contains( x ) );
-                    if ( ( usedNodes.Count + faceUniqueUsedNodeCount ) > maxNodeCount )
+                    var faceUsedBones = face.Indices.SelectMany( y => vertexWeights[y].Select( z => z.Item1 ) ).ToList();
+                    var faceUniqueUsedBoneCount = faceUsedBones.Count( x => !usedBones.Contains( x ) );
+                    if ( ( usedBones.Count + faceUniqueUsedBoneCount ) > maxBoneCount )
                     {
                         // Skip
                         continue;
@@ -276,15 +166,24 @@ namespace DDS3ModelLibrary.Modeling.Utilities
 
                     // It does fit ＼(^o^)／
                     faces.Add( face );
-                    foreach ( var node in faceUsedNodes )
-                        usedNodes.Add( node );
+                    foreach ( var node in faceUsedBones )
+                        usedBones.Add( node );
 
-                    Debug.Assert( usedNodes.Count <= maxNodeCount );
+                    Debug.Assert( usedBones.Count <= maxBoneCount );
+                }
+
+                if ( faces.Count == 0 )
+                {
+                    if ( remainingFaces.All( x => x.Indices.SelectMany( y => vertexWeights[y].Select( z => z.Item1 ) ).Count() > maxBoneCount ) )
+                    {
+                        // Need to reduce weights per face
+                        Debug.Assert( false ); // would need averaging..
+                    }
                 }
 
                 // Remove the faces we claimed from the pool
                 foreach ( var face in faces )
-                    meshFaces.Remove( face );
+                    remainingFaces.Remove( face );
 
                 // Build submesh
                 var subMesh = new Assimp.Mesh()
@@ -294,67 +193,191 @@ namespace DDS3ModelLibrary.Modeling.Utilities
                     Name = mesh.Name + $"_submesh{subMeshes.Count}",
                     PrimitiveType = mesh.PrimitiveType,
                 };
-                var vertexCache = new List<(Assimp.Vector3D Position, Assimp.Vector3D Normal, Assimp.Vector3D TexCoord, List<(Assimp.Node, float)> Weights)>();
+                var vertexCache = new List<Vertex>();
                 foreach ( var face in faces )
                 {
-                    var newFace = new Assimp.Face();
+                    var newFace = new Face();
 
                     foreach ( var index in face.Indices )
                     {
-                        var position = mesh.Vertices[index];
-                        var normal = mesh.Normals[index];
-                        var texCoord = mesh.TextureCoordinateChannels[0][index];
-                        var weights = vertexWeights[index];
-
-                        // Try to find a duplicate of this vertex
-                        var newIndex = vertexCache.FindIndex( x => x.Position == position && x.Normal == normal && x.TexCoord == texCoord &&
-                                                                     x.Weights.SequenceEqual( weights ) );
-                        if ( newIndex == -1 )
+                        var cacheIndex = FindVertexCacheIndex( mesh, index, vertexWeights, vertexCache, out var vertex );
+                        if ( cacheIndex == -1 )
                         {
-                            // This vertex is unique, add it to cache
-                            newIndex = vertexCache.Count;
-
-                            for ( int i = 0; i < weights.Count; i++ )
-                                Debug.Assert( usedNodes.Contains( weights[i].Item1 ) );
-
-                            vertexCache.Add( (position, normal, texCoord, weights) );
+                            // This vertex is new
+#if DEBUG
+                            for ( int i = 0; i < vertex.Weights.Count; i++ )
+                                Debug.Assert( usedBones.Contains( vertex.Weights[i].Item1 ) );
+#endif
+                            cacheIndex = vertexCache.Count;
+                            vertexCache.Add( vertex );
                         }
 
-                        newFace.Indices.Add( newIndex );
+                        newFace.Indices.Add( cacheIndex );
                     }
 
                     subMesh.Faces.Add( newFace );
                 }
 
-                int vertexIndex = 0;
-                foreach ( (Assimp.Vector3D position, Assimp.Vector3D normal, Assimp.Vector3D texCoord, List<(Assimp.Node, float)> weights) in vertexCache )
-                {
-                    // Split the vertex data from the cache
-                    subMesh.Vertices.Add( position );
-                    subMesh.Normals.Add( normal );
-                    subMesh.TextureCoordinateChannels[0].Add( texCoord );
+                PopulateSubMeshVertexData( mesh, subMesh, vertexCache );
 
-                    foreach ( (Assimp.Node node, float weight) in weights )
+#if DEBUG
+                CheckIfAllVerticesHaveWeights( subMesh );
+#endif
+
+                subMeshes.Add( subMesh );
+            }
+
+            return subMeshes;
+        }
+
+        /// <summary>
+        /// Splits the mesh into submeshes that use <paramref name="maxVertexCount"/> or less vertices.
+        /// </summary>
+        /// <param name="mesh"></param>
+        /// <param name="maxVertexCount"></param>
+        /// <returns></returns>
+        public static List<Assimp.Mesh> SplitMeshByVertexCount( Assimp.Mesh mesh, int maxVertexCount )
+        {
+            if ( mesh.VertexCount <= maxVertexCount )
+                return new List<Assimp.Mesh> { mesh };
+
+            var vertexWeights = mesh.HasBones ? mesh.GetVertexWeights() : null;
+            var remainingFaces = mesh.Faces.ToList();
+            var subMeshes = new List<Assimp.Mesh>();
+
+            while ( remainingFaces.Count > 0 )
+            {
+                // Build submesh
+                var subMesh = new Assimp.Mesh()
+                {
+                    MaterialIndex = mesh.MaterialIndex,
+                    MorphMethod = mesh.MorphMethod,
+                    Name = mesh.Name + $"_submesh{subMeshes.Count}",
+                    PrimitiveType = mesh.PrimitiveType,
+                };
+
+                var processedFaces = new List<Face>();
+                var vertexCache = new List<Vertex>();
+
+                // Get faces that fit inside the new mesh
+                foreach ( var face in remainingFaces )
+                {
+                    var newVertices = new List<Vertex>();
+                    var newFace     = new Face();
+                    foreach ( var i in face.Indices )
                     {
-                        var bone = subMesh.Bones.FirstOrDefault( x => x.Name == node.Name );
-                        if ( bone == null )
+                        var cacheIndex = FindVertexCacheIndex( mesh, i, vertexWeights, vertexCache, out var vertex );
+                        if ( cacheIndex == -1 )
                         {
-                            var originalBone = mesh.Bones.Find( x => x.Name == node.Name );
-                            bone = new Assimp.Bone()
-                            {
-                                Name = originalBone.Name,
-                                OffsetMatrix = originalBone.OffsetMatrix
-                            };
-                            subMesh.Bones.Add( bone );
-                            Debug.Assert( subMesh.Bones.Count <= maxNodeCount );
+                            // This vertex is new
+                            cacheIndex = vertexCache.Count + newVertices.Count;
+                            newVertices.Add( vertex );
                         }
 
-                        bone.VertexWeights.Add( new Assimp.VertexWeight( vertexIndex, weight ) );
+                        newFace.Indices.Add( cacheIndex );
                     }
 
-                    ++vertexIndex;
+                    if ( vertexCache.Count + newVertices.Count > maxVertexCount )
+                    {
+                        // Doesn't fit
+                        continue;
+                    }
+
+                    // It does fit ＼(^o^)／
+                    subMesh.Faces.Add( newFace );
+                    processedFaces.Add( face );
+                    foreach ( var vertex in newVertices )
+                        vertexCache.Add( vertex );
+
+                    Debug.Assert( vertexCache.Count <= maxVertexCount );
+
+                    if ( vertexCache.Count == maxVertexCount )
+                    {
+                        // We're done for sure
+                        break;
+                    }
                 }
 
+                // Remove the faces we processed from the remaining list
+                foreach ( var face in processedFaces )
+                    remainingFaces.Remove( face );
+
+                PopulateSubMeshVertexData( mesh, subMesh, vertexCache );
+
+#if DEBUG
+                CheckIfAllVerticesHaveWeights( subMesh );
+#endif
+
+                subMeshes.Add( subMesh );
+            }
+
+            return subMeshes;
+        }
+
+        private static int FindVertexCacheIndex(Assimp.Mesh mesh, int i, List<(Bone,float)>[] vertexWeights, List<Vertex> vertexCache, out Vertex vertex )
+        {
+            var position  = mesh.HasVertices ? mesh.Vertices[i] : new Vector3D();
+            var normal    = mesh.HasNormals ? mesh.Normals[i] : new Vector3D();
+            var texCoord  = mesh.HasTextureCoords( 0 ) ? mesh.TextureCoordinateChannels[0][i] : new Vector3D();
+            var texCoord2 = mesh.HasTextureCoords( 1 ) ? mesh.TextureCoordinateChannels[1][i] : new Vector3D();
+            var color     = mesh.HasVertexColors( 0 ) ? mesh.VertexColorChannels[0][i] : new Color4D();
+            var weights   = mesh.HasBones ? vertexWeights[i] : new List<(Bone, float)>();
+            var cacheIndex = vertexCache.FindIndex( y => y.Position == position && y.Normal == normal && y.TexCoord == texCoord &&
+                                                         y.TexCoord2 == texCoord2 && y.Color == color &&
+                                                         y.Weights.SequenceEqual( weights ) );
+
+            vertex = new Vertex( position, normal, texCoord, texCoord2, color, weights );
+            return cacheIndex;
+        }
+
+        private static void PopulateSubMeshVertexData( Assimp.Mesh mesh, Assimp.Mesh subMesh, List<Vertex> vertexCache )
+        {
+            var vertexIndex = 0;
+            foreach ( var vertex in vertexCache )
+            {
+                // Split the vertex data from the cache
+                if ( mesh.HasVertices )
+                    subMesh.Vertices.Add( vertex.Position );
+
+                if ( mesh.HasNormals )
+                    subMesh.Normals.Add( vertex.Normal );
+
+                if ( mesh.HasTextureCoords( 0 ) )
+                    subMesh.TextureCoordinateChannels[0].Add( vertex.TexCoord );
+
+                if ( mesh.HasTextureCoords( 1 ) )
+                    subMesh.TextureCoordinateChannels[1].Add( vertex.TexCoord2 );
+
+                if ( mesh.HasVertexColors( 0 ) )
+                    subMesh.VertexColorChannels[0].Add( vertex.Color );
+
+                if ( mesh.HasBones )
+                {
+                    foreach ( var boneWeight in vertex.Weights )
+                    {
+                        var subMeshBone = subMesh.Bones.FirstOrDefault( x => x.Name == boneWeight.Bone.Name );
+                        if ( subMeshBone == null )
+                        {
+                            subMeshBone = new Bone
+                            {
+                                Name = boneWeight.Bone.Name,
+                                OffsetMatrix = boneWeight.Bone.OffsetMatrix
+                            };
+                            subMesh.Bones.Add( subMeshBone );
+                        }
+
+                        subMeshBone.VertexWeights.Add( new VertexWeight( vertexIndex, boneWeight.Weight ) );
+                    }
+                }
+
+                ++vertexIndex;
+            }
+        }
+
+        private static void CheckIfAllVerticesHaveWeights( Assimp.Mesh subMesh )
+        {
+            if ( subMesh.HasBones )
+            {
                 var vertexIndices = Enumerable.Range( 0, subMesh.VertexCount ).ToList();
                 foreach ( var bone in subMesh.Bones )
                 {
@@ -363,17 +386,27 @@ namespace DDS3ModelLibrary.Modeling.Utilities
                 }
 
                 Debug.Assert( vertexIndices.Count == 0 );
-
-                subMeshes.Add( subMesh );
             }
-
-            return subMeshes;
         }
 
-        public static List<Assimp.Mesh> SplitMeshByVertexCount( Assimp.Mesh mesh, int vertexCount )
+        private struct Vertex
         {
-            // todo
-            return null;
+            public readonly Vector3D Position;
+            public readonly Vector3D Normal;
+            public readonly Vector3D TexCoord;
+            public readonly Vector3D TexCoord2;
+            public readonly Color4D Color;
+            public readonly List<(Bone Bone, float Weight)> Weights;
+
+            public Vertex( Vector3D position, Vector3D normal, Vector3D texCoord, Vector3D texCoord2, Color4D color, List<(Bone, float)> weights )
+            {
+                Position = position;
+                Normal = normal;
+                TexCoord = texCoord;
+                TexCoord2 = texCoord2;
+                Color = color;
+                Weights = weights;
+            }
         }
     }
 }

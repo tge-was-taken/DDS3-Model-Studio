@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using Assimp;
 using DDS3ModelLibrary.IO.Common;
 using DDS3ModelLibrary.Modeling;
 using DDS3ModelLibrary.Modeling.Utilities;
@@ -18,7 +19,7 @@ namespace DDS3ModelLibrary
     public class ModelPack : IBinarySerializable
     {
         private const int BATCH_VERTEX_LIMIT = 24;
-        private const int MESH_WEIGHT_LIMIT = 4;
+        private const int MESH_WEIGHT_LIMIT = 3;
 
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
@@ -166,32 +167,31 @@ namespace DDS3ModelLibrary
             usedNodeIndices.RemoveRange( 4, excessiveNodeCount );
         }
 
-        private static MeshType1 ConvertToMeshType1( Assimp.Mesh aiMesh, bool hasTexture, Matrix4x4 aiNodeWorldTransform, List<Vector3> localPositions, ref Matrix4x4 nodeInvWorldTransform )
+        private static MeshType1 ConvertToMeshType1( Assimp.Scene aiScene, Assimp.Mesh aiMesh, bool hasTexture, Matrix4x4 aiNodeWorldTransform, List<Vector3> localPositions, ref Matrix4x4 nodeInvWorldTransform )
         {
             var mesh = new MeshType1
             {
                 MaterialIndex = ( short )aiMesh.MaterialIndex,
             };
 
-            var processedVertexCount = 0;
-            while ( processedVertexCount < aiMesh.VertexCount )
+            var aiBatchMeshes = AssimpHelper.SplitMeshByVertexCount( aiMesh, BATCH_VERTEX_LIMIT );
+            foreach ( var aiBatchMesh in aiBatchMeshes )
             {
-                var batchVertexCount = Math.Min( BATCH_VERTEX_LIMIT, aiMesh.VertexCount - processedVertexCount );
-                var batch = new MeshType1Batch();
-                batch.Flags = 0;
-                batch.Triangles = aiMesh
-                                  .Faces.Select( x => new Triangle( ( ushort ) x.Indices[ 0 ], ( ushort ) x.Indices[ 1 ],
-                                                                    ( ushort ) ( x.IndexCount > 2 ? x.Indices[ 2 ] : x.Indices[ 1 ] ) ) )
-                                  .ToArray();
-
-                batch.Positions = new Vector3[batchVertexCount];
+                var batch = new MeshType1Batch
+                {
+                    Triangles = aiBatchMesh
+                                .Faces.Select( x => new Triangle( ( ushort ) x.Indices[ 0 ], ( ushort ) x.Indices[ 1 ],
+                                                                  ( ushort ) ( x.IndexCount > 2 ? x.Indices[ 2 ] : x.Indices[ 1 ] ) ) )
+                                .ToArray(),
+                };
 
                 // Convert positions
-                if ( aiMesh.HasVertices )
+                batch.Positions = new Vector3[aiBatchMesh.VertexCount];
+                if ( aiBatchMesh.HasVertices )
                 {
                     for ( int j = 0; j < batch.Positions.Length; j++ )
                     {
-                        var position = aiMesh.Vertices[processedVertexCount + j].FromAssimp();
+                        var position = aiBatchMesh.Vertices[j].FromAssimp();
                         var worldPosition = Vector3.Transform( position, aiNodeWorldTransform );
                         var localPosition = Vector3.Transform( worldPosition, nodeInvWorldTransform );
                         batch.Positions[j] = localPosition;
@@ -200,12 +200,12 @@ namespace DDS3ModelLibrary
                 }
 
                 // Convert normals
-                if ( aiMesh.HasNormals )
+                if ( aiBatchMesh.HasNormals )
                 {
-                    batch.Normals = new Vector3[batchVertexCount];
+                    batch.Normals = new Vector3[aiBatchMesh.VertexCount];
                     for ( int j = 0; j < batch.Normals.Length; j++ )
                     {
-                        var normal      = aiMesh.Normals[processedVertexCount + j].FromAssimp();
+                        var normal = aiBatchMesh.Normals[j].FromAssimp();
                         var worldNormal = Vector3.Normalize( Vector3.TransformNormal( normal, aiNodeWorldTransform ) );
                         var localNormal = Vector3.Normalize( Vector3.TransformNormal( worldNormal, nodeInvWorldTransform ) );
                         batch.Normals[j] = localNormal;
@@ -213,33 +213,36 @@ namespace DDS3ModelLibrary
                 }
 
                 // Convert texture coords
-                if ( hasTexture && aiMesh.HasTextureCoords( 0 ) )
+                if ( hasTexture && aiBatchMesh.HasTextureCoords( 0 ) )
                 {
-                    batch.TexCoords = new Vector2[batchVertexCount];
+                    batch.TexCoords = new Vector2[aiBatchMesh.VertexCount];
                     for ( int j = 0; j < batch.TexCoords.Length; j++ )
-                        batch.TexCoords[j] = aiMesh.TextureCoordinateChannels[0][processedVertexCount + j].FromAssimpAsVector2();
+                        batch.TexCoords[j] = aiBatchMesh.TextureCoordinateChannels[0][j].FromAssimpAsVector2();
                 }
 
-                if ( hasTexture && aiMesh.HasTextureCoords( 1 ) )
+                if ( hasTexture && aiBatchMesh.HasTextureCoords( 1 ) )
                 {
-                    batch.TexCoords2 = new Vector2[batchVertexCount];
+                    batch.TexCoords2 = new Vector2[aiBatchMesh.VertexCount];
                     for ( int j = 0; j < batch.TexCoords2.Length; j++ )
-                        batch.TexCoords2[j] = aiMesh.TextureCoordinateChannels[1][processedVertexCount + j].FromAssimpAsVector2();
+                        batch.TexCoords2[j] = aiBatchMesh.TextureCoordinateChannels[1][j].FromAssimpAsVector2();
                 }
 
-                if ( aiMesh.HasVertexColors( 0 ) )
+                if ( false && aiBatchMesh.HasVertexColors( 0 ) )
                 {
-                    batch.Colors = new Color[batchVertexCount];
+                    batch.Colors = new Color[aiBatchMesh.VertexCount];
                     for ( int j = 0; j < batch.Colors.Length; j++ )
-                        batch.Colors[j] = aiMesh.VertexColorChannels[0][processedVertexCount + j].FromAssimp();
+                        batch.Colors[j] = aiBatchMesh.VertexColorChannels[0][j].FromAssimp();
+                }
+                else if ( false )
+                {
+                    batch.Colors = new Color[aiBatchMesh.VertexCount];
+                    for ( int i = 0; i < batch.Colors.Length; i++ )
+                        batch.Colors[i] = Color.White;
                 }
 
                 // Add batch to mesh
                 mesh.Batches.Add( batch );
-                processedVertexCount += batchVertexCount;
             }
-
-            Debug.Assert( processedVertexCount == aiMesh.VertexCount );
 
             return mesh;
         }
@@ -255,43 +258,30 @@ namespace DDS3ModelLibrary
                             .ToArray()
             };
 
+            // TODO: texcoord generates artifacts, MESH_WEIGHT_LIMIT of 4 causes artifacts
+
+            mesh.Flags = MeshFlags.Weights | MeshFlags.Normal | MeshFlags.TexCoord;
+
             if ( !hasTexture )
                 mesh.Flags &= ~MeshFlags.TexCoord;
 
-            // Get vertex weights
-            var vertexWeights = new List<List<(short NodeIndex, float Weight)>>();
-            var nodeScores = new Dictionary<short, float>();
-            for ( int i = 0; i < aiMesh.VertexCount; i++ )
+            var aiVertexWeights = aiMesh.GetVertexWeights();
+            var vertexWeights = new List<(short NodeIndex, float Weight)>[aiVertexWeights.Length];
+            for ( int i = 0; i < aiVertexWeights.Length; i++ )
             {
                 var weights = new List<(short, float)>();
-                foreach ( var aiBone in aiMesh.Bones )
+                foreach ( (Bone bone, float weight) in aiVertexWeights[i] )
                 {
-                    foreach ( var aiVertexWeight in aiBone.VertexWeights )
-                    {
-                        if ( aiVertexWeight.VertexID == i )
-                        {
-                            var nodeIndex = nodes.FindIndex( x => x.Name == aiBone.Name );
-                            Debug.Assert( nodeIndex != -1 );
-                            weights.Add( (( short )nodeIndex, aiVertexWeight.Weight) );
-
-                            if ( !nodeScores.ContainsKey( ( short ) nodeIndex ) )
-                                nodeScores[ ( short ) nodeIndex ] = 0;
-
-                            nodeScores[(short)nodeIndex] += aiVertexWeight.Weight;
-                        }
-                    }
+                    var nodeIndex = nodes.FindIndex( x => x.Name == bone.Name );
+                    Debug.Assert( nodeIndex != -1 );
+                    weights.Add( (( short )nodeIndex, weight) );
                 }
 
-                vertexWeights.Add( weights );
+                vertexWeights[i] = weights;
             }
 
-            // Find unique node indices used by the mesh (max 4 per mesh!)
-            var usedNodeIndices = vertexWeights.SelectMany( x => x.Select( y => y.NodeIndex ) ).Distinct().OrderByDescending( x => nodeScores[ x ] )
-                                               .ToList();
-
-            Trace.Assert( usedNodeIndices.Count > 1 );
-            if ( usedNodeIndices.Count > 4 )
-                RemoveExcessiveNodeInfluences( aiMesh.VertexCount, usedNodeIndices, vertexWeights, nodeScores );
+            var usedNodeIndices = vertexWeights.SelectMany( x => x.Select( y => y.NodeIndex ) ).Distinct().ToList();
+            Debug.Assert( usedNodeIndices.Count >= 1 && usedNodeIndices.Count <= 4 );
 
             // Start building batches
             var batchVertexBaseIndex = 0;
@@ -317,7 +307,15 @@ namespace DDS3ModelLibrary
                     for ( int vertexIndex = batchVertexBaseIndex; vertexIndex < ( batchVertexBaseIndex + batchVertexCount ); vertexIndex++ )
                     {
                         var nodeBatchVertexIndex = vertexIndex - batchVertexBaseIndex;
-                        var addedAny = false;
+
+                        if ( batch.NodeBatches.Count == 0 )
+                        {
+                            var texCoord = aiMesh.HasTextureCoords( 0 )
+                                ? aiMesh.TextureCoordinateChannels[ 0 ][ vertexIndex ].FromAssimpAsVector2()
+                                : new Vector2();
+                            batch.TexCoords[ nodeBatchVertexIndex ] = texCoord;
+                        }
+
                         foreach ( (short nodeIndex, float nodeWeight) in vertexWeights[vertexIndex] )
                         {
                             if ( nodeIndex != usedNodeIndex )
@@ -335,22 +333,6 @@ namespace DDS3ModelLibrary
 
                             if ( aiMesh.HasNormals )
                                 nodeBatch.Normals[nodeBatchVertexIndex] = normal;
-
-                            if ( batch.NodeBatches.Count == 0 )
-                            {
-                                batch.TexCoords[nodeBatchVertexIndex] = aiMesh.HasTextureCoords( 0 )
-                                    ? aiMesh.TextureCoordinateChannels[0][vertexIndex].FromAssimpAsVector2()
-                                    : new Vector2();
-                            }
-
-                            addedAny = true;
-                        }
-
-                        if ( !addedAny && batch.NodeBatches.Count == 0 )
-                        {
-                            batch.TexCoords[nodeBatchVertexIndex] = aiMesh.HasTextureCoords( 0 )
-                                ? aiMesh.TextureCoordinateChannels[0][vertexIndex].FromAssimpAsVector2()
-                                : new Vector2();
                         }
                     }
 
@@ -359,6 +341,7 @@ namespace DDS3ModelLibrary
 
                 Debug.Assert( batch.NodeBatches.Count > 0 );
                 Debug.Assert( batch.NodeBatches.TrueForAll( x => x.VertexCount == batch.NodeBatches[0].VertexCount ) );
+                Debug.Assert( batch.NodeBatches.SelectMany( x => x.Positions ).Sum( x => x.W ) == batch.VertexCount );
 
                 mesh.Batches.Add( batch );
                 batchVertexBaseIndex += batchVertexCount;
@@ -432,15 +415,12 @@ namespace DDS3ModelLibrary
         {
             var baseDirectory = Path.GetDirectoryName( Path.GetFullPath( filePath ) );
             var aiContext = new Assimp.AssimpContext();
-            aiContext.SetConfig( new Assimp.Configs.FBXPreservePivotsConfig( false ) );
-            aiContext.SetConfig( new Assimp.Configs.MaxBoneCountConfig( 4 ) );
+        //    aiContext.SetConfig( new Assimp.Configs.FBXPreservePivotsConfig( false ) );
             aiContext.SetConfig( new Assimp.Configs.VertexBoneWeightLimitConfig( 4 ) );
-            aiContext.SetConfig( new Assimp.Configs.MeshVertexLimitConfig( 24 ) );
             var aiScene = aiContext.ImportFile( filePath, Assimp.PostProcessSteps.JoinIdenticalVertices |
-                                                          Assimp.PostProcessSteps.FindDegenerates |
                                                           Assimp.PostProcessSteps.FindInvalidData | Assimp.PostProcessSteps.FlipUVs |
                                                           Assimp.PostProcessSteps.ImproveCacheLocality |
-                                                          Assimp.PostProcessSteps.Triangulate | Assimp.PostProcessSteps.LimitBoneWeights  | Assimp.PostProcessSteps.SplitLargeMeshes // | Assimp.PostProcessSteps.SplitByBoneCount
+                                                          Assimp.PostProcessSteps.Triangulate | Assimp.PostProcessSteps.LimitBoneWeights
                                               );
 
             // Clear stuff we're going to replace
@@ -458,7 +438,7 @@ namespace DDS3ModelLibrary
             foreach ( var aiMaterial in aiScene.Materials )
             {
                 var materialName = TagName.Parse( aiMaterial.Name );
-                var isTextured = aiMaterial.HasTextureDiffuse;
+                var isTextured = true && aiMaterial.HasTextureDiffuse;
                 var hasOverlay = false && materialName["ovl"].Count == 2;
                 int textureId = 0;
                 int overlayMaskId = 0;
@@ -479,7 +459,7 @@ namespace DDS3ModelLibrary
 
                 if ( materialName["ps"].Count == 1 && int.TryParse( materialName["ps"][0], out var presetId ) && MaterialPresetStore.IsValidPresetId( presetId ) )
                 {
-                    if ( !aiMaterial.HasTextureDiffuse )
+                    if ( !isTextured )
                         material = Material.FromPreset( presetId );
                     else if ( !hasOverlay )
                         material = Material.FromPreset( presetId, textureId );
@@ -488,7 +468,7 @@ namespace DDS3ModelLibrary
                 }
                 else
                 {
-                    if ( !aiMaterial.HasTextureDiffuse )
+                    if ( !isTextured )
                         material = Material.CreateDefault();
                     else if ( !hasOverlay )
                         material = Material.CreateDefault( textureId );
@@ -500,7 +480,10 @@ namespace DDS3ModelLibrary
             }
 
             if ( TexturePack.Count == 0 )
+            {
+                // Otherwise we crash
                 TexturePack = null;
+            }
 
             var nodeLocalPositions = new Dictionary<Node, List<Vector3>>();
 
@@ -514,7 +497,7 @@ namespace DDS3ModelLibrary
                     {
                         if ( aiMesh.BoneCount > MESH_WEIGHT_LIMIT )
                         {
-                            aiMeshes.AddRange( AssimpHelper.SplitMeshByBoneCount( aiScene, aiMesh, MESH_WEIGHT_LIMIT ) );
+                            aiMeshes.AddRange( AssimpHelper.SplitMeshByBoneCount( aiMesh, MESH_WEIGHT_LIMIT ) );
                         }
                         else
                         {
@@ -545,10 +528,11 @@ namespace DDS3ModelLibrary
                         {
                             // Unweighted mesh
                             // TODO: decide between type 1 and 8?
-                            //mesh = ConvertToMeshType8( aiMesh, hasTexture, aiNodeWorldTransform, localPositions,
-                            //                           ref nodeInvWorldTransform );
-                            mesh = ConvertToMeshType1( aiMesh, hasTexture, aiNodeWorldTransform, localPositions, 
+                            mesh = ConvertToMeshType8( aiMesh, hasTexture, aiNodeWorldTransform, localPositions,
                                                        ref nodeInvWorldTransform );
+                            //mesh = ConvertToMeshType1( aiScene, aiMesh, hasTexture, aiNodeWorldTransform, localPositions,
+                            //                           ref nodeInvWorldTransform );
+                            //continue;
                         }
 
                         if ( node.Geometry == null )
@@ -571,6 +555,9 @@ namespace DDS3ModelLibrary
             // Calculate bounding boxes
             foreach ( var kvp in nodeLocalPositions )
             {
+                if ( kvp.Key.Geometry == null )
+                    continue;
+
                 kvp.Key.BoundingBox = BoundingBox.Calculate( kvp.Value );
                 Debug.Assert( kvp.Key.Geometry != null );
             }
@@ -586,28 +573,29 @@ namespace DDS3ModelLibrary
                 var start  = reader.Position;
                 var header = reader.ReadObject<ResourceHeader>();
                 var end    = AlignmentHelper.Align( start + header.FileSize, 64 );
+                var context = new Resource.IOContext( header, false, null );
 
                 switch ( header.Identifier )
                 {
                     case ResourceIdentifier.ModelPackInfo:
-                        Info = reader.ReadObject<ModelPackInfo>( (header, false) );
+                        Info = reader.ReadObject<ModelPackInfo>( context );
                         break;
 
                     case ResourceIdentifier.Particle:
                     case ResourceIdentifier.Video:
-                        Effects.Add( reader.ReadObject<BinaryResource>( (header, false) ) );
+                        Effects.Add( reader.ReadObject<BinaryResource>( context ) );
                         break;
 
                     case ResourceIdentifier.TexturePack:
-                        TexturePack = reader.ReadObject<TexturePack>( (header, false) );
+                        TexturePack = reader.ReadObject<TexturePack>( context );
                         break;
 
                     case ResourceIdentifier.Model:
-                        Models.Add( reader.ReadObject<Model>( ( header, false ) ) );
+                        Models.Add( reader.ReadObject<Model>( context ) );
                         break;
 
                     case ResourceIdentifier.AnimationPack:
-                        AnimationPacks.Add( reader.ReadObject<BinaryResource>( (header, false) ) );
+                        AnimationPacks.Add( reader.ReadObject<BinaryResource>( context ) );
                         break;
 
                     case ResourceIdentifier.ModelPackEnd:
@@ -629,7 +617,7 @@ namespace DDS3ModelLibrary
             if ( Info != null )
             {
                 // Some files don't have this
-                writer.WriteObject( Info, this );
+                writer.WriteObject( Info, new Resource.IOContext( this ) );
             }
 
             writer.WriteObjects( Effects );
@@ -637,7 +625,7 @@ namespace DDS3ModelLibrary
             if ( TexturePack != null )
                 writer.WriteObject( TexturePack );
 
-            writer.WriteObjects( Models, false );
+            writer.WriteObjects( Models );
             writer.WriteObjects( AnimationPacks );
 
             // write dummy end chunk

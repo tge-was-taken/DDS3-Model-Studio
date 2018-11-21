@@ -5,6 +5,8 @@ namespace DDS3ModelLibrary
 {
     public class FieldObject : IBinarySerializable
     {
+        private static readonly Resource.IOContext sResourceIOContext = new Resource.IOContext( true );
+
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
         public int Id { get; set; }
@@ -44,23 +46,23 @@ namespace DDS3ModelLibrary
             switch ( resourceType )
             {
                 case FieldObjectResourceType.Model:
-                    Resource = reader.ReadObjectOffset<Model>( ( (ResourceHeader )null, true ) );
+                    Resource = reader.ReadObjectOffset<Model>( sResourceIOContext );
                     break;
 
                 case FieldObjectResourceType.Type3:
-                    Resource = reader.ReadObjectOffset<FieldObjectResourceType3>( (( ResourceHeader )null, true) );
+                    Resource = reader.ReadObjectOffset<FieldObjectResourceType3>( sResourceIOContext );
                     break;
 
                 case FieldObjectResourceType.TextureListFileName:
-                    Resource = reader.ReadObjectOffset<FieldTextureListFileName>( ( ( ResourceHeader ) null, true ) );
+                    Resource = reader.ReadObjectOffset<FieldTextureListFileName>( sResourceIOContext );
                     break;
 
                 case FieldObjectResourceType.Effect:
-                    Resource = reader.ReadObjectOffset<FieldEffect>( (( ResourceHeader )null, true) );
+                    Resource = reader.ReadObjectOffset<FieldEffect>( sResourceIOContext );
                     break;
 
                 case FieldObjectResourceType.Light:
-                    Resource = reader.ReadObjectOffset<FieldLight>( (( ResourceHeader )null, true) );
+                    Resource = reader.ReadObjectOffset<FieldLight>( sResourceIOContext );
                     break;
 
                 default:
@@ -79,7 +81,7 @@ namespace DDS3ModelLibrary
             writer.ScheduleWriteObjectOffset( Field14, 16 );
             writer.Write( Field18 );
             writer.Write( Field1C );
-            writer.ScheduleWriteObjectOffset( Resource, 16, true );
+            writer.ScheduleWriteObjectOffset( Resource, 16, sResourceIOContext );
         }
     }
 }

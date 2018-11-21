@@ -176,7 +176,7 @@ namespace DDS3ModelLibrary
             }
         }
 
-        internal override void ReadContent( EndianBinaryReader reader, ResourceHeader header )
+        internal override void ReadContent( EndianBinaryReader reader, IOContext context )
         {
             var paletteCount = reader.ReadByte();
             PaletteFormat = ( GSPixelFormat )reader.ReadByte();
@@ -235,7 +235,7 @@ namespace DDS3ModelLibrary
             }
         }
 
-        internal override void WriteContent( EndianBinaryWriter writer, object context )
+        internal override void WriteContent( EndianBinaryWriter writer, IOContext context )
         {
             writer.Write( PaletteCount );
             writer.Write( ( byte )PaletteFormat );
