@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
-using DDS3ModelLibrary.Primitives;
+using DDS3ModelLibrary.Models;
 
 namespace DDS3ModelLibrary.IO.Common
 {

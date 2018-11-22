@@ -1,20 +1,16 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using AtlusFileSystemLibrary;
-using DDS3ModelLibrary;
-using DDS3ModelLibrary.IO.Common;
-using DDS3ModelLibrary.Modeling.Utilities;
-using DDS3ModelLibrary.Primitives;
-using Newtonsoft.Json;
 using AtlusFileSystemLibrary.FileSystems.LB;
+using DDS3ModelLibrary.Models;
+using DDS3ModelLibrary.Models.Field;
+using Newtonsoft.Json;
 
 namespace DDS3ModelLibraryCLI
 {

@@ -2,7 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.IO;
-using Color = DDS3ModelLibrary.Primitives.Color;
+using Color = DDS3ModelLibrary.Models.Color;
 
 namespace DDS3ModelLibrary.PS2.GS
 {

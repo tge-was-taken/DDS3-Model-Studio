@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using System.Text;
-using DDS3ModelLibrary.Primitives;
+using DDS3ModelLibrary.Models;
 
 namespace DDS3ModelLibrary.IO.Common
 {
@@ -216,7 +215,7 @@ namespace DDS3ModelLibrary.IO.Common
         {
             var actual = ReadByte();
             if ( actual != expected )
-                throw new UnexpectedDataException( message );
+                throw new InvalidDataException( message );
 
             return actual;
         }
@@ -259,7 +258,7 @@ namespace DDS3ModelLibrary.IO.Common
         {
             var actual = ReadInt16();
             if ( actual != expected )
-                throw new UnexpectedDataException( message );
+                throw new InvalidDataException( message );
 
             return actual;
         }
@@ -295,7 +294,7 @@ namespace DDS3ModelLibrary.IO.Common
         {
             var actual = ReadUInt16();
             if ( actual != expected )
-                throw new UnexpectedDataException( message );
+                throw new InvalidDataException( message );
 
             return actual;
         }
@@ -352,7 +351,7 @@ namespace DDS3ModelLibrary.IO.Common
         {
             var actual = ReadInt32();
             if ( actual != expected )
-                throw new UnexpectedDataException( message );
+                throw new InvalidDataException( message );
 
             return actual;
         }
@@ -393,7 +392,7 @@ namespace DDS3ModelLibrary.IO.Common
         {
             var actual = ReadSingle();
             if ( actual != expected )
-                throw new UnexpectedDataException( message );
+                throw new InvalidDataException( message );
 
             return actual;
         }
@@ -418,7 +417,7 @@ namespace DDS3ModelLibrary.IO.Common
         {
             var actual = ReadUInt32();
             if ( actual != expected )
-                throw new UnexpectedDataException( message );
+                throw new InvalidDataException( message );
 
             return actual;
         }

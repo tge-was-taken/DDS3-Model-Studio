@@ -1,7 +1,4 @@
-﻿using System.Diagnostics.Contracts;
-using DDS3ModelLibrary.IO;
-
-namespace DDS3ModelLibrary.IO.Common
+﻿namespace DDS3ModelLibrary.IO.Common
 {
     public struct BitField
     {

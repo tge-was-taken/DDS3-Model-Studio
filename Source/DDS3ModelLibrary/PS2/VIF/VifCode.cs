@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary.PS2.VIF
@@ -43,13 +39,13 @@ namespace DDS3ModelLibrary.PS2.VIF
         public void Ensure( int immediate, int count, VifCommand command )
         {
             if ( Immediate != immediate )
-                throw new UnexpectedDataException( $"Vifcode immediate value is not {immediate}" );
+                throw new InvalidDataException( $"Vifcode immediate value is not {immediate}" );
 
             if ( Count != count )
-                throw new UnexpectedDataException( $"Vifcode count value is not {count}" );
+                throw new InvalidDataException( $"Vifcode count value is not {count}" );
 
             if ( Command != command )
-                throw new UnexpectedDataException( $"Vifcode command type is not {command}" );
+                throw new InvalidDataException( $"Vifcode command type is not {command}" );
         }
 
         private void Read( EndianBinaryReader reader, VifTag tag )

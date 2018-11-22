@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Numerics;
 using DDS3ModelLibrary.IO.Common;
 
@@ -216,22 +217,22 @@ namespace DDS3ModelLibrary.PS2.VIF
         public void Ensure( int? address, bool sign, bool flag, int? count, VifUnpackElementFormat format, int elementCount  )
         {
             if ( address.HasValue && Address != address.Value )
-                throw new UnexpectedDataException( $"Packet address is not {address}" );
+                throw new InvalidDataException( $"Packet address is not {address}" );
 
             if ( Sign != sign )
-                throw new UnexpectedDataException( $"Packet sign flag is not {sign}" );
+                throw new InvalidDataException( $"Packet sign flag is not {sign}" );
 
             if ( Flag != flag )
-                throw new UnexpectedDataException( $"Packet flag is not {flag}" );
+                throw new InvalidDataException( $"Packet flag is not {flag}" );
 
             if ( count.HasValue && Count != count )
-                throw new UnexpectedDataException( $"Packet count is not {count}" );
+                throw new InvalidDataException( $"Packet count is not {count}" );
 
             if ( ElementFormat != format )
-                throw new UnexpectedDataException( $"Packet element format is not {format}" );
+                throw new InvalidDataException( $"Packet element format is not {format}" );
 
             if ( ElementCount != elementCount )
-                throw new UnexpectedDataException( $"Packet element count is not {elementCount}" );
+                throw new InvalidDataException( $"Packet element count is not {elementCount}" );
         }
 
         private void Initialize( int address, bool sign, bool flag, VifUnpackElementFormat format, int elementCount, int count, object elements )
