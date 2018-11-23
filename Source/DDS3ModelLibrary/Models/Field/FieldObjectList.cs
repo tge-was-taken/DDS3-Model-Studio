@@ -54,7 +54,7 @@ namespace DDS3ModelLibrary.Models.Field
         {
             writer.Write( ( int ) Type );
             writer.Write( Count );
-            writer.ScheduleWriteListOffset( this, 16 );
+            writer.ScheduleWriteListOffsetAligned( this, 16 );
         }
 
         #region IList

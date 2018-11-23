@@ -27,7 +27,7 @@ namespace DDS3ModelLibrary.Models.Field
         {
             writer.Write( Field00 );
             writer.Write( Field04 );
-            writer.ScheduleWriteObjectOffset( Field08, 16 );
+            writer.ScheduleWriteObjectOffsetAligned( Field08, 16 );
             writer.Write( Field0C );
         }
 
@@ -65,8 +65,8 @@ namespace DDS3ModelLibrary.Models.Field
                 writer.Write( Field10.Count );
                 writer.Write( Field08 );
                 writer.ScheduleWriteOffsetAligned( 16, () => writer.Write( Field0C ) );
-                writer.ScheduleWriteObjectListOffset( Field10, 16 );
-                writer.ScheduleWriteObjectOffset( Field14, 16 );
+                writer.ScheduleWriteObjectOffsetsAligned( Field10, 16 );
+                writer.ScheduleWriteObjectOffsetAligned( Field14, 16 );
                 writer.Write( Field18 );
                 writer.Write( Field1C );
             }

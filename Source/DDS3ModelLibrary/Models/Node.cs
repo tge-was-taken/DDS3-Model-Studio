@@ -254,17 +254,17 @@ namespace DDS3ModelLibrary.Models
             writer.Write( 1f );
             writer.Write( Scale );
             writer.Write( 0f );
-            writer.ScheduleWriteObjectOffset( BoundingBox, 16 );
+            writer.ScheduleWriteObjectOffsetAligned( BoundingBox, 16 );
 
             if ( Geometry != null )
-                writer.ScheduleWriteObjectOffset( Geometry, 16 );
+                writer.ScheduleWriteObjectOffsetAligned( Geometry, 16 );
             else if ( DeprecatedMeshList != null )
-                writer.ScheduleWriteObjectOffset( DeprecatedMeshList, 16 );
+                writer.ScheduleWriteObjectOffsetAligned( DeprecatedMeshList, 16 );
             else
                 writer.Write( 0 );
 
             writer.Write( Field48 );
-            writer.ScheduleWriteObjectOffset( DeprecatedMeshList2, 16 );
+            writer.ScheduleWriteObjectOffsetAligned( DeprecatedMeshList2, 16 );
         }
     }
 }

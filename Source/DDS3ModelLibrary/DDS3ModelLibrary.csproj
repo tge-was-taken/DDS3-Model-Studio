@@ -61,6 +61,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IO\Common\EndianBinaryWriter.ExplicitWriteMethods.cs" />
+    <Compile Include="IO\Common\Utilities\EncodingExtensions.cs" />
     <Compile Include="Models\Field\FieldEffect.cs" />
     <Compile Include="Models\Field\FieldLight.cs" />
     <Compile Include="Models\Field\FieldObject.cs" />

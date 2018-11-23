@@ -7,8 +7,10 @@ using DDS3ModelLibrary.Models;
 
 namespace DDS3ModelLibrary.IO.Common
 {
-    public class EndianBinaryReader : BinaryReader
+    public sealed class EndianBinaryReader : BinaryReader
     {
+        private static readonly Encoding sEncoding = Encoding.GetEncoding( 932 );
+
         private Endianness mEndianness;
         private Dictionary<long, object> mObjectLookup;
         private Stack<long> mBaseOffsetStack;
@@ -43,21 +45,21 @@ namespace DDS3ModelLibrary.IO.Common
             : base( input )
         {
             FileName = input is FileStream fs ? fs.Name : null;
-            Init( Encoding.GetEncoding( 932 ), endianness );
+            Init( sEncoding, endianness );
         }
 
         public EndianBinaryReader( Stream input, string fileName, Endianness endianness )
             : base( input )
         {
             FileName = input is FileStream fs ? fs.Name : fileName;
-            Init( Encoding.GetEncoding( 932 ), endianness );
+            Init( sEncoding, endianness );
         }
 
         public EndianBinaryReader( string filepath, Endianness endianness )
             : base( File.OpenRead( filepath ) )
         {
             FileName = filepath;
-            Init( Encoding.GetEncoding( 932 ), endianness );
+            Init( sEncoding, endianness );
         }
 
         public EndianBinaryReader( Stream input, Encoding encoding, Endianness endianness )
@@ -71,7 +73,7 @@ namespace DDS3ModelLibrary.IO.Common
             : base( input, Encoding.Default, leaveOpen )
         {
             FileName = input is FileStream fs ? fs.Name : null;
-            Init( Encoding.GetEncoding( 932 ), endianness );
+            Init( sEncoding, endianness );
         }
 
         public EndianBinaryReader( Stream input, Encoding encoding, bool leaveOpen, Endianness endianness )
@@ -140,18 +142,6 @@ namespace DDS3ModelLibrary.IO.Common
             }
         }
 
-        public void ReadOffset( Action<EndianBinaryReader> action )
-        {
-            var offset = ReadInt32();
-            if ( offset != 0 )
-            {
-                long current = Position;
-                SeekBegin( offset + BaseOffset );
-                action( this );
-                SeekBegin( current );
-            }
-        }
-
         public void ReadOffset( int count, Action<int> action )
         {
             ReadOffset( () =>
@@ -172,17 +162,6 @@ namespace DDS3ModelLibrary.IO.Common
             SeekBegin( current );
         }
 
-        public void ReadAtOffset( long offset, Action<EndianBinaryReader> action )
-        {
-            if ( offset == 0 )
-                return;
-
-            long current = Position;
-            SeekBegin( offset + BaseOffset );
-            action( this );
-            SeekBegin( current );
-        }
-
         public void ReadAtOffset( long offset, int count, Action<int> action )
         {
             if ( offset == 0 )
@@ -195,7 +174,7 @@ namespace DDS3ModelLibrary.IO.Common
             } );
         }
 
-        internal void ReadAtOffset<T>( long offset, int count, List<T> list, object context = null ) where T : IBinarySerializable, new()
+        public void ReadAtOffset<T>( long offset, int count, List<T> list, object context = null ) where T : IBinarySerializable, new()
         {
             if ( offset == 0 )
                 return;

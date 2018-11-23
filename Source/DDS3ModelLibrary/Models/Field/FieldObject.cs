@@ -75,13 +75,13 @@ namespace DDS3ModelLibrary.Models.Field
         {
             writer.Write( Id );
             writer.Write( ( int ) ResourceType );
-            writer.ScheduleWriteStringOffset( Name, 16 );
+            writer.ScheduleWriteStringOffsetAligned( Name, 16 );
             writer.Write( Field0C );
-            writer.ScheduleWriteObjectOffset( Transform, 16 );
-            writer.ScheduleWriteObjectOffset( Field14, 16 );
+            writer.ScheduleWriteObjectOffsetAligned( Transform, 16 );
+            writer.ScheduleWriteObjectOffsetAligned( Field14, 16 );
             writer.Write( Field18 );
             writer.Write( Field1C );
-            writer.ScheduleWriteObjectOffset( Resource, 16, sResourceIOContext );
+            writer.ScheduleWriteObjectOffsetAligned( Resource, 16, sResourceIOContext );
         }
     }
 }

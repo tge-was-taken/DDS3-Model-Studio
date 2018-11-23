@@ -19,7 +19,8 @@ namespace DDS3ModelLibraryCLI
         private static void Main( string[] args )
         {
             //ReplaceF1Test();
-            ReplaceModelTest();
+            //ReplaceModelTest();
+            OpenAndSaveFieldSceneBatchTest();
             return;
             //ExportObj( new ModelPack( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_b.PB" ) );
             //return;
@@ -784,7 +785,7 @@ namespace DDS3ModelLibraryCLI
                     Console.WriteLine( Path.GetFileName( path ) );
                     var field = new FieldScene( path );
                     //ExportObj( field, Path.GetFileNameWithoutExtension( path ) + ".obj" );
-                    //new FieldScene( field.Save() );
+                    new FieldScene( field.Save() );
                     //field.Save( path + ".out" );
                     //new FieldScene( path + ".out" );
                     //File.Delete( path + ".out" );

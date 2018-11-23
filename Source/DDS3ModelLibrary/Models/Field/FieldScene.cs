@@ -76,8 +76,8 @@ namespace DDS3ModelLibrary.Models.Field
         {
             var objectLists = Objects.GroupBy( x => x.ResourceType ).Select( x => new FieldObjectList( x ) ).OrderBy( x => x.Type ).ToList();
             writer.Write( objectLists.Count );
-            writer.ScheduleWriteListOffset( objectLists, 16 );
-            writer.ScheduleWriteObjectOffset( Field1C, 16 );
+            writer.ScheduleWriteListOffsetAligned( objectLists, 16 );
+            writer.ScheduleWriteObjectOffsetAligned( Field1C, 16 );
         }
     }
 }

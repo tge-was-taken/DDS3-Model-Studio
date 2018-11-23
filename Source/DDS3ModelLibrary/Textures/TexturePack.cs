@@ -93,7 +93,7 @@ namespace DDS3ModelLibrary.Textures
         {
             writer.Write( Textures.Count );
             foreach ( var texture in Textures )
-                writer.ScheduleWriteObjectOffset( texture, 64 );
+                writer.ScheduleWriteObjectOffsetAligned( texture, 64 );
 
             writer.PerformScheduledWrites();
         }

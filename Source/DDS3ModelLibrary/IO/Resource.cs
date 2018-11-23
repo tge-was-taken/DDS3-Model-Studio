@@ -175,10 +175,9 @@ namespace DDS3ModelLibrary.IO
                 Context = context;
             }
 
-            public IOContext( object context )
-            {
-                Context = context;
-            }
+            public IOContext( object context ) => Context = context;
+
+            public IOContext( bool isFieldObject ) => IsFieldObject = isFieldObject;
         }
     }
 }

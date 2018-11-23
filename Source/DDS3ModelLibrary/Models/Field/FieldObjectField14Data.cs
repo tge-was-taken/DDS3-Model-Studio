@@ -27,7 +27,7 @@ namespace DDS3ModelLibrary.Models.Field
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
         {
             writer.Write( Field00 );
-            writer.ScheduleWriteObjectOffset( Field04 );
+            writer.ScheduleWriteObjectOffsetAligned( Field04, 16 );
             writer.Write( Field08 );
             writer.Write( Field0C );
         }
