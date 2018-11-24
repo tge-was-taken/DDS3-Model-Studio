@@ -5,7 +5,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using Assimp;
 using DDS3ModelLibrary.IO;
 using DDS3ModelLibrary.IO.Common;
 using DDS3ModelLibrary.Materials;
@@ -13,17 +12,14 @@ using DDS3ModelLibrary.Models.Processing;
 using DDS3ModelLibrary.Models.Utilities;
 using DDS3ModelLibrary.Textures;
 using DDS3ModelLibrary.Textures.Utilities;
-using Material = DDS3ModelLibrary.Materials.Material;
 using Matrix4x4 = System.Numerics.Matrix4x4;
 
 namespace DDS3ModelLibrary.Models
 {
-    public class ModelPack : IBinarySerializable
+    public sealed class ModelPack : AbstractResource<object>
     {
         private const int BATCH_VERTEX_LIMIT = 24;
         private const int MESH_WEIGHT_LIMIT = 3;
-
-        BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
         public ModelPackInfo Info { get; set; }
 
@@ -38,7 +34,7 @@ namespace DDS3ModelLibrary.Models
         public ModelPack()
         {
             Info = new ModelPackInfo();
-            TexturePack = null;
+            TexturePack = new TexturePack();
             Effects = new List<Resource>();
             Models = new List<Model>();
             AnimationPacks = new List<Resource>();
@@ -54,33 +50,6 @@ namespace DDS3ModelLibrary.Models
         {
             using ( var reader = new EndianBinaryReader( stream, leaveOpen, Endianness.Little ) )
                 Read( reader );
-        }
-
-        public void Save( string filePath )
-        {
-            using ( var writer = new EndianBinaryWriter( new MemoryStream(), Endianness.Little ) )
-            {
-                Write( writer );
-                using ( var fileStream = File.Create( filePath ) )
-                {
-                    writer.BaseStream.Position = 0;
-                    writer.BaseStream.CopyTo( fileStream );
-                }
-            }
-        }
-
-        public void Save( Stream stream, bool leaveOpen = true )
-        {
-            using ( var writer = new EndianBinaryWriter( stream, leaveOpen, Endianness.Little ) )
-                Write( writer );
-        }
-
-        public MemoryStream Save()
-        {
-            var stream = new MemoryStream();
-            Save( stream );
-            stream.Position = 0;
-            return stream;
         }
 
         private static int AddTexture( string baseDirectory, string filePath, Dictionary<string, int> textureLookup, TexturePack texturePack )
@@ -272,7 +241,7 @@ namespace DDS3ModelLibrary.Models
             for ( int i = 0; i < aiVertexWeights.Length; i++ )
             {
                 var weights = new List<(short, float)>();
-                foreach ( (Bone bone, float weight) in aiVertexWeights[i] )
+                foreach ( (Assimp.Bone bone, float weight) in aiVertexWeights[i] )
                 {
                     var nodeIndex = nodes.FindIndex( x => x.Name == bone.Name );
                     Debug.Assert( nodeIndex != -1 );
@@ -481,12 +450,6 @@ namespace DDS3ModelLibrary.Models
                 model.Materials.Add( material );
             }
 
-            if ( TexturePack.Count == 0 )
-            {
-                // Otherwise we crash
-                TexturePack = null;
-            }
-
             var nodeLocalPositions = new Dictionary<Node, List<Vector3>>();
 
             void RecurseOverNodes( Assimp.Node aiNode, ref Matrix4x4 aiParentNodeWorldTransform )
@@ -565,39 +528,39 @@ namespace DDS3ModelLibrary.Models
             }
         }
 
-        private void Read( EndianBinaryReader reader )
+        protected override void Read( EndianBinaryReader reader, object context = null )
         {
             Info = null;
 
             var foundEnd = false;
             while ( !foundEnd && reader.Position < reader.BaseStream.Length )
             {
-                var start  = reader.Position;
+                var start = reader.Position;
                 var header = reader.ReadObject<ResourceHeader>();
-                var end    = AlignmentHelper.Align( start + header.FileSize, 64 );
-                var context = new Resource.IOContext( header, false, null );
+                var end = AlignmentHelper.Align( start + header.FileSize, 64 );
+                var resContext = new Resource.IOContext( header, false, null );
 
                 switch ( header.Identifier )
                 {
                     case ResourceIdentifier.ModelPackInfo:
-                        Info = reader.ReadObject<ModelPackInfo>( context );
+                        Info = reader.ReadObject<ModelPackInfo>( resContext );
                         break;
 
                     case ResourceIdentifier.Particle:
                     case ResourceIdentifier.Video:
-                        Effects.Add( reader.ReadObject<BinaryResource>( context ) );
+                        Effects.Add( reader.ReadObject<BinaryResource>( resContext ) );
                         break;
 
                     case ResourceIdentifier.TexturePack:
-                        TexturePack = reader.ReadObject<TexturePack>( context );
+                        TexturePack = reader.ReadObject<TexturePack>( resContext );
                         break;
 
                     case ResourceIdentifier.Model:
-                        Models.Add( reader.ReadObject<Model>( context ) );
+                        Models.Add( reader.ReadObject<Model>( resContext ) );
                         break;
 
-                    case ResourceIdentifier.AnimationPack:
-                        AnimationPacks.Add( reader.ReadObject<BinaryResource>( context ) );
+                    case ResourceIdentifier.MotionPack:
+                        AnimationPacks.Add( reader.ReadObject<BinaryResource>( resContext ) );
                         break;
 
                     case ResourceIdentifier.ModelPackEnd:
@@ -614,7 +577,7 @@ namespace DDS3ModelLibrary.Models
             }
         }
 
-        private void Write( EndianBinaryWriter writer )
+        protected override void Write( EndianBinaryWriter writer, object context = null )
         {
             if ( Info != null )
             {
@@ -624,7 +587,7 @@ namespace DDS3ModelLibrary.Models
 
             writer.WriteObjects( Effects );
 
-            if ( TexturePack != null )
+            if ( TexturePack != null && TexturePack.Count > 0 )
                 writer.WriteObject( TexturePack );
 
             writer.WriteObjects( Models );
@@ -637,9 +600,5 @@ namespace DDS3ModelLibrary.Models
             writer.Write( 0 );
             writer.Align( 64 );
         }
-
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context ) => Read( reader );
-
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context ) => Write( writer );
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace DDS3ModelLibrary.Models
 {
-    public enum MeshType1BatchRenderMode
+    public enum MeshBatchRenderMode
     {
         /// <summary>
         /// Microprogram 0xC.

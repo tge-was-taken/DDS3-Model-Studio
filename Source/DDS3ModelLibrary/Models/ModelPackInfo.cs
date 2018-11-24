@@ -24,7 +24,6 @@ namespace DDS3ModelLibrary.Models
             EffectInfos = new List<ModelPackEffectInfo>();
         }
 
-        // IBinarySerializable
         internal override void ReadContent( EndianBinaryReader reader, IOContext context )
         {
             var bom = reader.ReadUInt32Expects( BOM, "Model pack info BOM value does not match expected value" );

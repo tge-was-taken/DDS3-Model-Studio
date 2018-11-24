@@ -1,7 +1,6 @@
-﻿using DDS3ModelLibrary.IO;
-using DDS3ModelLibrary.IO.Common;
+﻿using DDS3ModelLibrary.IO.Common;
 
-namespace DDS3ModelLibrary.Models.Field
+namespace DDS3ModelLibrary.IO
 {
     public class FieldResourceHeader : IBinarySerializable
     {

@@ -58,7 +58,7 @@ namespace DDS3ModelLibrary.Models.Field
             return stream;
         }
 
-        internal override void ReadContent( EndianBinaryReader reader, FieldResourceHeader header )
+        internal override void ReadContent( EndianBinaryReader reader, IOContext context )
         {
             var objectListCount = reader.ReadInt32();
             reader.ReadOffset( () =>
@@ -72,7 +72,7 @@ namespace DDS3ModelLibrary.Models.Field
             Field1C = reader.ReadObjectOffset<FieldSceneField1CData>();
         }
 
-        internal override void WriteContent( EndianBinaryWriter writer, object context )
+        internal override void WriteContent( EndianBinaryWriter writer, IOContext context )
         {
             var objectLists = Objects.GroupBy( x => x.ResourceType ).Select( x => new FieldObjectList( x ) ).OrderBy( x => x.Type ).ToList();
             writer.Write( objectLists.Count );

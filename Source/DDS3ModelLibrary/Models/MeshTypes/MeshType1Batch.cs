@@ -67,7 +67,7 @@ namespace DDS3ModelLibrary.Models
             set => Flags = MeshFlagsHelper.Update( Flags, mColors = value, MeshFlags.Color );
         }
 
-        public MeshType1BatchRenderMode RenderMode { get; set; }
+        public MeshBatchRenderMode RenderMode { get; set; }
 
         public MeshType1Batch()
         {
@@ -77,7 +77,7 @@ namespace DDS3ModelLibrary.Models
 
             // 84507 Mode2
             // 112539 Mode1
-            RenderMode = MeshType1BatchRenderMode.Mode1;
+            RenderMode = MeshBatchRenderMode.Mode1;
         }
 
         public (Vector3[] Positions, Vector3[] Normals) Transform( Matrix4x4 nodeWorldTransform )
@@ -162,7 +162,7 @@ namespace DDS3ModelLibrary.Models
                 throw new InvalidDataException();
 
             // Not sure if this makes any difference yet
-            RenderMode = activateCode.Immediate == 0x0C ? MeshType1BatchRenderMode.Mode1 : MeshType1BatchRenderMode.Mode2;
+            RenderMode = activateCode.Immediate == 0x0C ? MeshBatchRenderMode.Mode1 : MeshBatchRenderMode.Mode2;
 
             Debug.Assert( Flags == flags );
         }
@@ -220,7 +220,7 @@ namespace DDS3ModelLibrary.Models
             if ( Flags.HasFlag( MeshFlags.Color ) )
                 vif.Unpack( nextAddress, Colors.Select( x => new[] { ( sbyte ) x.R, ( sbyte ) x.G, ( sbyte ) x.B, ( sbyte ) x.A } ).ToArray() );
 
-            vif.ActivateMicro( ( ushort ) ( RenderMode == MeshType1BatchRenderMode.Mode1 ? 0x0C : 0x10 ) );
+            vif.ActivateMicro( ( ushort ) ( RenderMode == MeshBatchRenderMode.Mode1 ? 0x0C : 0x10 ) );
         }
     }
 }

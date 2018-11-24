@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using DDS3ModelLibrary.IO.Common;
@@ -214,6 +215,7 @@ namespace DDS3ModelLibrary.PS2.VIF
             Initialize( address, true, flag, VifUnpackElementFormat.Byte, elements[0].Length, elements.Length, elements );
         }
 
+        [Conditional("DEBUG")]
         public void Ensure( int? address, bool sign, bool flag, int? count, VifUnpackElementFormat format, int elementCount  )
         {
             if ( address.HasValue && Address != address.Value )

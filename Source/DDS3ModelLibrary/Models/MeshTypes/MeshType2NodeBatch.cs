@@ -21,7 +21,7 @@ namespace DDS3ModelLibrary.Models
 
         public Vector3[] Normals { get; set; }
 
-        public MeshType1BatchRenderMode RenderMode { get; set; }
+        public MeshBatchRenderMode RenderMode { get; set; }
 
         public MeshType2NodeBatch()
         {
@@ -31,7 +31,7 @@ namespace DDS3ModelLibrary.Models
 
             // 215933 Mode1
             // 221821 Mode2
-            RenderMode = MeshType1BatchRenderMode.Mode1;
+            RenderMode = MeshBatchRenderMode.Mode1;
         }
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
@@ -108,7 +108,7 @@ namespace DDS3ModelLibrary.Models
                 throw new InvalidDataException();
 
             // Not sure if this makes any difference yet
-            RenderMode = activateCode.Immediate == 0x0C ? MeshType1BatchRenderMode.Mode1 : MeshType1BatchRenderMode.Mode2;
+            RenderMode = activateCode.Immediate == 0x0C ? MeshBatchRenderMode.Mode1 : MeshBatchRenderMode.Mode2;
 
             Debug.Assert( Flags == flags );
         }
@@ -175,7 +175,7 @@ namespace DDS3ModelLibrary.Models
                 }
             }
 
-            vif.ActivateMicro( ( ushort )( RenderMode == MeshType1BatchRenderMode.Mode1 ? 0x0C : 0x10 ) );
+            vif.ActivateMicro( ( ushort )( RenderMode == MeshBatchRenderMode.Mode1 ? 0x0C : 0x10 ) );
 
         }
 

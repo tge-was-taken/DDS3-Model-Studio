@@ -40,32 +40,6 @@ namespace DDS3ModelLibrary.Materials
 
         public static bool IsValidPresetId( int id ) => sValidPresetIds.Contains( id );
 
-        //private static Material CreateMaterialFromPreset( int id, bool hasTexture, bool hasOverlay )
-        //{
-        //    var material = FromPresetInternal( id, hasTexture, hasOverlay );
-        //    if ( material != null )
-        //        return material;
-
-        //    if ( hasOverlay )
-        //    {
-        //        // No template with overlay found, try without overlay
-        //        material = FromPresetInternal( id, hasTexture, false );
-        //        if ( material != null )
-        //            return material;
-        //    }
-
-        //    if ( hasTexture )
-        //    {
-        //        // No template without overlay found, try without texture
-        //        material = FromPresetInternal( id, false, false );
-        //        if ( material != null )
-        //            return material;
-        //    }
-
-        //    // Preset doesn't exist
-        //    throw new ArgumentOutOfRangeException( nameof( id ), $"Material preset {id} does not exist" );
-        //}
-
         public static Material GetPreset( int id, bool hasTexture, bool hasOverlay )
         {
             var path = GetMaterialPresetPath( id, hasTexture, hasOverlay );
