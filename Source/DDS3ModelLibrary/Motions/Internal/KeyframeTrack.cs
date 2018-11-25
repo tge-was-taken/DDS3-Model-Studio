@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using DDS3ModelLibrary.IO.Common;
 
-namespace DDS3ModelLibrary.Motions
+namespace DDS3ModelLibrary.Motions.Internal
 {
-    public class KeyframeTrack : IBinarySerializable
+    internal class KeyframeTrack : IBinarySerializable
     {
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
@@ -17,32 +16,39 @@ namespace DDS3ModelLibrary.Motions
             Keyframes = new List<IKeyframe>();
         }
 
+        public KeyframeTrack( List<IKeyframe> keyframes )
+        {
+            Keyframes = keyframes ?? throw new ArgumentNullException( nameof( keyframes ) );
+        }
+
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            var dataSize = reader.ReadInt32();
+            reader.SeekCurrent( 4 );
             var keyframeCount = reader.ReadInt16();
             var keyframeSize = reader.ReadInt16();
             var keyframeTimings = reader.ReadInt16Array( keyframeCount );
             reader.Align( 4 );
 
-            var controller = ( MotionController )context;
+            var controllerType = ( ControllerType )context;
             for ( int i = 0; i < keyframeCount; i++ )
             {
-                switch ( controller.Type )
+                IKeyframe keyframe;
+
+                switch ( controllerType )
                 {
                     case ControllerType.Translation:
                         switch ( keyframeSize )
                         {
                             case 4:
-                                Keyframes.Add( reader.ReadObject<TranslationKeyframeSize4>( keyframeTimings[ i ] ) );
+                                keyframe = reader.ReadObject<TranslationKeyframeSize4>();
                                 break;
 
                             case 8:
-                                Keyframes.Add( reader.ReadObject<TranslationKeyframeSize8>( keyframeTimings[i] ) );
+                                keyframe = reader.ReadObject<TranslationKeyframeSize8>();
                                 break;
 
                             case 12:
-                                Keyframes.Add( reader.ReadObject<TranslationKeyframeSize12>( keyframeTimings[i] ) );
+                                keyframe = reader.ReadObject<TranslationKeyframeSize12>();
                                 break;
 
                             default:
@@ -54,7 +60,7 @@ namespace DDS3ModelLibrary.Motions
                         switch ( keyframeSize )
                         {
                             case 4:
-                                Keyframes.Add( reader.ReadObject<MorphKeyframeSize4>( keyframeTimings[i] ) );
+                                keyframe = reader.ReadObject<MorphKeyframeSize4>();
                                 break;
 
                             default:
@@ -66,11 +72,11 @@ namespace DDS3ModelLibrary.Motions
                         switch ( keyframeSize )
                         {
                             case 12:
-                                Keyframes.Add( reader.ReadObject<ScaleKeyframeSize12>( keyframeTimings[i] ) );
+                                keyframe = reader.ReadObject<ScaleKeyframeSize12>();
                                 break;
 
                             case 20:
-                                Keyframes.Add( reader.ReadObject<RotationKeyframeSize20>( keyframeTimings[i] ) );
+                                keyframe = reader.ReadObject<RotationKeyframeSize20>();
                                 break;
 
                             default:
@@ -82,11 +88,11 @@ namespace DDS3ModelLibrary.Motions
                         switch ( keyframeSize )
                         {
                             case 8:
-                                Keyframes.Add( reader.ReadObject<RotationKeyframeSize8>( keyframeTimings[i] ) );
+                                keyframe = reader.ReadObject<RotationKeyframeSize8>();
                                 break;
 
                             case 20:
-                                Keyframes.Add( reader.ReadObject<RotationKeyframeSize20>( keyframeTimings[i] ) );
+                                keyframe = reader.ReadObject<RotationKeyframeSize20>();
                                 break;
 
                             default:
@@ -98,11 +104,11 @@ namespace DDS3ModelLibrary.Motions
                         switch ( keyframeSize )
                         {
                             case 1:
-                                Keyframes.Add( reader.ReadObject<MorphKeyframeSize1>( keyframeTimings[i] ) );
+                                keyframe = reader.ReadObject<MorphKeyframeSize1>();
                                 break;
 
                             case 4:
-                                Keyframes.Add( reader.ReadObject<MorphKeyframeSize4>( keyframeTimings[i] ) );
+                                keyframe = reader.ReadObject<MorphKeyframeSize4>();
                                 break;
 
                             default:
@@ -114,7 +120,7 @@ namespace DDS3ModelLibrary.Motions
                         switch ( keyframeSize )
                         {
                             case 4:
-                                Keyframes.Add( reader.ReadObject<Type5KeyframeSize4>( keyframeTimings[i] ) );
+                                keyframe = reader.ReadObject<Type5KeyframeSize4>();
                                 break;
 
                             default:
@@ -126,7 +132,7 @@ namespace DDS3ModelLibrary.Motions
                         switch ( keyframeSize )
                         {
                             case 4:
-                                Keyframes.Add( reader.ReadObject<Type8KeyframeSize4>( keyframeTimings[i] ) );
+                                keyframe = reader.ReadObject<Type8KeyframeSize4>();
                                 break;
 
                             default:
@@ -137,6 +143,9 @@ namespace DDS3ModelLibrary.Motions
                     default:
                         throw new NotImplementedException();
                 }
+
+                keyframe.Time = keyframeTimings[ i ];
+                Keyframes.Add( keyframe );
             }
 
             reader.Align( 4 );
@@ -145,9 +154,10 @@ namespace DDS3ModelLibrary.Motions
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
         {
             var start = writer.Position;
+            var dataSize = 0;
             var keyframeSize = Keyframes.Count > 0 ? Keyframes[ 0 ].Size : 0;
 
-            writer.WriteInt32( 0 );
+            writer.WriteInt32( dataSize );
             writer.WriteInt16( ( short )Keyframes.Count );
             writer.WriteInt16( ( short ) keyframeSize );
             writer.WriteInt16s( Keyframes.Select( x => x.Time ) );
@@ -157,7 +167,8 @@ namespace DDS3ModelLibrary.Motions
 
             var end = writer.Position;
             writer.SeekBegin( start );
-            writer.WriteInt32( ( int ) ( end - start ) );
+            dataSize = ( int ) ( end - start );
+            writer.WriteInt32( dataSize );
             writer.SeekBegin( end );
         }
     }

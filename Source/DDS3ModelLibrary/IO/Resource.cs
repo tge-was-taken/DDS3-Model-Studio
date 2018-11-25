@@ -105,7 +105,7 @@ namespace DDS3ModelLibrary.IO
         {
             public ResourceHeader Header { get; set; }
             public readonly bool IsFieldObject;
-            public readonly object Context;
+            public object Context { get; set; }
 
             public IOContext() { }
 

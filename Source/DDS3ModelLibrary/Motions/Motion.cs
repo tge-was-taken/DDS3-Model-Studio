@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+using System.Numerics;
 using DDS3ModelLibrary.IO.Common;
+using DDS3ModelLibrary.Motions.Internal;
 
 namespace DDS3ModelLibrary.Motions
 {
@@ -13,28 +13,60 @@ namespace DDS3ModelLibrary.Motions
     {
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        public int FrameCount { get; set; }
+        public int Duration { get; set; }
 
-        public List<KeyframeTrack> Tracks { get; }
+        public List<MotionController> Controllers { get; private set; }
 
         public Motion()
         {
-            Tracks = new List<KeyframeTrack>();
+            Controllers = new List<MotionController>();
+        }
+
+        internal Motion( MotionDefinition motion, List<MotionControllerDefinition> controllers ) : this()
+        {
+            Duration = motion.Duration;
+            for ( int i = 0; i < controllers.Count; i++ )
+            {
+                // Remove useless controllers
+                var controller = controllers[ i ];
+                var keyframes = motion.Tracks[i].Keyframes;
+                var isDummy = false;
+                if ( keyframes.Count == 1 && keyframes[0].Time == 0 )
+                {
+                    var keyframe = keyframes[ 0 ];
+                    switch ( keyframe )
+                    {
+                        case TranslationKeyframeSize12 translationKey:
+                            isDummy = translationKey.Translation == Vector3.Zero;
+                            break;
+
+                        case RotationKeyframeSize8 rotationKey:
+                            isDummy = rotationKey.Rotation == Quaternion.Identity;
+                            break;
+
+                        case ScaleKeyframeSize12 scaleKey:
+                            isDummy = scaleKey.Scale == Vector3.One;
+                            break;
+                    }
+                }
+
+                if ( !isDummy )
+                    Controllers.Add( new MotionController( controller, keyframes ) );
+            }
         }
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            var controllers = ( List<MotionController> )context;
-
-            FrameCount = reader.ReadInt32();
-            foreach ( var controller in controllers )
-                Tracks.Add( reader.ReadObject<KeyframeTrack>( controller ) );
+            Duration = reader.ReadInt32();
+            var controllerCount = reader.ReadInt32();
+            Controllers = reader.ReadObjects<MotionController>( controllerCount );
         }
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
         {
-            writer.WriteInt32( FrameCount );
-            writer.WriteObjects( Tracks );
+            writer.WriteInt32( Duration );
+            writer.WriteInt32( Controllers.Count );
+            writer.WriteObjects( Controllers );
         }
     }
 }

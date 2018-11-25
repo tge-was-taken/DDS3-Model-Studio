@@ -62,10 +62,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Motions\Keyframes.cs" />
-    <Compile Include="Motions\KeyframeTrack.cs" />
+    <Compile Include="Motions\Internal\KeyframeTrack.cs" />
     <Compile Include="Motions\Motion.cs" />
     <Compile Include="Motions\MotionController.cs" />
     <Compile Include="Motions\ControllerType.cs" />
+    <Compile Include="Motions\Internal\MotionControllerDefinition.cs" />
+    <Compile Include="Motions\Internal\MotionDefinition.cs" />
     <Compile Include="Motions\MotionPack.cs" />
     <Compile Include="IO\AbstractResource.cs" />
     <Compile Include="IO\Common\EndianBinaryWriter.ExplicitWriteMethods.cs" />

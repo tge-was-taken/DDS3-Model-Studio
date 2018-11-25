@@ -561,6 +561,7 @@ namespace DDS3ModelLibrary.Models
                         break;
 
                     case ResourceIdentifier.MotionPack:
+                        resContext.Context = Models.Count > 0 ? Models[0].Nodes : null;
                         MotionPacks.Add( reader.ReadObject<MotionPack>( resContext ) );
                         break;
 

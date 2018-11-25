@@ -18,6 +18,7 @@ namespace DDS3ModelLibraryCLI
     {
         private static void Main( string[] args )
         {
+            OpenAndSaveModelPackTest();
             //ReplaceF1Test();
             //ReplaceModelTest();
             OpenAndSaveModelPackBatchTest();
@@ -664,17 +665,18 @@ namespace DDS3ModelLibraryCLI
             //foreach ( var path in paths )
             Parallel.ForEach( paths, new ParallelOptions() { MaxDegreeOfParallelism = 16 }, ( path ) =>
             {
-                //Console.WriteLine( Path.GetFileName( path ) );
+                Console.WriteLine( Path.GetFileName( path ) );
                 var modelPack = new ModelPack( path );
-                //new ModelPack( modelPack.Save() );
+                new ModelPack( modelPack.Save() );
                 //modelPack.Save( path + ".out" );
                 //new ModelPack( path + ".out" );
                 //ExportObj( modelPack, Path.GetFileNameWithoutExtension( path ) + ".obj" );
-            } 
+            }
              );
 
             //var modelPack = new ModelPack( @"D:\Programming\Repos\DDS3-Model-Studio\Source\DDS3ModelLibraryCLI\bin\Debug\unique_models\tiaki_DF1D93D2EC3ED36D63239A1A2B27ED1745DA9991F231884EA7BC5FAF291F74AA.PB" );
             //modelPack.Save( @"D:\Programming\Repos\DDS3-Model-Studio\Source\DDS3ModelLibraryCLI\bin\Debug\unique_models\tiaki_DF1D93D2EC3ED36D63239A1A2B27ED1745DA9991F231884EA7BC5FAF291F74AA.PB" + ".out" );
+
 
             //foreach ( var kvp in frequencyMap.OrderBy( x => x.Value ) )
             //{

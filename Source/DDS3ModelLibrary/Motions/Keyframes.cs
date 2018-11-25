@@ -24,7 +24,6 @@ namespace DDS3ModelLibrary.Motions
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Time = ( short )context;
             Value = reader.ReadUInt32();
         }
 
@@ -34,7 +33,7 @@ namespace DDS3ModelLibrary.Motions
         }
     }
 
-    public class TranslationKeyframeSize8 : IKeyframe
+    public struct TranslationKeyframeSize8 : IKeyframe
     {
         public int Size => 8;
 
@@ -49,7 +48,6 @@ namespace DDS3ModelLibrary.Motions
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Time = ( short )context;
             ShapeIndex = reader.ReadInt32();
             BlendAmount = reader.ReadSingle();
         }
@@ -61,7 +59,7 @@ namespace DDS3ModelLibrary.Motions
         }
     }
 
-    public class TranslationKeyframeSize12 : IKeyframe
+    public struct TranslationKeyframeSize12 : IKeyframe
     {
         public int Size => 12;
 
@@ -74,7 +72,6 @@ namespace DDS3ModelLibrary.Motions
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Time = ( short )context;
             Translation = reader.ReadVector3();
         }
 
@@ -84,7 +81,7 @@ namespace DDS3ModelLibrary.Motions
         }
     }
 
-    public class Type1KeyframeSize4 : IKeyframe
+    public struct Type1KeyframeSize4 : IKeyframe
     {
         public int Size => 4;
 
@@ -97,7 +94,6 @@ namespace DDS3ModelLibrary.Motions
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Time  = ( short )context;
             Value = reader.ReadUInt32();
         }
 
@@ -107,7 +103,7 @@ namespace DDS3ModelLibrary.Motions
         }
     }
 
-    public class ScaleKeyframeSize12 : IKeyframe
+    public struct ScaleKeyframeSize12 : IKeyframe
     {
         public int Size => 12;
 
@@ -120,7 +116,6 @@ namespace DDS3ModelLibrary.Motions
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Time = ( short )context;
             Scale = reader.ReadVector3();
         }
 
@@ -130,7 +125,7 @@ namespace DDS3ModelLibrary.Motions
         }
     }
 
-    public class ScaleKeyframeSize20 : IKeyframe
+    public struct ScaleKeyframeSize20 : IKeyframe
     {
         public int Size => 20;
 
@@ -143,7 +138,6 @@ namespace DDS3ModelLibrary.Motions
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Time   = ( short )context;
             Values = reader.ReadSingles( 5 );
         }
 
@@ -153,38 +147,76 @@ namespace DDS3ModelLibrary.Motions
         }
     }
 
-    public class RotationKeyframeSize8 : IKeyframe
+    public struct RotationKeyframeSize8 : IKeyframe
     {
         private const float FIXED_POINT_12 = 4096f;
+
+        private short mRotationX;
+        private short mRotationY;
+        private short mRotationZ;
+        private short mRotationW;
+        private bool mDecoded;
+        private bool mChanged;
+        private Quaternion mRotation;
 
         public int Size => 8;
 
         public short Time { get; set; }
 
-        public Quaternion Rotation { get; set; }
+        public Quaternion Rotation
+        {
+            get
+            {
+                if ( !mDecoded )
+                {
+                    mRotation = new Quaternion( mRotationX / FIXED_POINT_12,
+                                                mRotationY / FIXED_POINT_12,
+                                                mRotationZ / FIXED_POINT_12,
+                                                mRotationW / FIXED_POINT_12 );
+
+                    mDecoded = true;
+                }
+
+                return mRotation;
+            }
+            set
+            {
+                mRotation = value;
+                mChanged = true;
+            }
+        }
 
         // -- IBinarySerializable --
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
+
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Time = ( short )context;
-            Rotation = new Quaternion( reader.ReadInt16() / FIXED_POINT_12,
-                                       reader.ReadInt16() / FIXED_POINT_12,
-                                       reader.ReadInt16() / FIXED_POINT_12,
-                                       reader.ReadInt16() / FIXED_POINT_12 );
+            mRotationX = reader.ReadInt16();
+            mRotationY = reader.ReadInt16();
+            mRotationZ = reader.ReadInt16();
+            mRotationW = reader.ReadInt16();
         }
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
         {
-            writer.WriteInt16( ( short )( Rotation.X * FIXED_POINT_12 ) );
-            writer.WriteInt16( ( short )( Rotation.Y * FIXED_POINT_12 ) );
-            writer.WriteInt16( ( short )( Rotation.Z * FIXED_POINT_12 ) );
-            writer.WriteInt16( ( short )( Rotation.W * FIXED_POINT_12 ) );
+            if ( mChanged )
+            {
+                mRotationX = ( short )( Rotation.X * FIXED_POINT_12 );
+                mRotationY = ( short ) ( Rotation.Y * FIXED_POINT_12 );
+                mRotationZ = ( short ) ( Rotation.Z * FIXED_POINT_12 );
+                mRotationW = ( short ) ( Rotation.W * FIXED_POINT_12 );
+                mChanged = false;
+            }
+
+            writer.Write( mRotationX );
+            writer.Write( mRotationY );
+            writer.Write( mRotationZ );
+            writer.Write( mRotationW );
         }
     }
 
-    public class RotationKeyframeSize20 : IKeyframe
+    public struct RotationKeyframeSize20 : IKeyframe
     {
         public int Size => 20;
 
@@ -197,7 +229,6 @@ namespace DDS3ModelLibrary.Motions
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Time  = ( short )context;
             Values = reader.ReadSingles( 5 );
         }
 
@@ -207,7 +238,7 @@ namespace DDS3ModelLibrary.Motions
         }
     }
 
-    public class MorphKeyframeSize1 : IKeyframe
+    public struct MorphKeyframeSize1 : IKeyframe
     {
         public int Size => 1;
 
@@ -221,7 +252,6 @@ namespace DDS3ModelLibrary.Motions
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Time  = ( short )context;
             Value = reader.ReadByte();
         }
 
@@ -231,7 +261,7 @@ namespace DDS3ModelLibrary.Motions
         }
     }
 
-    public class MorphKeyframeSize4 : IKeyframe
+    public struct MorphKeyframeSize4 : IKeyframe
     {
         public int Size => 4;
 
@@ -244,7 +274,6 @@ namespace DDS3ModelLibrary.Motions
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Time = ( short )context;
             Value = reader.ReadUInt32();
         }
 
@@ -254,7 +283,7 @@ namespace DDS3ModelLibrary.Motions
         }
     }
 
-    public class Type5KeyframeSize4 : IKeyframe
+    public struct Type5KeyframeSize4 : IKeyframe
     {
         public int Size => 4;
 
@@ -267,7 +296,6 @@ namespace DDS3ModelLibrary.Motions
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Time  = ( short )context;
             Value = reader.ReadSingle();
         }
 
@@ -277,7 +305,7 @@ namespace DDS3ModelLibrary.Motions
         }
     }
 
-    public class Type8KeyframeSize4 : IKeyframe
+    public struct Type8KeyframeSize4 : IKeyframe
     {
         public int Size => 4;
 
@@ -290,7 +318,6 @@ namespace DDS3ModelLibrary.Motions
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Time  = ( short )context;
             Value = reader.ReadSingle();
         }
 
