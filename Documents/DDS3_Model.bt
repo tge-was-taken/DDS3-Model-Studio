@@ -998,6 +998,270 @@ typedef struct
     u32 Id;
 } TNodeName;
 
+// Motion pack
+typedef struct
+{
+    SetRandomBackColor();
+
+    // -- header --
+    u8 FileType;
+    u8 IsCompressed;
+    u16 UserId;
+    u32 FileSize;
+    u32 Magic;
+    u32 MemorySize;
+
+    // -- motion pack header --
+    u32 DataSize;
+    u32 RelocationTableSize;
+    s16 Group;
+    s16 PlayGroup;
+    s16 FirstMotion;
+    s16 Flags;
+
+    if ( DataSize > 0 )
+    {
+        gBaseOffset = FTell();
+
+        // -- motion data header --
+        u16 MotionCount;
+        u16 ControllerCount;
+        u32 MotionTableOffset;
+
+        // -- controllers --
+        struct
+        {
+            struct TController Controller[ ControllerCount ];
+        } Controllers;
+   
+        // -- motions -- 
+        if ( MotionTableOffset != 0 )
+        {
+            FSeek( gBaseOffset + MotionTableOffset );
+            u32 MotionOffsets[ MotionCount ];
+
+            local u32 motionIndex;
+            local u32 motionOffset;
+
+            struct
+            {
+                for ( motionIndex = 0; motionIndex < MotionCount; ++motionIndex )
+                {
+                    motionOffset = MotionOffsets[ motionIndex ];
+                    if ( motionOffset != 0 )
+                    {
+                        FSeek( gBaseOffset + motionOffset );
+                        struct TMotion Motion;
+                    }
+                }
+            } Motions;
+        }
+    }
+
+    if ( DataSize != 0 )
+    {
+        // Read relocation table
+        SetRandomBackColor();
+        FSeek( gBaseOffset + DataSize );
+        u8 RelocationTable[ RelocationTableSize ];
+    }
+} TMotionPack;
+
+enum<u16> TControllerType
+{
+    TControllerType_Translation = 0,
+    TControllerType_Scale = 2,
+    TControllerType_Rotation = 3,
+    TControllerType_Morph = 4
+};
+
+// Controls the animation of a single property of a node.
+// The property that is modified depends on the type.
+typedef struct
+{
+    SetRandomBackColor();
+    TControllerType Type;
+    u16 Field02;
+    u16 NodeIndex;
+    u16 Field06;
+
+    if ( EnumToString( Type ) == "" ) Printf( "TController: unknown type: %d\n", Type ); 
+    if ( Field02 != 0 ) Printf( "TController: %s %d Field02 is not 0: %d\n", EnumToString( Type ), NodeIndex, Field02 ); 
+    if ( Field06 != 0 ) Printf( "TController: %s %d Field06 is not 0: %d\n", EnumToString( Type ), NodeIndex, Field06 ); 
+} TController <optimize=false>;
+
+// A motion represents the entire array of per-node tracks containing modifications of properties over time
+// used in a single motion.
+typedef struct
+{
+    SetRandomBackColor();
+
+    u32 FrameCount;
+
+    local u32 controllerIndex;
+    for ( controllerIndex = 0; controllerIndex < File.MotionPack.ControllerCount; ++controllerIndex )
+        struct TMotionTrack Track( controllerIndex );
+
+} TMotion;
+
+typedef struct( u32 controllerIndex )
+{
+    SetRandomBackColor();
+
+    u32 DataSize;
+    u16 KeyFrameCount;
+    u16 KeyFrameSize;
+    u16 KeyFrameTimings[ KeyFrameCount ];
+    FAlign( 4 );
+    
+    local u32 keyFrameIndex = 0;
+    for ( keyFrameIndex = 0; keyFrameIndex < KeyFrameCount; ++keyFrameIndex )
+    {
+        struct
+        {
+            SetRandomBackColor();
+            local TControllerType type = File.MotionPack.Controllers.Controller[ controllerIndex ].Type;
+            switch ( type )
+            {
+                case TControllerType_Translation:
+                    switch ( KeyFrameSize )
+                    {
+                        case 4: 
+                            u32 Value; 
+                            break;
+    
+                        case 8:
+                            u32 ShapeIndex;
+                            f32 BlendAmount; 
+                            break;
+
+                        case 12:
+                            Vector3 Translation;
+                            break;
+
+                        default:
+                            Assert( false );
+                            break;
+                    }
+                    break;
+
+                case 1:
+                    switch ( KeyFrameSize )
+                    {
+                        case 4: 
+                            u32 Value; 
+                            break;
+
+                        default:
+                            Assert( false );
+                            break;
+                    }
+                    break;
+    
+                case TControllerType_Scale:
+                    switch ( KeyFrameSize )
+                    {
+                        case 12:
+                            Vector3 Scale;
+                            break;
+
+                         case 20:
+                            struct f32 Values[5];
+                            break;
+
+                        default:
+                            Assert( false );
+                            break;
+                    }
+                    break;
+    
+                case TControllerType_Rotation:
+                    switch ( KeyFrameSize )
+                    {
+                        case 8:
+                            struct PackedQuaternion Rotation;
+                            break;
+
+                        case 20:
+                            struct f32 Values[5];
+                            break;
+
+                        default:
+                            Assert( false );
+                            break;
+                    }
+                    break;
+    
+                case TControllerType_Morph:
+                    switch ( KeyFrameSize )
+                    {
+                        case 1:
+                            u8 Value;
+                            break;
+
+                        case 4:
+                            u8 Values[ 4 ]; // divide by 0x80?
+                            break;
+
+                        default:
+                            Assert( false );
+                            break;
+                    }
+                    break;
+
+                case 5:
+                    switch ( KeyFrameSize )
+                    {
+                        case 4:
+                            u8 Values[ 4 ]; // divide by 0x80?
+                            break;
+
+                        default:
+                            Assert( false );
+                            break;
+                    }
+                    break;
+
+                case 8:
+                    switch ( KeyFrameSize )
+                    {
+                        case 4:
+                            u8 Values[ 4 ]; // divide by 0x80?
+                            break;
+
+                        default:
+                            Assert( false );
+                            break;
+                    }
+                    break;
+            }
+        } KeyFrameValues;
+    }
+
+    FAlign( 4 );
+} TMotionTrack;
+
+const float MOTION_FIXED_POINT_12 = 4096.0f;
+
+typedef struct
+{
+    s16 X;
+    s16 Y;
+    s16 Z;
+    s16 W;
+} PackedQuaternion <read=PackedQuaternionToString>;
+
+string PackedQuaternionToString( PackedQuaternion& value )
+{
+    string str = "";
+    SPrintf( str, "[%f, %f, %f, %f]", 
+        value.X / MOTION_FIXED_POINT_12,
+        value.Y / MOTION_FIXED_POINT_12,
+        value.Z / MOTION_FIXED_POINT_12,
+        value.W / MOTION_FIXED_POINT_12 );
+    return str;
+}
+
 // Field model
 typedef struct
 {
@@ -1321,6 +1585,10 @@ struct
 
             case MakeFourCC( "MD00" ):
                 struct TModel Model( true );
+                break;
+
+            case MakeFourCC( "MT00" ):
+                struct TMotionPack MotionPack;
                 break;
 
             default:

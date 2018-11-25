@@ -51,7 +51,7 @@ namespace DDS3ModelLibrary.Models
             reader.ReadOffset( () =>
             {
                 var materialCount = reader.ReadInt32();
-                Materials = reader.ReadObjectList<Material>( materialCount );
+                Materials = reader.ReadObjects<Material>( materialCount );
             } );
             var morpherMeshCount = reader.ReadInt32();
             reader.ReadOffset( () =>

@@ -10,6 +10,7 @@ using DDS3ModelLibrary.IO.Common;
 using DDS3ModelLibrary.Materials;
 using DDS3ModelLibrary.Models.Processing;
 using DDS3ModelLibrary.Models.Utilities;
+using DDS3ModelLibrary.Motions;
 using DDS3ModelLibrary.Textures;
 using DDS3ModelLibrary.Textures.Utilities;
 using Matrix4x4 = System.Numerics.Matrix4x4;
@@ -29,7 +30,7 @@ namespace DDS3ModelLibrary.Models
 
         public List<Model> Models { get; }
 
-        public List<Resource> AnimationPacks { get; }
+        public List<MotionPack> MotionPacks { get; }
 
         public ModelPack()
         {
@@ -37,7 +38,7 @@ namespace DDS3ModelLibrary.Models
             TexturePack = new TexturePack();
             Effects = new List<Resource>();
             Models = new List<Model>();
-            AnimationPacks = new List<Resource>();
+            MotionPacks = new List<MotionPack>();
         }
 
         public ModelPack( string filePath ) : this()
@@ -560,7 +561,7 @@ namespace DDS3ModelLibrary.Models
                         break;
 
                     case ResourceIdentifier.MotionPack:
-                        AnimationPacks.Add( reader.ReadObject<BinaryResource>( resContext ) );
+                        MotionPacks.Add( reader.ReadObject<MotionPack>( resContext ) );
                         break;
 
                     case ResourceIdentifier.ModelPackEnd:
@@ -591,7 +592,7 @@ namespace DDS3ModelLibrary.Models
                 writer.WriteObject( TexturePack );
 
             writer.WriteObjects( Models );
-            writer.WriteObjects( AnimationPacks );
+            writer.WriteObjects( MotionPacks );
 
             // write dummy end chunk
             writer.Write( ( int )ResourceFileType.ModelPackEnd );

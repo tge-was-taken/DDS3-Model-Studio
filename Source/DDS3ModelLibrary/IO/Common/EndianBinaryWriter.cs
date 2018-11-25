@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using DDS3ModelLibrary.IO.Common.Utilities;
 using DDS3ModelLibrary.Models;
-
 namespace DDS3ModelLibrary.IO.Common
 {
     public sealed partial class EndianBinaryWriter : BinaryWriter
@@ -127,37 +126,46 @@ namespace DDS3ModelLibrary.IO.Common
             mObjectLookup = new Dictionary<object, long>();
         }
 
+        [DebuggerStepThrough, MethodImpl( MethodImplOptions.AggressiveInlining )]
         public void Seek( long offset, SeekOrigin origin )
         {
             BaseStream.Seek( offset, origin );
         }
 
+        [DebuggerStepThrough, MethodImpl( MethodImplOptions.AggressiveInlining )]
         public void SeekBegin( long offset )
         {
             BaseStream.Seek( offset, SeekOrigin.Begin );
         }
 
+        [DebuggerStepThrough, MethodImpl( MethodImplOptions.AggressiveInlining )]
         public void SeekCurrent( long offset )
         {
             BaseStream.Seek( offset, SeekOrigin.Current );
         }
 
+        [DebuggerStepThrough, MethodImpl( MethodImplOptions.AggressiveInlining )]
         public void SeekEnd( long offset )
         {
             BaseStream.Seek( offset, SeekOrigin.End );
         }
 
+        [DebuggerStepThrough, MethodImpl( MethodImplOptions.AggressiveInlining )]
         public void Align( int alignment )
         {
             WritePadding( AlignmentHelper.GetAlignedDifference( Position, alignment ) );
         }
 
+        [DebuggerStepThrough, MethodImpl( MethodImplOptions.AggressiveInlining )]
         public void Align() => Align( DefaultAlignment );
 
+        [DebuggerStepThrough, MethodImpl( MethodImplOptions.AggressiveInlining )]
         public void PushBaseOffset() => mBaseOffsetStack.Push( Position );
 
+        [DebuggerStepThrough, MethodImpl( MethodImplOptions.AggressiveInlining )]
         public void PushBaseOffset( long position ) => mBaseOffsetStack.Push( position );
 
+        [DebuggerStepThrough, MethodImpl( MethodImplOptions.AggressiveInlining )]
         public void PopBaseOffset() => mBaseOffsetStack.Pop();
 
         [DebuggerStepThrough, MethodImpl( MethodImplOptions.AggressiveInlining )]
@@ -456,10 +464,10 @@ namespace DDS3ModelLibrary.IO.Common
             } );
         }
 
-        public void ScheduleWriteObjectOffsets<T>( IEnumerable<T> list, object context = null ) where T : IBinarySerializable
-            => ScheduleWriteObjectOffsetsAligned( list, DefaultAlignment, context );
+        public void ScheduleWriteObjectListOffset<T>( IEnumerable<T> list, object context = null ) where T : IBinarySerializable
+            => ScheduleWriteObjectListOffsetAligned( list, DefaultAlignment, context );
 
-        public void ScheduleWriteObjectOffsetsAligned<T>( IEnumerable<T> list, int alignment, object context = null ) where T : IBinarySerializable
+        public void ScheduleWriteObjectListOffsetAligned<T>( IEnumerable<T> list, int alignment, object context = null ) where T : IBinarySerializable
         {
             if ( list == null )
             {
@@ -593,6 +601,15 @@ namespace DDS3ModelLibrary.IO.Common
             }
 
             return count;
+        }
+
+        public void ScheduleWriteObjectOffsets<T>( IEnumerable<T> list, object context = null ) where T : IBinarySerializable
+            => ScheduleWriteObjectOffsetsAligned( list, DefaultAlignment, context );
+
+        public void ScheduleWriteObjectOffsetsAligned<T>( IEnumerable<T> list, int alignment, object context = null ) where T : IBinarySerializable
+        {
+            foreach ( var obj in list )
+                ScheduleWriteObjectOffsetAligned( obj, alignment, context );
         }
 
         public void ScheduleWriteFileSize()

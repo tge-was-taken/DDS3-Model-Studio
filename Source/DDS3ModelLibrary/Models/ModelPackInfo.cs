@@ -34,7 +34,7 @@ namespace DDS3ModelLibrary.Models
             var effectCount = reader.ReadInt16();
             var animationCount = reader.ReadInt16();
             Field22 = reader.ReadInt16Expects( 0, "Model pack info Field22 value is not 0" );
-            EffectInfos = reader.ReadObjectList<ModelPackEffectInfo>( effectInfoCount );
+            EffectInfos = reader.ReadObjects<ModelPackEffectInfo>( effectInfoCount );
         }
 
         internal override void WriteContent( EndianBinaryWriter writer, IOContext context )
@@ -48,7 +48,7 @@ namespace DDS3ModelLibrary.Models
             writer.Write( Field1A );
             writer.Write( ( short )EffectInfos.Count );
             writer.Write( ( short )modelPack.Effects.Count );
-            writer.Write( ( short )modelPack.AnimationPacks.Count );
+            writer.Write( ( short )modelPack.MotionPacks.Count );
             writer.Write( Field22 );
             writer.WriteObjects( EffectInfos );
         }

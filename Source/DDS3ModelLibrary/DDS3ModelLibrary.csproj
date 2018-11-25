@@ -61,6 +61,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Motions\Keyframes.cs" />
+    <Compile Include="Motions\KeyframeTrack.cs" />
+    <Compile Include="Motions\Motion.cs" />
+    <Compile Include="Motions\MotionController.cs" />
+    <Compile Include="Motions\ControllerType.cs" />
+    <Compile Include="Motions\MotionPack.cs" />
     <Compile Include="IO\AbstractResource.cs" />
     <Compile Include="IO\Common\EndianBinaryWriter.ExplicitWriteMethods.cs" />
     <Compile Include="IO\Common\IBinarySerializableExtensions.cs" />
@@ -186,9 +192,7 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Animations\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\AssimpNet.4.1.0\build\AssimpNet.targets" Condition="Exists('..\packages\AssimpNet.4.1.0\build\AssimpNet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

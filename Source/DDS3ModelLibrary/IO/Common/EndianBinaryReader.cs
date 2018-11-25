@@ -612,16 +612,27 @@ namespace DDS3ModelLibrary.IO.Common
         public List<T> ReadObjectListOffset<T>( int count, object context = null ) where T : IBinarySerializable, new()
         {
             List<T> list = null;
-            ReadOffset( () => { list = ReadObjectList<T>( count, context ); } );
+            ReadOffset( () => { list = ReadObjects<T>( count, context ); } );
             return list;
         }
 
-        public List<T> ReadObjectList<T>( int count, object context = null ) where T : IBinarySerializable, new()
+        public List<T> ReadObjects<T>( int count, object context = null ) where T : IBinarySerializable, new()
         {
             var list = new List<T>( count );
             for ( int i = 0; i < count; i++ )
             {
                 list.Add( ReadObject<T>( context ) );
+            }
+
+            return list;
+        }
+
+        public List<T> ReadObjectOffsets<T>( int count, object context = null ) where T : IBinarySerializable, new()
+        {
+            var list = new List<T>( count );
+            for ( int i = 0; i < count; i++ )
+            {
+                list.Add( ReadObjectOffset<T>( context ) );
             }
 
             return list;

@@ -11,6 +11,9 @@ namespace DDS3ModelLibrary.IO.Common
     public partial class EndianBinaryWriter
     {
         [DebuggerStepThrough, MethodImpl( MethodImplOptions.AggressiveInlining )]
+        public void WriteByte( byte value ) => Write( value );
+
+        [DebuggerStepThrough, MethodImpl( MethodImplOptions.AggressiveInlining )]
         public void WriteBytes( IEnumerable<byte> values ) => Write( values );
 
         [DebuggerStepThrough, MethodImpl( MethodImplOptions.AggressiveInlining )]
