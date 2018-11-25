@@ -48,8 +48,6 @@ namespace DDS3ModelLibrary.IO
 
         protected override void Write( EndianBinaryWriter writer, IOContext context = null )
         {
-            int size = 0;
-
             // Skip header
             writer.PushBaseOffset();
             var start = writer.Position;
@@ -90,7 +88,7 @@ namespace DDS3ModelLibrary.IO
 
         public class IOContext
         {
-            public FieldResourceHeader Header;
+            public FieldResourceHeader Header { get; set; }
 
             public IOContext()
             {

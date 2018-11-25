@@ -8,7 +8,6 @@ using DDS3ModelLibrary.PS2.VIF;
 
 namespace DDS3ModelLibrary.Models
 {
-    // TODO: set flags properly
     public class MeshType1Batch : IBinarySerializable
     {
         private Triangle[] mTriangles;

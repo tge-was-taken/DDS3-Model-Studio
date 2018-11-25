@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using DDS3ModelLibrary.IO.Common;
 
@@ -34,6 +35,13 @@ namespace DDS3ModelLibrary.Models
             Meshes = reader.ReadObjectOffset<MeshList>();
             if ( Meshes != null )
                 TranslucentMeshes = reader.ReadObjectOffset<MeshList>();
+
+            if ( TranslucentMeshes != null )
+            {
+                // TODO: fix crash when meshes are in translucent slot
+                Meshes.AddRange( TranslucentMeshes );
+                TranslucentMeshes = null;
+            }
         }
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
@@ -41,7 +49,8 @@ namespace DDS3ModelLibrary.Models
             void WriteMeshList(MeshList meshes)
             {
                 var canWrite = meshes?.Count > 0 && meshes.All( x => x.Type == MeshType.Type1 || x.Type == MeshType.Type2 || x.Type == MeshType.Type4 ||
-                                                                     x.Type == MeshType.Type5 || x.Type == MeshType.Type7 || x.Type == MeshType.Type8 );
+                                                                     x.Type == MeshType.Type5 || x.Type == MeshType.Type7 || x.Type == MeshType.Type8 
+                                                              );
 
                 if ( canWrite )
                 {

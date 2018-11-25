@@ -14,6 +14,7 @@ namespace DDS3ModelLibrary.Materials
     public class Material : IBinarySerializable
     {
         // For debugging only, only valid when read from a file.
+        // ReSharper disable once NotAccessedField.Local
         private int mIndex;
 
         /* 16 */ private Color? mColor1;
@@ -372,7 +373,7 @@ namespace DDS3ModelLibrary.Materials
                             writer.Write( FloatArray3 );
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException( "Unknown material flag" );
+                            throw new InvalidOperationException( "Unknown material flag" );
                     }
                 }
             }

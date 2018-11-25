@@ -30,8 +30,7 @@ namespace DDS3ModelLibrary.Models
 
         internal override void ReadContent( EndianBinaryReader reader, IOContext context )
         {
-            var relocationTableOffset = reader.ReadInt32();
-            var relocationTableSize = reader.ReadInt32();
+            reader.SeekCurrent( 8 );
 
             for ( int i = 0; i < 2; i++ )
                 reader.ReadUInt32Expects( 0, "Model header padding is not 0" );

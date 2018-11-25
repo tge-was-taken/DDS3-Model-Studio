@@ -10,6 +10,8 @@ namespace DDS3ModelLibrary.Models
 
     public class MeshType7Batch : IBinarySerializable
     {
+        BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
+
         public short UsedNodeCount => ( short )NodeBatches.Count;
 
         public short VertexCount => ( short ) ( NodeBatches.Count > 0 ? NodeBatches[ 0 ].VertexCount : 0 );
@@ -17,8 +19,6 @@ namespace DDS3ModelLibrary.Models
         public List<MeshType7NodeBatch> NodeBatches { get; }
 
         public Vector2[] TexCoords { get; set; }
-
-        BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
         public MeshType7Batch()
         {

@@ -6,7 +6,7 @@ using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary.Textures
 {
-    public class TexturePack : Resource, IList<Texture>
+    public sealed class TexturePack : Resource, IList<Texture>
     {
         public override ResourceDescriptor ResourceDescriptor { get; } =
             new ResourceDescriptor( ResourceFileType.TexturePack, ResourceIdentifier.TexturePack );
@@ -28,33 +28,6 @@ namespace DDS3ModelLibrary.Textures
         {
             using ( var reader = new EndianBinaryReader( stream, leaveOpen, Endianness.Little ) )
                 Read( reader );
-        }
-
-        public void Save( string filePath )
-        {
-            using ( var writer = new EndianBinaryWriter( new MemoryStream(), Endianness.Little ) )
-            {
-                Write( writer );
-                using ( var fileStream = File.Create( filePath ) )
-                {
-                    writer.BaseStream.Position = 0;
-                    writer.BaseStream.CopyTo( fileStream );
-                }
-            }
-        }
-
-        public void Save( Stream stream, bool leaveOpen = true )
-        {
-            using ( var writer = new EndianBinaryWriter( stream, leaveOpen, Endianness.Little ) )
-                Write( writer );
-        }
-
-        public MemoryStream Save()
-        {
-            var stream = new MemoryStream();
-            Save( stream );
-            stream.Position = 0;
-            return stream;
         }
 
         internal override void ReadContent( EndianBinaryReader reader, IOContext context )

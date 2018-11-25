@@ -135,7 +135,7 @@ namespace DDS3ModelLibrary.Models
             return ( ( IList<Mesh> )mList ).GetEnumerator();
         }
 
-        public void AddRange( IEnumerable<MeshType7> list )
+        public void AddRange( IEnumerable<Mesh> list )
         {
             foreach ( var mesh in list )
             {
