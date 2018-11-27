@@ -12,9 +12,18 @@ namespace DDS3ModelLibrary.Models.Utilities
     {
         public static Vector3D ToAssimp( this Vector3 value ) => new Vector3D( value.X, value.Y, value.Z );
 
+        public static IEnumerable<Vector3D> ToAssimp( this IEnumerable<Vector3> values ) => values.Select( x => x.ToAssimp() );
+
         public static Vector3D ToAssimp( this Vector2 value ) => new Vector3D( value.X, value.Y, 0 );
 
+        public static IEnumerable<Vector3D> ToAssimp( this IEnumerable<Vector2> values ) => values.Select( x => x.ToAssimp() );
+
         public static Color4D ToAssimp( this Vector4 value ) => new Color4D( value.X, value.Y, value.Z, value.W );
+
+        public static IEnumerable<Color4D> ToAssimp( this IEnumerable<Vector4> values ) => values.Select( x => x.ToAssimp() );
+
+        public static Quaternion ToAssimp( this System.Numerics.Quaternion quaternion ) =>
+            new Quaternion( quaternion.W, quaternion.X, quaternion.Y, quaternion.Z );
 
         public static Matrix4x4 ToAssimp( this System.Numerics.Matrix4x4 matrix )
         {
@@ -32,6 +41,8 @@ namespace DDS3ModelLibrary.Models.Utilities
                                        value.A / 255f );
         }
 
+        public static IEnumerable<Color4D> ToAssimp( this IEnumerable<Color> values ) => values.Select( x => x.ToAssimp() );
+
         public static void ExportColladaFile( this Scene aiScene, string path )
         {
             using ( var aiContext = new AssimpContext() )
@@ -46,6 +57,8 @@ namespace DDS3ModelLibrary.Models.Utilities
                               ( byte )( value.A * 255f ) );
         }
 
+        public static IEnumerable<Color> FromAssimp( this IEnumerable<Color4D> values ) => values.Select( x => x.FromAssimp() );
+
         public static System.Numerics.Matrix4x4 FromAssimp( this Matrix4x4 matrix )
         {
             return new System.Numerics.Matrix4x4( matrix.A1, matrix.B1, matrix.C1, matrix.D1,
@@ -59,10 +72,14 @@ namespace DDS3ModelLibrary.Models.Utilities
             return new Vector3( value.X, value.Y, value.Z );
         }
 
+        public static IEnumerable<Vector3> FromAssimp( this IEnumerable<Vector3D> values ) => values.Select( x => x.FromAssimp() );
+
         public static Vector2 FromAssimpAsVector2( this Vector3D value )
         {
             return new Vector2( value.X, value.Y );
         }
+
+        public static IEnumerable<Vector2> FromAssimpAsVector2( this IEnumerable<Vector3D> values ) => values.Select( x => x.FromAssimpAsVector2() );
 
         public static System.Numerics.Quaternion FromAssimp( this Quaternion value )
         {

@@ -38,6 +38,11 @@ namespace DDS3ModelLibrary.Materials
 
         public static int GetPresetId( Material material ) => sMaterialHashToId[ material.GetPresetHashCode() ];
 
+        public static bool TryGetPresetId( Material material, out int presetId )
+        {
+            return sMaterialHashToId.TryGetValue( material.GetPresetHashCode(), out presetId );
+        }
+
         public static bool IsValidPresetId( int id ) => sValidPresetIds.Contains( id );
 
         public static Material GetPreset( int id, bool hasTexture, bool hasOverlay )

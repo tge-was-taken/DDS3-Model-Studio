@@ -61,10 +61,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Models\Conversion\AssimpModelExporter.Config.cs" />
+    <Compile Include="Models\Conversion\AssimpModelExporter.cs" />
+    <Compile Include="Models\Conversion\ModelExporter.cs" />
+    <Compile Include="Models\Conversion\ModelImporter.cs" />
+    <Compile Include="Motions\Conversion\AssimpMotionExporter.Config.cs" />
+    <Compile Include="Motions\Conversion\AssimpMotionExporter.cs" />
+    <Compile Include="Motions\Conversion\AssimpMotionImporter.Config.cs" />
+    <Compile Include="Motions\Conversion\AssimpMotionImporter.cs" />
+    <Compile Include="Motions\Conversion\MotionExporter.cs" />
+    <Compile Include="Motions\Conversion\IMotionImporter.cs" />
+    <Compile Include="Utilities\Singleton.cs" />
     <Compile Include="Motions\Keyframes.cs" />
     <Compile Include="Motions\Internal\KeyframeTrack.cs" />
     <Compile Include="Motions\Motion.cs" />
-    <Compile Include="Motions\MotionController.cs" />
+    <Compile Include="Motions\NodeController.cs" />
     <Compile Include="Motions\ControllerType.cs" />
     <Compile Include="Motions\Internal\MotionControllerDefinition.cs" />
     <Compile Include="Motions\Internal\MotionDefinition.cs" />

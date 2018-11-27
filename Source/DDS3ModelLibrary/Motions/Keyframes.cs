@@ -4,14 +4,14 @@ using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary.Motions
 {
-    public interface IKeyframe : IBinarySerializable
+    public interface IKey : IBinarySerializable
     {
         int Size { get; }
 
         short Time { get; set; }
     }
 
-    public struct TranslationKeyframeSize4 : IKeyframe
+    public struct UInt32Key : IKey
     {
         public int Size => 4;
 
@@ -33,7 +33,7 @@ namespace DDS3ModelLibrary.Motions
         }
     }
 
-    public struct TranslationKeyframeSize8 : IKeyframe
+    public struct PositionKeySize8 : IKey
     {
         public int Size => 8;
 
@@ -59,73 +59,29 @@ namespace DDS3ModelLibrary.Motions
         }
     }
 
-    public struct TranslationKeyframeSize12 : IKeyframe
+    public struct Vector3Key : IKey
     {
         public int Size => 12;
 
         public short Time { get; set; }
 
-        public Vector3 Translation { get; set; }
+        public Vector3 Value { get; set; }
 
         // -- IBinarySerializable --
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Translation = reader.ReadVector3();
+            Value = reader.ReadVector3();
         }
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
         {
-            writer.WriteVector3( Translation );
+            writer.WriteVector3( Value );
         }
     }
 
-    public struct Type1KeyframeSize4 : IKeyframe
-    {
-        public int Size => 4;
-
-        public short Time { get; set; }
-
-        public uint Value { get; set; }
-
-        // -- IBinarySerializable --
-        BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
-
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
-        {
-            Value = reader.ReadUInt32();
-        }
-
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
-        {
-            writer.WriteUInt32( Value );
-        }
-    }
-
-    public struct ScaleKeyframeSize12 : IKeyframe
-    {
-        public int Size => 12;
-
-        public short Time { get; set; }
-
-        public Vector3 Scale { get; set; }
-
-        // -- IBinarySerializable --
-        BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
-
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
-        {
-            Scale = reader.ReadVector3();
-        }
-
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
-        {
-            writer.WriteVector3( Scale );
-        }
-    }
-
-    public struct ScaleKeyframeSize20 : IKeyframe
+    public struct Single5Key : IKey
     {
         public int Size => 20;
 
@@ -147,7 +103,7 @@ namespace DDS3ModelLibrary.Motions
         }
     }
 
-    public struct RotationKeyframeSize8 : IKeyframe
+    public struct QuaternionKey : IKey
     {
         private const float FIXED_POINT_12 = 4096f;
 
@@ -163,11 +119,11 @@ namespace DDS3ModelLibrary.Motions
 
         public short Time { get; set; }
 
-        public Quaternion Rotation
+        public Quaternion Value
         {
             get
             {
-                if ( !mDecoded )
+                if ( !mChanged && !mDecoded )
                 {
                     mRotation = new Quaternion( mRotationX / FIXED_POINT_12,
                                                 mRotationY / FIXED_POINT_12,
@@ -202,11 +158,12 @@ namespace DDS3ModelLibrary.Motions
         {
             if ( mChanged )
             {
-                mRotationX = ( short )( Rotation.X * FIXED_POINT_12 );
-                mRotationY = ( short ) ( Rotation.Y * FIXED_POINT_12 );
-                mRotationZ = ( short ) ( Rotation.Z * FIXED_POINT_12 );
-                mRotationW = ( short ) ( Rotation.W * FIXED_POINT_12 );
+                mRotationX = ( short )( Value.X * FIXED_POINT_12 );
+                mRotationY = ( short ) ( Value.Y * FIXED_POINT_12 );
+                mRotationZ = ( short ) ( Value.Z * FIXED_POINT_12 );
+                mRotationW = ( short ) ( Value.W * FIXED_POINT_12 );
                 mChanged = false;
+                mDecoded = true;
             }
 
             writer.Write( mRotationX );
@@ -216,29 +173,7 @@ namespace DDS3ModelLibrary.Motions
         }
     }
 
-    public struct RotationKeyframeSize20 : IKeyframe
-    {
-        public int Size => 20;
-
-        public short Time { get; set; }
-
-        public float[] Values { get; set; }
-
-        // -- IBinarySerializable --
-        BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
-
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
-        {
-            Values = reader.ReadSingles( 5 );
-        }
-
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
-        {
-            writer.WriteSingles( Values );
-        }
-    }
-
-    public struct MorphKeyframeSize1 : IKeyframe
+    public struct ByteKey : IKey
     {
         public int Size => 1;
 
@@ -261,51 +196,7 @@ namespace DDS3ModelLibrary.Motions
         }
     }
 
-    public struct MorphKeyframeSize4 : IKeyframe
-    {
-        public int Size => 4;
-
-        public short Time { get; set; }
-
-        public uint Value { get; set; }
-
-        // -- IBinarySerializable --
-        BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
-
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
-        {
-            Value = reader.ReadUInt32();
-        }
-
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
-        {
-            writer.WriteUInt32( Value );
-        }
-    }
-
-    public struct Type5KeyframeSize4 : IKeyframe
-    {
-        public int Size => 4;
-
-        public short Time { get; set; }
-
-        public float Value { get; set; }
-
-        // -- IBinarySerializable --
-        BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
-
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
-        {
-            Value = reader.ReadSingle();
-        }
-
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
-        {
-            writer.WriteSingle( Value );
-        }
-    }
-
-    public struct Type8KeyframeSize4 : IKeyframe
+    public struct SingleKey : IKey
     {
         public int Size => 4;
 

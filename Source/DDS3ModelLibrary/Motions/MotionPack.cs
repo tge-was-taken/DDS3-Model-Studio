@@ -156,45 +156,41 @@ namespace DDS3ModelLibrary.Motions
 
                     if ( controller != null )
                     {
-                        motionDef.Tracks.Add( new KeyframeTrack( controller.Keyframes ) );
+                        motionDef.Tracks.Add( new KeyframeTrack( controller.Keys ) );
                         continue;
                     }
 
                     // Need to add dummy values
-                    var keyframes = new List<IKeyframe>();
+                    var keyframes = new List<IKey>();
 
                     void AddPlaceholderKeyframe( short time )
                     {
-                        IKeyframe keyframe;
+                        IKey key;
                         switch ( controllerDef.Type )
                         {
-                            case ControllerType.Translation:
-                                keyframe = new TranslationKeyframeSize12();
+                            case ControllerType.Position:
+                                key = new Vector3Key();
                                 break;
                             case ControllerType.Type1:
-                                keyframe = new Type1KeyframeSize4();
+                            case ControllerType.Morph:
+                            case ControllerType.Type8:
+                                key = new UInt32Key();
                                 break;
                             case ControllerType.Scale:
-                                keyframe = new ScaleKeyframeSize12 { Scale = Vector3.One };
+                                key = new Vector3Key { Value = Vector3.One };
                                 break;
                             case ControllerType.Rotation:
-                                keyframe = new RotationKeyframeSize8 { Rotation = Quaternion.Identity };
-                                break;
-                            case ControllerType.Morph:
-                                keyframe = new MorphKeyframeSize4();
+                                key = new QuaternionKey { Value = Quaternion.Identity };
                                 break;
                             case ControllerType.Type5:
-                                keyframe = new Type5KeyframeSize4();
-                                break;
-                            case ControllerType.Type8:
-                                keyframe = new Type8KeyframeSize4();
+                                key = new SingleKey();
                                 break;
                             default:
                                 throw new InvalidOperationException();
                         }
 
-                        keyframe.Time = time;
-                        keyframes.Add( keyframe );
+                        key.Time = time;
+                        keyframes.Add( key );
                     }
 
                     AddPlaceholderKeyframe( 0 );

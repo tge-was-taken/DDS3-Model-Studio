@@ -89,7 +89,7 @@ namespace DDS3ModelLibrary.Models
 
                     var normal = blendShape.Normals[j];
                     if ( i > 0 )
-                        normal += BlendShapes[0].Normals[j];
+                        normal = Vector3.Normalize( normal + BlendShapes[ 0 ].Normals[ j ] );
 
                     positions[j] = Vector3.Transform( position, nodeWorldTransform );
                     normals[j] = Vector3.TransformNormal( normal, nodeWorldTransform );

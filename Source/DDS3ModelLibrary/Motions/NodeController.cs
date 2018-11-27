@@ -9,7 +9,7 @@ namespace DDS3ModelLibrary.Motions
     /// Controls the animation of a single property of a node.
     /// The property that is modified depends on the type.
     /// </summary>
-    public class MotionController : IBinarySerializable
+    public class NodeController : IBinarySerializable
     {
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
@@ -41,22 +41,29 @@ namespace DDS3ModelLibrary.Motions
         public short Field06 { get; set; }
 
         /// <summary>
-        /// Gets the list of keyframes associated with this controller.
+        /// Gets the list of keys associated with this controller.
         /// </summary>
-        public List<IKeyframe> Keyframes { get; private set; }
+        public List<IKey> Keys { get; private set; }
 
-        public MotionController()
+        public NodeController()
         {
-            Keyframes = new List<IKeyframe>();
+            Keys = new List<IKey>();
         }
 
-        internal MotionController( MotionControllerDefinition definition, List<IKeyframe> keyframes )
+        public NodeController( ControllerType type, short nodeIndex, string nodeName ) : this()
+        {
+            Type = type;
+            NodeIndex = nodeIndex;
+            NodeName = nodeName;
+        }
+
+        internal NodeController( MotionControllerDefinition definition, List<IKey> keys )
         {
             Type = definition.Type;
             Field02 = definition.Field02;
             NodeIndex = definition.NodeIndex;
             Field06 = definition.Field06;
-            Keyframes = keyframes;
+            Keys = keys;
         }
 
         internal MotionControllerDefinition GetDefinition()
@@ -86,7 +93,7 @@ namespace DDS3ModelLibrary.Motions
             Field02 = reader.ReadInt16();
             NodeIndex = reader.ReadInt16();
             Field06 = reader.ReadInt16();
-            Keyframes = reader.ReadObject<KeyframeTrack>().Keyframes;
+            Keys = reader.ReadObject<KeyframeTrack>().Keyframes;
         }
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
@@ -95,7 +102,7 @@ namespace DDS3ModelLibrary.Motions
             writer.WriteInt16( Field02 );
             writer.WriteInt16( NodeIndex );
             writer.WriteInt16( Field06 );
-            writer.WriteObject( new KeyframeTrack( Keyframes ) );
+            writer.WriteObject( new KeyframeTrack( Keys ) );
         }
     }
 }

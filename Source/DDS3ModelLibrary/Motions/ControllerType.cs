@@ -2,7 +2,7 @@
 {
     public enum ControllerType : short
     {
-        Translation,
+        Position,
         Type1,
         Scale,
         Rotation,

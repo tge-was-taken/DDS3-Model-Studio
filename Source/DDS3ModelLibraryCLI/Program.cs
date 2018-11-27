@@ -9,7 +9,9 @@ using System.Threading.Tasks;
 using AtlusFileSystemLibrary;
 using AtlusFileSystemLibrary.FileSystems.LB;
 using DDS3ModelLibrary.Models;
+using DDS3ModelLibrary.Models.Conversion;
 using DDS3ModelLibrary.Models.Field;
+using DDS3ModelLibrary.Motions.Conversion;
 using Newtonsoft.Json;
 
 namespace DDS3ModelLibraryCLI
@@ -18,11 +20,34 @@ namespace DDS3ModelLibraryCLI
     {
         private static void Main( string[] args )
         {
-            OpenAndSaveModelPackTest();
+            var modelPack = new ModelPack( @"..\..\..\..\Resources\player_a.PB" );
+            AssimpModelExporter.Instance.Export( modelPack.Models[ 0 ], "player_a.dae", modelPack.TexturePack );
+            for ( var i = 0; i < modelPack.MotionPacks[ 0 ].Motions.Count; i++ )
+            {
+                var motion = modelPack.MotionPacks[ 0 ].Motions[ i ];
+                if ( motion == null )
+                    continue;
+
+                AssimpMotionExporter.Instance.Export( modelPack.Models[ 0 ], motion, $"player_a_motion_{i:D2}.dae" );
+            }
+
+            var newMotion =
+                AssimpMotionImporter.Instance.Import( "animtest.fbx",
+                                                      new AssimpMotionImporter.Config
+                                                      {
+                                                          NodeIndexResolver = n => modelPack.Models[ 0 ].Nodes.FindIndex( x => x.Name == n )
+                                                      });
+            for ( int i = 0; i < modelPack.MotionPacks[0].Motions.Count; i++ )
+            {
+                modelPack.MotionPacks[0].Motions[i] = newMotion;
+            }
+            modelPack.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_a.PB" );
+
+            //OpenAndSaveModelPackTest();
             //ReplaceF1Test();
             //ReplaceModelTest();
-            OpenAndSaveModelPackBatchTest();
-            return;
+            //OpenAndSaveModelPackBatchTest();
+            //return;
             //ExportObj( new ModelPack( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_b.PB" ) );
             //return;
             //OpenAndSaveModelPackBatchTest();return;
