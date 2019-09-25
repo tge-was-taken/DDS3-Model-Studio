@@ -177,7 +177,7 @@ namespace DDS3ModelLibrary.Models.Utilities
                     if ( remainingFaces.All( x => x.Indices.SelectMany( y => vertexWeights[y].Select( z => z.Item1 ) ).Count() > maxBoneCount ) )
                     {
                         // Need to reduce weights per face
-                        Debug.Assert( false ); // would need averaging..
+                        throw new NotSupportedException( "Too many weights per face" );
                     }
                 }
 

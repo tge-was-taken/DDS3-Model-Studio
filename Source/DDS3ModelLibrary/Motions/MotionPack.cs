@@ -136,6 +136,7 @@ namespace DDS3ModelLibrary.Motions
         private List<MotionDefinition> BuildMotionDefinitions()
         {
             var motionDefs = new List<MotionDefinition>();
+            var motionDefCache = new Dictionary<Motion, MotionDefinition>();
 
             foreach ( var motion in Motions )
             {
@@ -145,7 +146,13 @@ namespace DDS3ModelLibrary.Motions
                     continue;
                 }
 
-                var motionDef = new MotionDefinition
+                if ( motionDefCache.TryGetValue( motion, out var motionDef ) )
+                {
+                    motionDefs.Add( motionDef );
+                    continue;
+                }
+
+                motionDef = new MotionDefinition
                 {
                     Duration = motion.Duration,
                 };
@@ -198,6 +205,7 @@ namespace DDS3ModelLibrary.Motions
                 }
 
                 motionDefs.Add( motionDef );
+                motionDefCache[motion] = motionDef;
             }
 
             return motionDefs;

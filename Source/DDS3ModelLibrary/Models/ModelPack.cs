@@ -19,9 +19,6 @@ namespace DDS3ModelLibrary.Models
 {
     public sealed class ModelPack : AbstractResource<object>
     {
-        private const int BATCH_VERTEX_LIMIT = 24;
-        private const int MESH_WEIGHT_LIMIT = 3;
-
         public ModelPackInfo Info { get; set; }
 
         public TexturePack TexturePack { get; set; }
@@ -53,7 +50,7 @@ namespace DDS3ModelLibrary.Models
                 Read( reader );
         }
 
-        private static int AddTexture( string baseDirectory, string filePath, Dictionary<string, int> textureLookup, TexturePack texturePack )
+        private static int AddTexture( string baseDirectory, string filePath, Dictionary<string, int> textureLookup, TexturePack texturePack, float scale )
         {
             if ( !textureLookup.TryGetValue( filePath, out var textureId ) )
             {
@@ -69,9 +66,8 @@ namespace DDS3ModelLibrary.Models
                 }
 
                 var bitmap = fileExists ? TextureImportHelper.ImportBitmap( path ) : new Bitmap( 32, 32 );
-                var scale = 1;
                 if ( scale != 1 )
-                    bitmap = new Bitmap( bitmap, new Size( bitmap.Width / scale, bitmap.Height / scale ) );
+                    bitmap = new Bitmap( bitmap, new Size( ( int )( bitmap.Width / scale ), ( int )( bitmap.Height / scale ) ) );
                 var name    = Path.GetFileNameWithoutExtension( path );
                 var texture = new Texture( bitmap, PS2.GS.GSPixelFormat.PSMT8, name );
                 textureId = texturePack.Count;
@@ -82,9 +78,9 @@ namespace DDS3ModelLibrary.Models
             return textureId;
         }
 
-        private static void RemoveExcessiveNodeInfluences( int vertexCount, List<short> usedNodeIndices, List<List<(short NodeIndex, float Weight)>> vertexWeights, Dictionary<short, float> nodeScores )
+        private static void RemoveExcessiveNodeInfluences( int vertexCount, List<short> usedNodeIndices, List<List<(short NodeIndex, float Weight)>> vertexWeights, Dictionary<short, float> nodeScores, int meshWeightLimit )
         {
-            var excessiveNodeCount = usedNodeIndices.Count - MESH_WEIGHT_LIMIT;
+            var excessiveNodeCount = usedNodeIndices.Count - meshWeightLimit;
             var maxScore = vertexCount;
 
             for ( int i = 4; i < ( 4 + excessiveNodeCount ); i++ )
@@ -139,14 +135,14 @@ namespace DDS3ModelLibrary.Models
             usedNodeIndices.RemoveRange( 4, excessiveNodeCount );
         }
 
-        private static MeshType1 ConvertToMeshType1( Assimp.Scene aiScene, Assimp.Mesh aiMesh, bool hasTexture, Matrix4x4 aiNodeWorldTransform, List<Vector3> localPositions, ref Matrix4x4 nodeInvWorldTransform )
+        private static MeshType1 ConvertToMeshType1( Assimp.Scene aiScene, Assimp.Mesh aiMesh, bool hasTexture, Matrix4x4 aiNodeWorldTransform, List<Vector3> localPositions, ref Matrix4x4 nodeInvWorldTransform, int batchVertexLimit )
         {
             var mesh = new MeshType1
             {
                 MaterialIndex = ( short )aiMesh.MaterialIndex,
             };
 
-            var aiBatchMeshes = AssimpHelper.SplitMeshByVertexCount( aiMesh, BATCH_VERTEX_LIMIT );
+            var aiBatchMeshes = AssimpHelper.SplitMeshByVertexCount( aiMesh, batchVertexLimit );
             foreach ( var aiBatchMesh in aiBatchMeshes )
             {
                 var batch = new MeshType1Batch
@@ -219,7 +215,7 @@ namespace DDS3ModelLibrary.Models
             return mesh;
         }
 
-        private static MeshType7 ConvertToMeshType7( Assimp.Mesh aiMesh, bool hasTexture, List<Node> nodes, Matrix4x4 aiNodeWorldTransform, ref Matrix4x4 nodeInvWorldTransform, List<Vector3> localPositions )
+        private static MeshType7 ConvertToMeshType7( Assimp.Mesh aiMesh, bool hasTexture, List<Node> nodes, Matrix4x4 aiNodeWorldTransform, ref Matrix4x4 nodeInvWorldTransform, List<Vector3> localPositions, int batchVertexLimit )
         {
             var mesh = new MeshType7
             {
@@ -244,7 +240,7 @@ namespace DDS3ModelLibrary.Models
                 var weights = new List<(short, float)>();
                 foreach ( (Assimp.Bone bone, float weight) in aiVertexWeights[i] )
                 {
-                    var nodeIndex = nodes.FindIndex( x => x.Name == bone.Name );
+                    var nodeIndex = nodes.FindIndex( x => CompareNodeName( x, bone.Name ) );
                     Debug.Assert( nodeIndex != -1 );
                     weights.Add( (( short )nodeIndex, weight) );
                 }
@@ -259,7 +255,7 @@ namespace DDS3ModelLibrary.Models
             var batchVertexBaseIndex = 0;
             while ( batchVertexBaseIndex < aiMesh.VertexCount )
             {
-                var batchVertexCount = Math.Min( BATCH_VERTEX_LIMIT, aiMesh.VertexCount - batchVertexBaseIndex );
+                var batchVertexCount = Math.Min( batchVertexLimit, aiMesh.VertexCount - batchVertexBaseIndex );
                 var batch = new MeshType7Batch { TexCoords = new Vector2[batchVertexCount] };
 
                 // req. all vertices to use the same set of node indices
@@ -324,7 +320,7 @@ namespace DDS3ModelLibrary.Models
             return mesh;
         }
 
-        private static MeshType8 ConvertToMeshType8( Assimp.Mesh aiMesh, bool hasTexture, Matrix4x4 aiNodeWorldTransform, List<Vector3> localPositions, ref Matrix4x4 nodeInvWorldTransform )
+        private static MeshType8 ConvertToMeshType8( Assimp.Mesh aiMesh, bool hasTexture, Matrix4x4 aiNodeWorldTransform, List<Vector3> localPositions, ref Matrix4x4 nodeInvWorldTransform, int batchVertexLimit )
         {
             var mesh = new MeshType8
             {
@@ -341,7 +337,7 @@ namespace DDS3ModelLibrary.Models
             var processedVertexCount = 0;
             while ( processedVertexCount < aiMesh.VertexCount )
             {
-                var batchVertexCount = Math.Min( BATCH_VERTEX_LIMIT, aiMesh.VertexCount - processedVertexCount );
+                var batchVertexCount = Math.Min( batchVertexLimit, aiMesh.VertexCount - processedVertexCount );
                 var batch = new MeshType8Batch { Positions = new Vector3[batchVertexCount] };
 
                 // Convert positions
@@ -383,7 +379,12 @@ namespace DDS3ModelLibrary.Models
             return mesh;
         }
 
-        public void Replace( string filePath )
+        private static bool CompareNodeName( Node node, string name )
+        {
+            return node.Name == name || node.Name.Replace( " ", "_" ) == name;
+        }
+
+        public void Replace( string filePath, float textureScale = 1, bool enableOverlays = false, MeshType weightedMeshType = MeshType.Type7, MeshType unweightedMeshType = MeshType.Type1, int meshWeightLimit = 4, int batchVertexLimit = 24 )
         {
             var baseDirectory = Path.GetDirectoryName( Path.GetFullPath( filePath ) );
             var aiContext = new Assimp.AssimpContext();
@@ -411,19 +412,19 @@ namespace DDS3ModelLibrary.Models
             {
                 var materialName = TagName.Parse( aiMaterial.Name );
                 var isTextured = true && aiMaterial.HasTextureDiffuse;
-                var hasOverlay = false && materialName["ovl"].Count == 2;
+                var hasOverlay = enableOverlays && materialName["ovl"].Count == 2;
                 int textureId = 0;
                 int overlayMaskId = 0;
                 int overlayTextureId = 0;
 
                 if ( isTextured )
                 {
-                    textureId = AddTexture( baseDirectory, aiMaterial.TextureDiffuse.FilePath, textureLookup, TexturePack );
+                    textureId = AddTexture( baseDirectory, aiMaterial.TextureDiffuse.FilePath, textureLookup, TexturePack, textureScale );
 
                     if ( hasOverlay )
                     {
-                        overlayMaskId = AddTexture( baseDirectory, materialName["ovl"][ 0 ], textureLookup, TexturePack );
-                        overlayTextureId = AddTexture( baseDirectory, materialName["ovl"][ 1 ], textureLookup, TexturePack );
+                        overlayMaskId = AddTexture( baseDirectory, materialName["ovl"][ 0 ], textureLookup, TexturePack, textureScale );
+                        overlayTextureId = AddTexture( baseDirectory, materialName["ovl"][ 1 ], textureLookup, TexturePack, textureScale );
                     }
                 }
 
@@ -461,9 +462,9 @@ namespace DDS3ModelLibrary.Models
                     var aiMeshes = new List<Assimp.Mesh>();
                     foreach ( var aiMesh in aiNode.MeshIndices.Select( x => aiScene.Meshes[x] ) )
                     {
-                        if ( aiMesh.BoneCount > MESH_WEIGHT_LIMIT )
+                        if ( aiMesh.BoneCount > meshWeightLimit )
                         {
-                            aiMeshes.AddRange( AssimpHelper.SplitMeshByBoneCount( aiMesh, MESH_WEIGHT_LIMIT ) );
+                            aiMeshes.AddRange( AssimpHelper.SplitMeshByBoneCount( aiMesh, meshWeightLimit ) );
                         }
                         else
                         {
@@ -473,7 +474,7 @@ namespace DDS3ModelLibrary.Models
 
                     foreach ( var aiMesh in aiMeshes )
                     {
-                        var node = AssimpHelper.DetermineBestTargetNode( aiMesh, aiNode, name => model.Nodes.Find( x => x.Name == name ),
+                        var node = AssimpHelper.DetermineBestTargetNode( aiMesh, aiNode, name => model.Nodes.Find( x => CompareNodeName( x, name ) ),
                                                                          model.Nodes[ model.Nodes.Count > 1 ? 1 : 0 ] );
                         var nodeWorldTransform = node.WorldTransform;
                         var nodeInvWorldTransform = nodeWorldTransform.Inverted();
@@ -486,19 +487,63 @@ namespace DDS3ModelLibrary.Models
                         {
                             // Weighted mesh
                             // TODO: decide between type 2 and 7?
-                            Debug.Assert( aiMesh.BoneCount <= MESH_WEIGHT_LIMIT );
-                            mesh = ConvertToMeshType7( aiMesh, hasTexture, model.Nodes, aiNodeWorldTransform, ref nodeInvWorldTransform,
-                                                       localPositions );
+                            Debug.Assert( aiMesh.BoneCount <= meshWeightLimit );
+
+                            switch ( weightedMeshType )
+                            {
+                                case MeshType.Type1:
+                                    mesh = ConvertToMeshType1( aiScene, aiMesh, hasTexture, aiNodeWorldTransform, localPositions,
+                                                       ref nodeInvWorldTransform, batchVertexLimit );
+                                    break;
+                                //case MeshType.Type2:
+                                //    break;
+                                //case MeshType.Type3:
+                                //    break;
+                                //case MeshType.Type4:
+                                //    break;
+                                //case MeshType.Type5:
+                                //    break;
+                                case MeshType.Type7:
+                                    mesh = ConvertToMeshType7( aiMesh, hasTexture, model.Nodes, aiNodeWorldTransform, ref nodeInvWorldTransform,
+                                                               localPositions, batchVertexLimit );
+                                    break;
+                                case MeshType.Type8:
+                                    mesh = ConvertToMeshType8( aiMesh, hasTexture, aiNodeWorldTransform, localPositions,
+                                                       ref nodeInvWorldTransform, batchVertexLimit );
+                                    break;
+                                default:
+                                    throw new NotImplementedException( $"Mesh type {weightedMeshType} not implemented/supported for weighted meshes" );
+                            }   
                         }
                         else
                         {
                             // Unweighted mesh
                             // TODO: decide between type 1 and 8?
-                            mesh = ConvertToMeshType8( aiMesh, hasTexture, aiNodeWorldTransform, localPositions,
-                                                       ref nodeInvWorldTransform );
-                            //mesh = ConvertToMeshType1( aiScene, aiMesh, hasTexture, aiNodeWorldTransform, localPositions,
-                            //                           ref nodeInvWorldTransform );
-                            //continue;
+                            switch ( unweightedMeshType )
+                            {
+                                case MeshType.Type1:
+                                    mesh = ConvertToMeshType1( aiScene, aiMesh, hasTexture, aiNodeWorldTransform, localPositions,
+                                                       ref nodeInvWorldTransform, batchVertexLimit );
+                                    break;
+                                //case MeshType.Type2:
+                                //    break;
+                                //case MeshType.Type3:
+                                //    break;
+                                //case MeshType.Type4:
+                                //    break;
+                                //case MeshType.Type5:
+                                //    break;
+                                case MeshType.Type7:
+                                    mesh = ConvertToMeshType7( aiMesh, hasTexture, model.Nodes, aiNodeWorldTransform, ref nodeInvWorldTransform,
+                                                               localPositions, batchVertexLimit );
+                                    break;
+                                case MeshType.Type8:
+                                    mesh = ConvertToMeshType8( aiMesh, hasTexture, aiNodeWorldTransform, localPositions,
+                                                       ref nodeInvWorldTransform, batchVertexLimit );
+                                    break;
+                                default:
+                                    throw new NotImplementedException( $"Mesh type {unweightedMeshType} not implemented/supported for unweighted meshes" );
+                            }
                         }
 
                         if ( node.Geometry == null )

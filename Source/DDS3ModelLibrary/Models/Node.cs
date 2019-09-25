@@ -21,6 +21,7 @@ namespace DDS3ModelLibrary.Models
         private bool mLocalTransformDirty;
         private bool mWorldTransformDirty;
         private bool mPRSDirty;
+        private Matrix4x4 mParentWorldTransform;
 
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
@@ -154,7 +155,7 @@ namespace DDS3ModelLibrary.Models
         {
             get
             {
-                if ( mWorldTransformDirty )
+                if ( mWorldTransformDirty || Parent?.WorldTransform != mParentWorldTransform )
                     UpdateWorldTransform();
 
                 return mWorldTransform;
@@ -172,7 +173,7 @@ namespace DDS3ModelLibrary.Models
             BoundingBox = null;
             Geometry    = null;
             Field48     = 0;
-            mLocalTransform = mWorldTransform = Matrix4x4.Identity;
+            mLocalTransform = mWorldTransform = mParentWorldTransform = Matrix4x4.Identity;
         }
 
         private void UpdateLocalTransform()
@@ -189,7 +190,9 @@ namespace DDS3ModelLibrary.Models
         {
             mWorldTransform = Transform;
             if ( Parent != null )
-                mWorldTransform *= Parent.WorldTransform;
+                mWorldTransform *= ( mParentWorldTransform = Parent.WorldTransform );
+            else
+                mParentWorldTransform = Matrix4x4.Identity;
 
             mWorldTransformDirty = false;
         }

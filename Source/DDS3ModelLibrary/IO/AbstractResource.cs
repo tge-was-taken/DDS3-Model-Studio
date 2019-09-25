@@ -1,10 +1,27 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary.IO
 {
     public abstract class AbstractResource<TIOContext> : IBinarySerializable where TIOContext : class, new()
     {
+        public static T Load<T>( string filePath, TIOContext context = null)
+            where T : AbstractResource<TIOContext>
+        {
+            var resource = Activator.CreateInstance<T>();
+            resource.Load( filePath, context );
+            return resource;
+        }
+
+        public void Load( string filePath, TIOContext context = null )
+        {
+            using ( var reader = new EndianBinaryReader( filePath, Endianness.Little) )
+            {
+                Read( reader, context );
+            }
+        }
+
         public void Save( string filePath )
         {
             using ( var writer = new EndianBinaryWriter( new MemoryStream(), Endianness.Little ) )
@@ -42,5 +59,9 @@ namespace DDS3ModelLibrary.IO
         void IBinarySerializable.Read( EndianBinaryReader reader, object context ) => Read( reader, ( TIOContext ) ( context ?? new TIOContext() ) );
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context ) => Write( writer, ( TIOContext ) ( context ?? new TIOContext() ) );
+    }
+
+    public class NullIOContext
+    {
     }
 }

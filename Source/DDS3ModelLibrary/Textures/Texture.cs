@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using DDS3ModelLibrary.IO;
 using DDS3ModelLibrary.IO.Common;
 using DDS3ModelLibrary.PS2.GS;
@@ -74,6 +75,12 @@ namespace DDS3ModelLibrary.Textures
         public Texture( string path )
         {
             using ( var reader = new EndianBinaryReader( path, Endianness.Little ) )
+                Read( reader );
+        }
+
+        public Texture( Stream stream, bool leaveOpen )
+        {
+            using ( var reader = new EndianBinaryReader( stream, leaveOpen, Endianness.Little ) )
                 Read( reader );
         }
 

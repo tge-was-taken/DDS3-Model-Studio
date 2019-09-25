@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -12,6 +13,7 @@ using DDS3ModelLibrary.Models;
 using DDS3ModelLibrary.Models.Conversion;
 using DDS3ModelLibrary.Models.Field;
 using DDS3ModelLibrary.Motions.Conversion;
+using DDS3ModelLibrary.Textures;
 using Newtonsoft.Json;
 
 namespace DDS3ModelLibraryCLI
@@ -20,28 +22,99 @@ namespace DDS3ModelLibraryCLI
     {
         private static void Main( string[] args )
         {
-            var modelPack = new ModelPack( @"..\..\..\..\Resources\player_a.PB" );
-            AssimpModelExporter.Instance.Export( modelPack.Models[ 0 ], "player_a.dae", modelPack.TexturePack );
-            for ( var i = 0; i < modelPack.MotionPacks[ 0 ].Motions.Count; i++ )
             {
-                var motion = modelPack.MotionPacks[ 0 ].Motions[ i ];
-                if ( motion == null )
-                    continue;
+                var modelPack = new ModelPack( @"..\..\..\..\Resources\player_a.PB" );
+                //AssimpModelExporter.Instance.Export( modelPack.Models[ 0 ], "player_a.dae", modelPack.TexturePack );
+                //for ( var i = 0; i < modelPack.MotionPacks[ 0 ].Motions.Count; i++ )
+                //{
+                //    var motion = modelPack.MotionPacks[ 0 ].Motions[ i ];
+                //    if ( motion == null )
+                //        continue;
 
-                AssimpMotionExporter.Instance.Export( modelPack.Models[ 0 ], motion, $"player_a_motion_{i:D2}.dae" );
+                //    AssimpMotionExporter.Instance.Export( modelPack.Models[ 0 ], motion, $"player_a_motion_{i:D2}.dae" );
+                //}
+
+                var newMotion =
+                    AssimpMotionImporter.Instance.Import( @"D:\Users\smart\Desktop\nocturne_player_a_fortnite.fbx",
+                                                          new AssimpMotionImporter.Config
+                                                          {
+                                                              NodeIndexResolver = n => modelPack.Models[0].Nodes.FindIndex( x => x.Name == n )
+                                                          } );
+                for ( int i = 0; i < modelPack.MotionPacks[0].Motions.Count; i++ )
+                {
+                    modelPack.MotionPacks[0].Motions[i] = newMotion;
+                }
+
+                modelPack.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_a.PB" );
             }
 
-            var newMotion =
-                AssimpMotionImporter.Instance.Import( "animtest.fbx",
-                                                      new AssimpMotionImporter.Config
-                                                      {
-                                                          NodeIndexResolver = n => modelPack.Models[ 0 ].Nodes.FindIndex( x => x.Name == n )
-                                                      });
-            for ( int i = 0; i < modelPack.MotionPacks[0].Motions.Count; i++ )
             {
-                modelPack.MotionPacks[0].Motions[i] = newMotion;
+                var lb = new LBFileSystem();
+                lb.Load( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\fld\f\f037\_f037_027.LB" );
+
+                var f1Handle = lb.GetHandle( "F1" );
+
+                FieldScene f1;
+                using ( var stream = lb.OpenFile( f1Handle ) )
+                    f1 = new FieldScene( stream, true );
+
+                foreach ( var obj in f1.Objects )
+                {
+                    switch ( obj.ResourceType )
+                    {
+                        case FieldObjectResourceType.Model:
+                            {
+                                var model = ( Model ) obj.Resource;
+                                foreach ( var material in model.Materials )
+                                {
+                                    if ( material.TextureId.HasValue )
+                                        material.TextureId = 0;
+
+                                    material.Color1 = material.Color2 = material.Color3 = material.Color4 = material.Color5 = null;
+                                    material.Float1 = null;
+                                    material.FloatArray1 = material.FloatArray2 = material.FloatArray3 = null;
+                                }
+
+                                foreach ( var node in model.Nodes )
+                                {
+                                    if ( node.Geometry == null )
+                                        continue;
+
+                                    foreach ( var _mesh in node.Geometry.Meshes )
+                                    {
+                                        if ( _mesh is MeshType1 mesh )
+                                        {
+                                            foreach ( var batch in mesh.Batches )
+                                            {
+                                                batch.Flags &= ~MeshFlags.Normal;
+                                                batch.Flags &= ~MeshFlags.Color;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                        case FieldObjectResourceType.Type3:
+                            break;
+                        case FieldObjectResourceType.TextureListFileName:
+                            break;
+                        case FieldObjectResourceType.Effect:
+                            break;
+                        case FieldObjectResourceType.Light:
+                            break;
+                    }
+                }
+                ExportObj( f1 );
+
+                lb.AddFile( f1Handle, f1.Save(), true, ConflictPolicy.Replace );
+
+                var tbHandle = lb.GetHandle( "TBN" );
+                var texturePack = new TexturePack();
+                texturePack.Textures.Add( new Texture( new Bitmap( @"D:\Modding\Tools\magenta.png" ) ) );
+                lb.AddFile( tbHandle, texturePack.Save(), true, ConflictPolicy.Replace );
+
+                lb.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\fld\f\f037\f037_027.LB" );
             }
-            modelPack.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_a.PB" );
 
             //OpenAndSaveModelPackTest();
             //ReplaceF1Test();
