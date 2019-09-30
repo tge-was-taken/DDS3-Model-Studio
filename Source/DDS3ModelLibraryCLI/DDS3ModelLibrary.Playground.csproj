@@ -71,4 +71,7 @@
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy $(SolutionDir)..\Resources Resources /q /e /d /y /i</PostBuildEvent>
+  </PropertyGroup>
 </Project>

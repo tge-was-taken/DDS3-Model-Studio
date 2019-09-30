@@ -6,13 +6,18 @@ using DDS3ModelLibrary.Models.Conversion;
 using DDS3ModelLibrary.Models.Field;
 using DDS3ModelLibrary.Motions.Conversion;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Text;
+using TGE.SimpleCommandLine;
 
 namespace DDS3ModelConverter
 {
-    internal enum InputFormat
+    public enum InputFormat
     {
         Unknown,
         PB,
@@ -23,7 +28,7 @@ namespace DDS3ModelConverter
         FBX,
     }
 
-    internal enum OutputFormat
+    public enum OutputFormat
     {
         Unknown,
         PB,
@@ -36,117 +41,22 @@ namespace DDS3ModelConverter
 
     internal class Program
     {
-        private static AssemblyName sAssemblyName = Assembly.GetExecutingAssembly().GetName();
+        public static string About { get; } = SimpleCommandLineFormatter.Default.FormatAbout<ProgramOptions>( 
+            "TGE", "A model converter for DDS3 engine games." );
 
-        public static string Name => sAssemblyName.Name;
-
-        public static Version Version => sAssemblyName.Version;
-
-        public static string Usage { get; } = $@"
-{Name} {Version} by TGE (2019)
-A model converter for DDS3 engine games.
-
-Usage:
-{Name} <command> <args> [optional parameters]
-
-Commands:
---input <filepath>
-Specifies the path to the file to use as input.
-
---input-format <auto|pb|mb|f1|obj|dae|fbx>
-Specifies the input format of the specified input file. Default is auto.
-
---output <filepath>
-Specifies the path to the file to save the output to.
-
---output-format <auto|pb|mb|f1|obj|dae|fbx>    
-Specifies the conversion output format.
-
---assimp-input-anim
-When specifies, the input is treated as an animation file, rather than a model file which affects the conversion process.
-
---assimp-output-pb-anim
-When specified, animations found within the given packed model file are exported when exporting a PB model obj/dae/fbx.
-
---pb-replace-input <filepath>
-Specifies the base PB file to use for the conversion.
-
---pb-replace-motion-index <index>
-Specifies the index of the motion in the PB file to replace.
-
---pb-replace-motion-pack-index <index>
-Specifies the index of the motion pack in the PB file to replace. Default is 0.
-
---pb-replace-motion-model-index <index>
-Specifies the index of the model in the PB file to use when repplacing motions. Default is 0.
-
---tmx-scale <decimal scale factor>
-Specifies the scaling used for texture conversions. Default is 1.0.
-
---mb-material-overlays
-When specified, enables the usage of overlay materials.
-
---mb-unweighted-mesh-type <1|8>
-Specifies the mesh type to be used for unweighted meshes. Default is 1.
-
---mb-weighted-mesh-type <2|7>
-Specifies the mesh type to be used for weighted meshes. Default is 7.
-
---mb-mesh-weight-limit <integer>
-Specifies the max number of weights to be used per mesh. Default is 4. 3 might give better results.
-
---mb-batch-vertex-limit <integer>
-Specifies the max number of vertices to be used per batch. Default is 24.
-
---f1-lb-replace-input <filepath>
-Specifies the base field LB file to use for the conversion.
-";
-
-        public static string Input { get; set; }
-
-        public static InputFormat InputFormat { get; set; }
-
-        public static string Output { get; set; }
-
-        public static OutputFormat OutputFormat { get; set; }
-
-        public static bool AssimpInputAnim { get; set; } = false;
-
-        public static bool AssimpOutputPbAnim { get; set; } = false;
-
-        public static string PbReplaceInput { get; set; }
-
-        public static int PbReplaceMotionIndex { get; set; } = -1;
-
-        public static int PbReplaceMotionPackIndex { get; set; } = 0;
-
-        public static int PbReplaceMotionModelIndex { get; set; } = 0;
-
-        public static float TmxScale { get; set; } = 1f;
-
-        public static bool MbMaterialEnableOverlays { get; set; } = false;
-
-        public static MeshType MbWeightedMeshType { get; set; } = MeshType.Type7;
-
-        public static MeshType MbUnweightedMeshType { get; set; } = MeshType.Type1;
-
-        public static int MbMeshWeightLimit { get; set; } = 4;
-
-        public static int MbBatchVertexLimit { get; set; } = 24;
-
-        public static string F1LbReplaceInput { get; set; }
+        public static ProgramOptions Options { get; set; }
 
         static void Main( string[] args )
         {
             if ( args.Length == 0 )
             {
-                Console.WriteLine( Usage );
+                Console.WriteLine( About );
                 return;
             }
 
             if ( !ParseArgs( args ) )
             {
-                Console.WriteLine( Usage );
+                Console.WriteLine( About );
                 return;
             }
 
@@ -154,7 +64,7 @@ Specifies the base field LB file to use for the conversion.
             try
 #endif
             {
-                switch ( InputFormat )
+                switch ( Options.InputFormat )
                 {
                     case InputFormat.PB:
                         ConvertPB();
@@ -187,16 +97,16 @@ Specifies the base field LB file to use for the conversion.
 
         private static void ConvertPB()
         {
-            var modelPack = new ModelPack(Input);
+            var modelPack = new ModelPack(Options.Input);
 
-            switch ( OutputFormat )
+            switch ( Options.OutputFormat )
             {
                 case OutputFormat.PB:
-                    modelPack.Save( Output );
+                    modelPack.Save( Options.Output );
                     break;
                 case OutputFormat.MB:
                     for ( int i = 0; i < modelPack.Models.Count; i++ )
-                        modelPack.Models[i].Save( modelPack.Models.Count == 1 ? Output : $"{Path.GetFileNameWithoutExtension( Output )}_{i}.MB" );
+                        modelPack.Models[i].Save( modelPack.Models.Count == 1 ? Options.Output : $"{Path.GetFileNameWithoutExtension( Options.Output )}_{i}.MB" );
                     break;
                 case OutputFormat.OBJ:
                 case OutputFormat.DAE:
@@ -204,20 +114,20 @@ Specifies the base field LB file to use for the conversion.
                     for ( int i = 0; i < modelPack.Models.Count; i++ )
                     {
                         var modelOutfilePath = modelPack.Models.Count == 1 ?
-                                Output :
-                                $"{Path.GetFileNameWithoutExtension( Output )}_{i}.{OutputFormat}";
+                                Options.Output :
+                                $"{Path.GetFileNameWithoutExtension( Options.Output )}_{i}.{Options.OutputFormat}";
 
                         AssimpModelExporter.Instance.Export( modelPack.Models[i], modelOutfilePath, modelPack.TexturePack );
 
-                        if ( AssimpOutputPbAnim )
+                        if ( Options.Assimp.OutputPbMotion )
                         {
                             for ( int j = 0; j < modelPack.MotionPacks.Count; j++ )
                             {
                                 for ( int k = 0; k < modelPack.MotionPacks[j].Motions.Count; k++ )
                                 {
                                     var outfilePath = modelPack.MotionPacks.Count == 1 ?
-                                            $"{Path.GetFileNameWithoutExtension( Output )}_m_{j}.{OutputFormat}" :
-                                            $"{Path.GetFileNameWithoutExtension( Output )}_mp_{j}_m_{k}.{OutputFormat}";
+                                            $"{Path.GetFileNameWithoutExtension( Options.Output )}_m_{j}.{Options.OutputFormat}" :
+                                            $"{Path.GetFileNameWithoutExtension( Options.Output )}_mp_{j}_m_{k}.{Options.OutputFormat}";
 
                                     AssimpMotionExporter.Instance.Export( modelPack.Models[i], modelPack.MotionPacks[j].Motions[k], outfilePath );
                                 }
@@ -232,22 +142,22 @@ Specifies the base field LB file to use for the conversion.
 
         private static void ConvertMB()
         {
-            var model = Resource.Load<Model>(Input);
+            var model = Resource.Load<Model>(Options.Input);
 
-            switch ( OutputFormat )
+            switch ( Options.OutputFormat )
             {
                 case OutputFormat.PB:
                     var modelPack = new ModelPack();
                     modelPack.Models.Add( model );
-                    modelPack.Save( Output );
+                    modelPack.Save( Options.Output );
                     break;
                 case OutputFormat.MB:
-                    model.Save( Output );
+                    model.Save( Options.Output );
                     break;
                 case OutputFormat.OBJ:
                 case OutputFormat.DAE:
                 case OutputFormat.FBX:
-                    AssimpModelExporter.Instance.Export( model, Output );
+                    AssimpModelExporter.Instance.Export( model, Options.Output );
                     break;
                 default:
                     throw new Exception( "Unsupported output format" );
@@ -256,12 +166,12 @@ Specifies the base field LB file to use for the conversion.
 
         private static void ConvertF1()
         {
-            var fieldScene = new FieldScene(Input);
+            var fieldScene = new FieldScene(Options.Input);
 
-            switch ( OutputFormat )
+            switch ( Options.OutputFormat )
             {
                 case OutputFormat.F1:
-                    fieldScene.Save( Output );
+                    fieldScene.Save( Options.Output );
                     break;
                 case OutputFormat.OBJ:
                 case OutputFormat.DAE:
@@ -275,7 +185,7 @@ Specifies the base field LB file to use for the conversion.
                             var model = ( Model )obj.Resource;
                             model.Nodes[0].Transform *= obj.Transform.Matrix;
                             AssimpModelExporter.Instance.Export( model, 
-                                Path.Combine( Path.GetDirectoryName( Output ), obj.Name, Path.GetExtension( Output ) ) );
+                                Path.Combine( Path.GetDirectoryName( Options.Output ), obj.Name, Path.GetExtension( Options.Output ) ) );
                         }
                     }
                     break;
@@ -286,34 +196,36 @@ Specifies the base field LB file to use for the conversion.
 
         private static void ConvertAssimpModel()
         {
-            switch ( OutputFormat )
+            switch ( Options.OutputFormat )
             {
                 case OutputFormat.PB:
-                    if ( !AssimpInputAnim )
+                    if ( !Options.Assimp.TreatInputAsAnimation )
                     {
                         var modelPack = new ModelPack();
-                        if ( PbReplaceInput != null )
-                            modelPack.Load( PbReplaceInput );
+                        if ( Options.PackedModel.ReplaceInput != null )
+                            modelPack.Load( Options.PackedModel.ReplaceInput );
 
-                        modelPack.Replace( Input, TmxScale, MbMaterialEnableOverlays, MbWeightedMeshType, MbUnweightedMeshType, MbMeshWeightLimit, MbBatchVertexLimit );
+                        modelPack.Replace( Options.Input, Options.TmxScale, Options.Model.EnableMaterialOverlays, Options.Model.WeightedMeshType, 
+                            Options.Model.UnweightedMeshType, Options.Model.MeshWeightLimit, Options.Model.BatchVertexLimit );
                     }
                     else
                     {
                         var modelPack = new ModelPack();
-                        if ( PbReplaceInput != null )
-                            modelPack.Load( PbReplaceInput );
+                        if ( Options.PackedModel.ReplaceInput != null )
+                            modelPack.Load( Options.PackedModel.ReplaceInput );
 
                         var newMotion =
-                        AssimpMotionImporter.Instance.Import( Input,
+                        AssimpMotionImporter.Instance.Import( Options.Input,
                                                           new AssimpMotionImporter.Config
                                                           {
-                                                              NodeIndexResolver = n => modelPack.Models[PbReplaceMotionModelIndex].Nodes.FindIndex( x => x.Name == n )
+                                                              NodeIndexResolver = n => modelPack.Models[Options.PackedModel.ReplaceMotionModelIndex].Nodes.FindIndex( x => x.Name == n )
                                                           });
                         
-                        if ( PbReplaceMotionIndex < 0 || ( PbReplaceMotionIndex + 1 ) > modelPack.MotionPacks[PbReplaceMotionPackIndex].Motions.Count )
+                        if ( Options.PackedModel.ReplaceMotionIndex < 0 || ( Options.PackedModel.ReplaceMotionIndex + 1 ) >
+                            modelPack.MotionPacks[Options.PackedModel.ReplaceMotionPackIndex].Motions.Count )
                         {
-                            modelPack.MotionPacks[PbReplaceMotionPackIndex].Motions[PbReplaceMotionIndex] = newMotion;
-                            modelPack.Save( Output );
+                            modelPack.MotionPacks[Options.PackedModel.ReplaceMotionPackIndex].Motions[Options.PackedModel.ReplaceMotionIndex] = newMotion;
+                            modelPack.Save( Options.Output );
                         }
                     }
                     break;
@@ -323,10 +235,11 @@ Specifies the base field LB file to use for the conversion.
                         var model = new Model();
                         model.Nodes.Add( new Node { Name = "model" } );
                         modelPack.Models.Add( model );
-                        modelPack.Replace( Input, TmxScale, MbMaterialEnableOverlays, MbWeightedMeshType, MbUnweightedMeshType, MbMeshWeightLimit, MbBatchVertexLimit );
+                        modelPack.Replace( Options.Input, Options.TmxScale, Options.Model.EnableMaterialOverlays,
+                            Options.Model.WeightedMeshType, Options.Model.UnweightedMeshType, Options.Model.MeshWeightLimit, Options.Model.BatchVertexLimit );
 
                         var lb = new LBFileSystem();
-                        lb.Load( F1LbReplaceInput );
+                        lb.Load( Options.Field.LbReplaceInput );
 
                         var f1Handle = lb.GetHandle( "F1" );
 
@@ -346,7 +259,7 @@ Specifies the base field LB file to use for the conversion.
                             lb.AddFile( tbHandle, modelPack.TexturePack.Save(), true, ConflictPolicy.Replace );
                         }
 
-                        lb.Save( Output );
+                        lb.Save( Options.Output );
                     }
                     break;
                 default:
@@ -358,113 +271,19 @@ Specifies the base field LB file to use for the conversion.
         {
             try
             {
-                string inputFormat = null;
-                string outputFormat = null;
-
-                for ( int i = 0; i < args.Length; i++ )
-                {
-                    var cmd = args[i];
-
-                    string GetNextArg()
-                    {
-                        if ( ( i + 1 )  > ( args.Length - 1 ) )
-                            throw new Exception( $"Missing required argument for {cmd}" );
-
-                        return args[++i];
-                    }
-
-                    string TryGetNextParam( string defaultValue = "" )
-                    {
-                        if ( ( i + 1 ) > ( args.Length - 1 ) )
-                            return defaultValue;
-
-                        return args[++i];
-                    }
-
-                    switch ( cmd )
-                    {
-                        case "--input":
-                            Input = GetNextArg();
-                            break;
-
-                        case "--input-format":
-                            inputFormat = GetNextArg();
-                            break;
-
-                        case "--output":
-                            Output = GetNextArg();
-                            break;
-
-                        case "--output-format":
-                            outputFormat = GetNextArg();
-                            break;
-
-                        case "--assimp-input-anim":
-                            AssimpInputAnim = true;
-                            break;
-
-                        case "--assimp-output-pb-anim":
-                            AssimpOutputPbAnim = true;
-                            break;
-
-                        case "--pb-replace-input":
-                            PbReplaceInput = GetNextArg();
-                            break;
-
-                        case "--pb-replace-animation-index":
-                            PbReplaceMotionIndex = int.Parse( GetNextArg() );
-                            break;
-
-                        case "--tmx-scale":
-                            TmxScale = float.Parse( GetNextArg(), NumberStyles.Float, CultureInfo.InvariantCulture );
-                            break;
-
-                        case "--mb-material-overlays":
-                            MbMaterialEnableOverlays = true;
-                            break;
-
-                        case "--mb-unweighted-mesh-type":
-                            MbUnweightedMeshType = ( MeshType )( int.Parse( GetNextArg() ) );
-                            break;
-
-                        case "--mb-weighted-mesh-type":
-                            MbUnweightedMeshType = ( MeshType )( int.Parse( GetNextArg() ) );
-                            break;
-
-                        case "--mb-mesh-weight-limit":
-                            MbMeshWeightLimit = int.Parse( GetNextArg() );
-                            break;
-
-                        case "--mb-batch-vertex-limit":
-                            MbBatchVertexLimit = int.Parse( GetNextArg() );
-                            break;
-
-                        case "--f1-lb-replace-input":
-                            F1LbReplaceInput = GetNextArg();
-                            break;
-
-                        default:
-                            Console.WriteLine( $"Unrecognized command: {cmd}" );
-                            break;
-                    }
-                }
+                Options = SimpleCommandLineParser.Default.Parse<ProgramOptions>( args );
 
                 //-- Validate given input
-
-                if ( Input == null ) throw new Exception( "Missing input parameter" );
-
-                if ( inputFormat == null || inputFormat.Equals( "auto", StringComparison.OrdinalIgnoreCase ) )
+                if ( Options.InputFormat == InputFormat.Unknown )
                 {
-                    InputFormat = ( InputFormat )Enum.Parse( typeof( InputFormat ), Path.GetExtension( Input )
+                    Options.InputFormat = ( InputFormat )Enum.Parse( typeof( InputFormat ), Path.GetExtension( Options.Input )
                         .TrimStart( '.' )
                         .ToLower(), true );
                 }
 
-                if ( Output == null ) throw new Exception( "Missing output parameter" );
-
-                if ( outputFormat == null || outputFormat.Equals( "auto", StringComparison.OrdinalIgnoreCase ) )
+                if ( Options.OutputFormat == OutputFormat.Unknown )
                 {
-                    OutputFormat = ( OutputFormat )Enum.Parse( typeof( OutputFormat ), Path.GetExtension( Output )
+                    Options.OutputFormat = ( OutputFormat )Enum.Parse( typeof( OutputFormat ), Path.GetExtension( Options.Output )
                         .TrimStart( '.' )
                         .ToLower(), true );
                 }
@@ -476,6 +295,86 @@ Specifies the base field LB file to use for the conversion.
                 Console.WriteLine( e.Message );
                 return false;
             }
+        }
+    }
+
+    public class ProgramOptions
+    {
+        [Option( "i", "input", "filepath", "Specifies the path to the file to use as input.", Required = true )]
+        public string Input { get; set; }
+
+        [Option( "if", "input-format", "auto|pb|mb|f1|obj|dae|fbx", "Specifies the input format of the specified input file." )]
+        public InputFormat InputFormat { get; set; }
+
+        [Option( "o", "output", "filepath", "Specifies the path to the file to save the output to.", Required = true )]
+        public string Output { get; set; }
+
+        [Option( "of", "output-format", "auto|pb|mb|f1|obj|dae|fbx", "Specifies the conversion output format." )]
+        public OutputFormat OutputFormat { get; set; }
+
+        [Group( "ai" )]
+        public AssimpOptions Assimp { get; set; }
+
+        [Group( "pb" )]
+        public PackedModelOptions PackedModel { get; set; }
+
+        [Option( "ts", "tmx-scale", "decimal scale factor", "Specifies the scaling used for texture conversions.", DefaultValue = 1.0f )]
+        public float TmxScale { get; set; }
+
+        [Group( "mb" )]
+        public ModelOptions Model { get; set; }
+
+        [Group( "f1" )]
+        public FieldOptions Field { get; set; }
+
+        public class AssimpOptions
+        {
+            [Option( "a", "input-anim", "When specified, the input is treated as an animation file, rather than a model file which affects the conversion process." )]
+            public bool TreatInputAsAnimation { get; set; }
+
+            [Option( "pbm", "output-pb-motion", "When specified, motions found within the given packed model file are exported when exporting a PB model obj/dae/fbx." )]
+            public bool OutputPbMotion { get; set; }
+        }
+        public class PackedModelOptions
+        {
+            [Option( "i", "replace-input", "filepath", "Specifies the base PB file to use for the conversion." )]
+            public string ReplaceInput { get; set; }
+
+            [Option( "mi", "replace-motion-index", "0-based index", "Specifies the index of the motion in the PB file to replace." )]
+            public int ReplaceMotionIndex { get; set; } = -1;
+
+            [Option( "mpi", "replace-motion-pack-index", "0-based index", "Specifies the index of the motion pack in the PB file to replace.", DefaultValue = 0 )]
+            public int ReplaceMotionPackIndex { get; set; }
+
+            [Option( "mmi", "replace-motion-model-index", "0-based index", "Specifies the index of the model in the PB file to use when replacing motions.", DefaultValue = 0 )]
+            public int ReplaceMotionModelIndex { get; set; }
+        }
+
+        public class ModelOptions
+        {
+            [Option( "mo", "material-overlays", "When specified, enables the usage of overlay materials." )]
+            public bool EnableMaterialOverlays { get; set; }
+
+
+            [Option( "umt", "unweighted-mesh-type", "1|8", "Specifies the mesh type to be used for unweighted meshes.", DefaultValue = 1 )]
+            public MeshType UnweightedMeshType { get; set; }
+
+
+            [Option( "wmt", "weighted-mesh-type", "2|7", "Specifies the mesh type to be used for weighted meshes.", DefaultValue = 7 )]
+            public MeshType WeightedMeshType { get; set; }
+
+
+            [Option( "wl", "mesh-weight-limit", "integer", "Specifies the max number of weights to be used per mesh. 3 might give better results.", DefaultValue = 4 )]
+            public int MeshWeightLimit { get; set; }
+
+            [Option( "vl", "batch-vertex-limit", "integer", "Specifies the max number of vertices to be used per batch.", DefaultValue = 24 )]
+            public int BatchVertexLimit { get; set; }
+        }
+
+        public class FieldOptions
+        {
+            [Option( "lbi", "lb-replace-input", "filepath", "Specifies the base field LB file to use for the conversion." )]
+            public string LbReplaceInput { get; set; }
         }
     }
 }

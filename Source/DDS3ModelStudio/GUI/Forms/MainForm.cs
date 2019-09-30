@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System.IO;
+using System.Windows.Forms;
 using DDS3ModelLibrary.Models;
 using DDS3ModelStudio.GUI.TreeView;
 using DDS3ModelStudio.GUI.TreeView.DataNodes;
@@ -13,8 +14,6 @@ namespace DDS3ModelStudio.GUI.Forms
 
             mDataTreeView.AfterSelect += HandleDataTreeViewAfterSelect;
             mDataTreeView.NodeUpdated += HandleDataTreeViewNodeUpdated;
-            var modelPackNode = DataNodeFactory.Create( "player_a.PB", new ModelPack( @"D:\Modding\DDS3\Nocturne\DDS3_OUT\model\field\player_a.PB" ) );
-            mDataTreeView.TopNode = new DataTreeNode( modelPackNode );
         }
 
         private void HandleDataTreeViewNodeUpdated( object sender, TreeViewEventArgs e )
@@ -27,6 +26,18 @@ namespace DDS3ModelStudio.GUI.Forms
         {
             var node = ( DataTreeNode )e.Node;
             mPropertyGrid.SelectedObject = node.DataNode;
+        }
+
+        private void MOpenToolStripMenuItem_Click( object sender, System.EventArgs e )
+        {
+            using ( var dlg = new OpenFileDialog())
+            {
+                if ( dlg.ShowDialog() != DialogResult.OK )
+                    return;
+
+                var modelPackNode = DataNodeFactory.Create( Path.GetFileName( dlg.FileName ), new ModelPack( dlg.FileName ) );
+                mDataTreeView.TopNode = new DataTreeNode( modelPackNode );
+            }
         }
     }
 }

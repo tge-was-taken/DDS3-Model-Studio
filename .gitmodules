@@ -1,0 +1,3 @@
+[submodule "Externals/SimpleCommandLine"]
+	path = Externals/SimpleCommandLine
+	url = https://github.com/TGEnigma/SimpleCommandLine

@@ -60,8 +60,9 @@
             // mOpenToolStripMenuItem
             // 
             this.mOpenToolStripMenuItem.Name = "mOpenToolStripMenuItem";
-            this.mOpenToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.mOpenToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.mOpenToolStripMenuItem.Text = "Open";
+            this.mOpenToolStripMenuItem.Click += new System.EventHandler(this.MOpenToolStripMenuItem_Click);
             // 
             // mContextMenuStrip
             // 
@@ -81,6 +82,7 @@
             this.mDataTreeView.Name = "mDataTreeView";
             this.mDataTreeView.Size = new System.Drawing.Size(344, 315);
             this.mDataTreeView.TabIndex = 0;
+            this.mDataTreeView.TopNode = null;
             // 
             // mPropertyGrid
             // 
