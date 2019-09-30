@@ -294,7 +294,7 @@ namespace DDS3ModelLibrary.Materials
                             TextureId = reader.ReadInt32();
                             break;
                         case MaterialFlags.FloatArray1:
-                            FloatArray1 = reader.ReadSingles( 5 );
+                            FloatArray1 = reader.ReadSingleArray( 5 );
                             break;
                         case MaterialFlags.Color3:
                             Color3 = reader.ReadColor();
@@ -303,7 +303,7 @@ namespace DDS3ModelLibrary.Materials
                             OverlayTextureIds = reader.ReadInt16Array( 2 );
                             break;
                         case MaterialFlags.FloatArray2:
-                            FloatArray2 = reader.ReadSingles( 5 );
+                            FloatArray2 = reader.ReadSingleArray( 5 );
                             break;
                         case MaterialFlags.Color4:
                             Color4 = reader.ReadColor();
@@ -315,7 +315,7 @@ namespace DDS3ModelLibrary.Materials
                             Float1 = reader.ReadSingle();
                             break;
                         case MaterialFlags.FloatArray3:
-                            FloatArray3 = reader.ReadSingles( 2 );
+                            FloatArray3 = reader.ReadSingleArray( 2 );
                             break;
                         default:
                             throw new InvalidDataException( "Unknown material flag" );

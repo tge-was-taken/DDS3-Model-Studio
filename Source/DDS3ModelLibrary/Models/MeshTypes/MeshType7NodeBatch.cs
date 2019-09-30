@@ -23,18 +23,18 @@ namespace DDS3ModelLibrary.Models
             NodeIndex = ( short )context;
 
             var positionsPacket = reader.ReadObject<VifPacket>();
-            positionsPacket.Ensure( null, true, false, null, VifUnpackElementFormat.Float, 4 );
-            Positions = positionsPacket.Vector4s;
+            VifValidationHelper.Ensure( positionsPacket, null, true, false, null, VifUnpackElementFormat.Float, 4 );
+            Positions = positionsPacket.Vector4Array;
 
             // @NOTE(TGE): Not a single mesh type 7 mesh has the normals flag not set so I'm not sure if the flag is checked for.
             var normalsPacket = reader.ReadObject<VifPacket>();
-            normalsPacket.Ensure( null, true, false, VertexCount, VifUnpackElementFormat.Float, 3 );
-            Normals = normalsPacket.Vector3s;
+            VifValidationHelper.Ensure( normalsPacket, null, true, false, VertexCount, VifUnpackElementFormat.Float, 3 );
+            Normals = normalsPacket.Vector3Array;
 
             var cmdTag = reader.ReadObject<VifCode>();
             if ( cmdTag.Command == VifCommand.ActMicro )
             {
-                cmdTag.Ensure( 0x14, 0, VifCommand.ActMicro );
+                VifValidationHelper.Ensure( cmdTag, 0x14, 0, VifCommand.ActMicro );
             }
             else if ( cmdTag.Command != VifCommand.CntMicro )
             {
@@ -63,11 +63,11 @@ namespace DDS3ModelLibrary.Models
                     // TODO: use flags for this
                     if ( packet.ElementFormat == VifUnpackElementFormat.Float && packet.ElementCount == 4 )
                     {
-                        Positions = packet.Vector4s;
+                        Positions = packet.Vector4Array;
                     }
                     else if ( packet.ElementFormat == VifUnpackElementFormat.Float && packet.ElementCount == 3 )
                     {
-                        Normals = packet.Vector3s;
+                        Normals = packet.Vector3Array;
                     }
                     else
                     {

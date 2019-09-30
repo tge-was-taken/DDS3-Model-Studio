@@ -94,7 +94,7 @@ namespace DDS3ModelLibrary.Motions
 
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
-            Values = reader.ReadSingles( 5 );
+            Values = reader.ReadSingleArray( 5 );
         }
 
         void IBinarySerializable.Write( EndianBinaryWriter writer, object context )

@@ -72,7 +72,7 @@ namespace DDS3ModelLibrary.Models
 
             if ( Flags.HasFlag( MeshFlags.TexCoord2 ) )
             {
-                TexCoords2 = reader.ReadVector2s( vertexCount );
+                TexCoords2 = reader.ReadVector2Array( vertexCount );
             }
 
             Debug.Assert( Flags == flags, "Flags doesn't match value read from file" );

@@ -158,10 +158,10 @@ namespace DDS3ModelLibrary.Models
                 BlendShapes.Add( reader.ReadObject<MeshType5BlendShape>( vertexCount ) );
 
             if ( flags.HasFlag( MeshFlags.TexCoord ) )
-                TexCoords = reader.ReadVector2s( vertexCount );
+                TexCoords = reader.ReadVector2Array( vertexCount );
 
             if ( flags.HasFlag( MeshFlags.TexCoord2 ) )
-                TexCoords2 = reader.ReadVector2s( vertexCount );
+                TexCoords2 = reader.ReadVector2Array( vertexCount );
 
             // TODO: where does this go? the only meshes that use this dont have blend shapes or even texcoords
             if ( usedNodeCount > 0 )

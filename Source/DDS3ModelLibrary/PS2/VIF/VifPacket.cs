@@ -75,55 +75,55 @@ namespace DDS3ModelLibrary.PS2.VIF
 
         public object Elements { get; protected set; }
 
-        public float[] Floats
+        public float[] SingleArray
         {
             get => ( float[] ) Elements;
             set => Elements = value;
         }
 
-        public Vector2[] Vector2s
+        public Vector2[] Vector2Array
         {
             get => ( Vector2[] )Elements;
             set => Elements = value;
         }
 
-        public Vector3[] Vector3s
+        public Vector3[] Vector3Array
         {
             get => ( Vector3[] )Elements;
             set => Elements = value;
         }
 
-        public Vector4[] Vector4s
+        public Vector4[] Vector4Array
         {
             get => ( Vector4[] )Elements;
             set => Elements = value;
         }
 
-        public short[] Shorts
+        public short[] Int16Array
         {
             get => ( short[] )Elements;
             set => Elements = value;
         }
 
-        public short[][] ShortArrays
+        public short[][] Int16Arrays
         {
             get => ( short[][] )Elements;
             set => Elements = value;
         }
 
-        public ushort[] UnsignedShorts
+        public ushort[] UInt16Array
         {
             get => ( ushort[] )Elements;
             set => Elements = value;
         }
 
-        public ushort[][] UnsignedShortArrays
+        public ushort[][] UInt16Arrays
         {
             get => ( ushort[][] )Elements;
             set => Elements = value;
         }
 
-        public byte[] Bytes
+        public byte[] ByteArray
         {
             get => ( byte[] )Elements;
             set => Elements = value;
@@ -135,13 +135,13 @@ namespace DDS3ModelLibrary.PS2.VIF
             set => Elements = value;
         }
 
-        public sbyte[] SignedBytes
+        public sbyte[] SByteArray
         {
             get => ( sbyte[] )Elements;
             set => Elements = value;
         }
 
-        public sbyte[][] SignedByteArrays
+        public sbyte[][] SByteArrays
         {
             get => ( sbyte[][] )Elements;
             set => Elements = value;
@@ -215,28 +215,6 @@ namespace DDS3ModelLibrary.PS2.VIF
             Initialize( address, true, flag, VifUnpackElementFormat.Byte, elements[0].Length, elements.Length, elements );
         }
 
-        [Conditional("DEBUG")]
-        public void Ensure( int? address, bool sign, bool flag, int? count, VifUnpackElementFormat format, int elementCount  )
-        {
-            if ( address.HasValue && Address != address.Value )
-                throw new InvalidDataException( $"Packet address is not {address}" );
-
-            if ( Sign != sign )
-                throw new InvalidDataException( $"Packet sign flag is not {sign}" );
-
-            if ( Flag != flag )
-                throw new InvalidDataException( $"Packet flag is not {flag}" );
-
-            if ( count.HasValue && Count != count )
-                throw new InvalidDataException( $"Packet count is not {count}" );
-
-            if ( ElementFormat != format )
-                throw new InvalidDataException( $"Packet element format is not {format}" );
-
-            if ( ElementCount != elementCount )
-                throw new InvalidDataException( $"Packet element count is not {elementCount}" );
-        }
-
         private void Initialize( int address, bool sign, bool flag, VifUnpackElementFormat format, int elementCount, int count, object elements )
         {
             mCommand      = ( byte )Command;
@@ -257,16 +235,16 @@ namespace DDS3ModelLibrary.PS2.VIF
                     switch ( ElementCount )
                     {
                         case 1:
-                            Floats = reader.ReadSingles( Count );
+                            SingleArray = reader.ReadSingleArray( Count );
                             break;
                         case 2:
-                            Vector2s = reader.ReadVector2s( Count );
+                            Vector2Array = reader.ReadVector2Array( Count );
                             break;
                         case 3:
-                            Vector3s = reader.ReadVector3s( Count );
+                            Vector3Array = reader.ReadVector3Array( Count );
                             break;
                         case 4:
-                            Vector4s = reader.ReadVector4Array( Count );
+                            Vector4Array = reader.ReadVector4Array( Count );
                             break;
                     }
                     break;
@@ -276,23 +254,23 @@ namespace DDS3ModelLibrary.PS2.VIF
                     {
                         case 1:
                             if ( Sign )
-                                Shorts = reader.ReadInt16Array( Count );
+                                Int16Array = reader.ReadInt16Array( Count );
                             else
-                                UnsignedShorts = reader.ReadUInt16s( Count );
+                                UInt16Array = reader.ReadUInt16Array( Count );
                             break;
 
                         default:
                             if ( Sign )
-                                ShortArrays = new short[Count][];
+                                Int16Arrays = new short[Count][];
                             else
-                                UnsignedShortArrays = new ushort[Count][];
+                                UInt16Arrays = new ushort[Count][];
 
                             for ( int i = 0; i < Count; i++ )
                             {
                                 if ( Sign )
-                                    ShortArrays[i] = reader.ReadInt16Array( ElementCount );
+                                    Int16Arrays[i] = reader.ReadInt16Array( ElementCount );
                                 else
-                                    UnsignedShortArrays[i] = reader.ReadUInt16s( ElementCount );
+                                    UInt16Arrays[i] = reader.ReadUInt16Array( ElementCount );
                             }
                             break;
                     }
@@ -302,21 +280,21 @@ namespace DDS3ModelLibrary.PS2.VIF
                     {
                         case 1:
                             if ( Sign )
-                                SignedBytes = reader.ReadSBytes( Count );
+                                SByteArray = reader.ReadSBytes( Count );
                             else
-                                Bytes = reader.ReadBytes( Count );
+                                ByteArray = reader.ReadBytes( Count );
                             break;
 
                         default:
                             if ( Sign )
-                                SignedByteArrays = new sbyte[Count][];
+                                SByteArrays = new sbyte[Count][];
                             else
                                 ByteArrays = new byte[Count][];
 
                             for ( int i = 0; i < Count; i++ )
                             {
                                 if ( Sign )
-                                    SignedByteArrays[i] = reader.ReadSBytes( ElementCount );
+                                    SByteArrays[i] = reader.ReadSBytes( ElementCount );
                                 else
                                     ByteArrays[i] = reader.ReadBytes( ElementCount );
                             }
@@ -334,16 +312,16 @@ namespace DDS3ModelLibrary.PS2.VIF
                     switch ( ElementCount )
                     {
                         case 1:
-                            writer.Write( Floats );
+                            writer.Write( SingleArray );
                             break;
                         case 2:
-                            writer.Write( Vector2s );
+                            writer.Write( Vector2Array );
                             break;
                         case 3:
-                            writer.Write( Vector3s );
+                            writer.Write( Vector3Array );
                             break;
                         case 4:
-                            writer.Write( Vector4s );
+                            writer.Write( Vector4Array );
                             break;
                     }
                     break;
@@ -353,18 +331,18 @@ namespace DDS3ModelLibrary.PS2.VIF
                     {
                         case 1:
                             if ( Sign )
-                                writer.Write( Shorts );
+                                writer.Write( Int16Array );
                             else
-                                writer.Write( UnsignedShorts );
+                                writer.Write( UInt16Array );
                             break;
 
                         default:
                             for ( int i = 0; i < Count; i++ )
                             {
                                 if ( Sign )
-                                    writer.Write( ShortArrays[i] );
+                                    writer.Write( Int16Arrays[i] );
                                 else
-                                    writer.Write( UnsignedShortArrays[i] );
+                                    writer.Write( UInt16Arrays[i] );
                             }
                             break;
                     }
@@ -374,16 +352,16 @@ namespace DDS3ModelLibrary.PS2.VIF
                     {
                         case 1:
                             if ( Sign )
-                                writer.Write( SignedBytes );
+                                writer.Write( SByteArray );
                             else
-                                writer.Write( Bytes );
+                                writer.Write( ByteArray );
                             break;
 
                         default:
                             for ( int i = 0; i < Count; i++ )
                             {
                                 if ( Sign )
-                                    writer.Write( SignedByteArrays[i] );
+                                    writer.Write( SByteArrays[i] );
                                 else
                                     writer.Write( ByteArrays[i] );
                             }
@@ -391,6 +369,51 @@ namespace DDS3ModelLibrary.PS2.VIF
                     }
                     break;
             }
+        }
+    }
+
+    internal class VifValidationHelper
+    {
+        [Conditional("DEBUG")]
+        public static void Ensure( VifCode code, int immediate, int count, VifCommand command )
+        {
+            if ( code.Immediate != immediate )
+                throw new InvalidDataException( $"Vifcode immediate value is not {immediate}" );
+
+            if ( code.Count != count )
+                throw new InvalidDataException( $"Vifcode count value is not {count}" );
+
+            if ( code.Command != command )
+                throw new InvalidDataException( $"Vifcode command type is not {command}" );
+        }
+
+        [Conditional( "DEBUG" )]
+        public static void Ensure( VifPacket packet, int? address, bool sign, bool flag, int? count, VifUnpackElementFormat format, int elementCount )
+        {
+            if ( address.HasValue && packet.Address != address.Value )
+                throw new InvalidDataException( $"Packet address is not {address}" );
+
+            if ( packet.Sign != sign )
+                throw new InvalidDataException( $"Packet sign flag is not {sign}" );
+
+            if ( packet.Flag != flag )
+                throw new InvalidDataException( $"Packet flag is not {flag}" );
+
+            if ( count.HasValue && packet.Count != count )
+                throw new InvalidDataException( $"Packet count is not {count}" );
+
+            if ( packet.ElementFormat != format )
+                throw new InvalidDataException( $"Packet element format is not {format}" );
+
+            if ( packet.ElementCount != elementCount )
+                throw new InvalidDataException( $"Packet element count is not {elementCount}" );
+        }
+
+        [Conditional( "DEBUG" )]
+        public static void ValidateActivateMicro( VifCode code  )
+        {
+            if ( code.Command != VifCommand.ActMicro || ( code.Immediate != 0x0C && code.Immediate != 0x10 ) )
+                throw new InvalidDataException( "Invalid ActMicro Vifcode" );
         }
     }
 }

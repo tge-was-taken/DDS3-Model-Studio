@@ -278,7 +278,7 @@ namespace DDS3ModelLibrary.IO.Common
             return actual;
         }
 
-        public ushort[] ReadUInt16s( int count )
+        public ushort[] ReadUInt16Array( int count )
         {
             var array = new ushort[count];
             for ( var i = 0; i < array.Length; i++ )
@@ -376,7 +376,7 @@ namespace DDS3ModelLibrary.IO.Common
             return actual;
         }
 
-        public float[] ReadSingles( int count )
+        public float[] ReadSingleArray( int count )
         {
             var array = new float[count];
             for ( var i = 0; i < array.Length; i++ )
@@ -453,7 +453,7 @@ namespace DDS3ModelLibrary.IO.Common
             return new Vector2( ReadSingle(), ReadSingle() );
         }
 
-        public Vector2[] ReadVector2s( int count )
+        public Vector2[] ReadVector2Array( int count )
         {
             var array = new Vector2[count];
             for ( var i = 0; i < array.Length; i++ )
@@ -467,7 +467,7 @@ namespace DDS3ModelLibrary.IO.Common
             return new Vector3( ReadSingle(), ReadSingle(), ReadSingle() );
         }
 
-        public Vector3[] ReadVector3s( int count )
+        public Vector3[] ReadVector3Array( int count )
         {
             var array = new Vector3[count];
             for ( var i = 0; i < array.Length; i++ )

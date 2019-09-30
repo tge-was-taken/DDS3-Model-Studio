@@ -103,7 +103,7 @@ namespace DDS3ModelLibrary.Models
 
             for ( var i = 0; i < NodeBatches.Count; i++ )
             {
-                nodeBatchContext.Last = i == NodeBatches.Count - 1;
+                nodeBatchContext.IsLastBatch = i == NodeBatches.Count - 1;
                 writer.WriteObject( NodeBatches[i], nodeBatchContext );
             }
         }

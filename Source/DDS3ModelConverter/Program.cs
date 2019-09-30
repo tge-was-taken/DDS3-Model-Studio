@@ -8,6 +8,7 @@ using DDS3ModelLibrary.Motions.Conversion;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -199,34 +200,36 @@ namespace DDS3ModelConverter
             switch ( Options.OutputFormat )
             {
                 case OutputFormat.PB:
-                    if ( !Options.Assimp.TreatInputAsAnimation )
                     {
+                        if ( Options.PackedModel.ReplaceInput == null )
+                            throw new Exception( "You must specify a PB replacement input for conversion to PB" );
+
                         var modelPack = new ModelPack();
                         if ( Options.PackedModel.ReplaceInput != null )
                             modelPack.Load( Options.PackedModel.ReplaceInput );
 
-                        modelPack.Replace( Options.Input, Options.TmxScale, Options.Model.EnableMaterialOverlays, Options.Model.WeightedMeshType, 
-                            Options.Model.UnweightedMeshType, Options.Model.MeshWeightLimit, Options.Model.BatchVertexLimit );
-                    }
-                    else
-                    {
-                        var modelPack = new ModelPack();
-                        if ( Options.PackedModel.ReplaceInput != null )
-                            modelPack.Load( Options.PackedModel.ReplaceInput );
-
-                        var newMotion =
+                        if ( !Options.Assimp.TreatInputAsAnimation )
+                        {
+                            modelPack.Replace( Options.Input, Options.TmxScale, Options.Model.EnableMaterialOverlays, Options.Model.WeightedMeshType,
+                                Options.Model.UnweightedMeshType, Options.Model.MeshWeightLimit, Options.Model.BatchVertexLimit );
+                        }
+                        else
+                        {
+                            var newMotion =
                         AssimpMotionImporter.Instance.Import( Options.Input,
                                                           new AssimpMotionImporter.Config
                                                           {
                                                               NodeIndexResolver = n => modelPack.Models[Options.PackedModel.ReplaceMotionModelIndex].Nodes.FindIndex( x => x.Name == n )
                                                           });
-                        
-                        if ( Options.PackedModel.ReplaceMotionIndex < 0 || ( Options.PackedModel.ReplaceMotionIndex + 1 ) >
-                            modelPack.MotionPacks[Options.PackedModel.ReplaceMotionPackIndex].Motions.Count )
-                        {
-                            modelPack.MotionPacks[Options.PackedModel.ReplaceMotionPackIndex].Motions[Options.PackedModel.ReplaceMotionIndex] = newMotion;
-                            modelPack.Save( Options.Output );
+
+                            if ( Options.PackedModel.ReplaceMotionIndex < 0 || ( Options.PackedModel.ReplaceMotionIndex + 1 ) >
+                                modelPack.MotionPacks[Options.PackedModel.ReplaceMotionPackIndex].Motions.Count )
+                            {
+                                modelPack.MotionPacks[Options.PackedModel.ReplaceMotionPackIndex].Motions[Options.PackedModel.ReplaceMotionIndex] = newMotion;
+                            }
                         }
+
+                        modelPack.Save( Options.Output );
                     }
                     break;
                 case OutputFormat.F1:

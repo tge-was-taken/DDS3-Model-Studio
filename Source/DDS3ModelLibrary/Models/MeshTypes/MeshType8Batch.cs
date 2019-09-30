@@ -40,29 +40,29 @@ namespace DDS3ModelLibrary.Models
             var flags = ( MeshFlags )context;
 
             var headerPacket = reader.ReadObject<VifPacket>();
-            headerPacket.Ensure( 0xFF, true, false, 1, VifUnpackElementFormat.Short, 2 );
+            VifValidationHelper.Ensure( headerPacket, 0xFF, true, false, 1, VifUnpackElementFormat.Short, 2 );
 
-            var vertexCount = headerPacket.ShortArrays[0][0];
-            if ( headerPacket.ShortArrays[ 0 ][ 1 ] != 0 )
-                throw new InvalidDataException();
+            var vertexCount = headerPacket.Int16Arrays[0][0];
+            if ( headerPacket.Int16Arrays[0][1] != 0 )
+                throw new InvalidDataException( "Header packet second short is not 0" );
 
             var positionsPacket = reader.ReadObject<VifPacket>();
-            positionsPacket.Ensure( 0, true, false, vertexCount, VifUnpackElementFormat.Float, 3 );
-            Positions = positionsPacket.Vector3s;
+            VifValidationHelper.Ensure( positionsPacket, 0, true, false, vertexCount, VifUnpackElementFormat.Float, 3 );
+            Positions = positionsPacket.Vector3Array;
 
             var normalsPacket = reader.ReadObject<VifPacket>();
-            normalsPacket.Ensure( 0x18, true, false, vertexCount, VifUnpackElementFormat.Float, 3 );
-            Normals = normalsPacket.Vector3s;
+            VifValidationHelper.Ensure( normalsPacket, 0x18, true, false, vertexCount, VifUnpackElementFormat.Float, 3 );
+            Normals = normalsPacket.Vector3Array;
 
             var texCoordPacket = reader.ReadObject<VifPacket>();
-            texCoordPacket.Ensure( 0x30, true, false, vertexCount, VifUnpackElementFormat.Float, 2 );
-            TexCoords = texCoordPacket.Vector2s;
+            VifValidationHelper.Ensure( texCoordPacket, 0x30, true, false, vertexCount, VifUnpackElementFormat.Float, 2 );
+            TexCoords = texCoordPacket.Vector2Array;
 
             var activateTag = reader.ReadObject<VifCode>();
-            activateTag.Ensure( 0x16, 0, VifCommand.ActMicro );
+            VifValidationHelper.Ensure( activateTag, 0x16, 0, VifCommand.ActMicro );
 
             var flushTag = reader.ReadObject<VifCode>();
-            flushTag.Ensure( 0, 0, VifCommand.FlushEnd );
+            VifValidationHelper.Ensure( flushTag, 0, 0, VifCommand.FlushEnd );
             reader.Align( 16 );
         }
 

@@ -24,9 +24,9 @@ namespace DDS3ModelLibrary.Models
         void IBinarySerializable.Read( EndianBinaryReader reader, object context )
         {
             var vertexCount = ( short )context;
-            Positions = reader.ReadVector3s( vertexCount );
+            Positions = reader.ReadVector3Array( vertexCount );
             reader.Align( 16 );
-            Normals = reader.ReadVector3s( vertexCount );
+            Normals = reader.ReadVector3Array( vertexCount );
             reader.Align( 16 );
         }
 

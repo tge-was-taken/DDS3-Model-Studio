@@ -36,18 +36,6 @@ namespace DDS3ModelLibrary.PS2.VIF
             mCommand = command;
         }
 
-        public void Ensure( int immediate, int count, VifCommand command )
-        {
-            if ( Immediate != immediate )
-                throw new InvalidDataException( $"Vifcode immediate value is not {immediate}" );
-
-            if ( Count != count )
-                throw new InvalidDataException( $"Vifcode count value is not {count}" );
-
-            if ( Command != command )
-                throw new InvalidDataException( $"Vifcode command type is not {command}" );
-        }
-
         private void Read( EndianBinaryReader reader, VifTag tag )
         {
             if ( tag == null )
