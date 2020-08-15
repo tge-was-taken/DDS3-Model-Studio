@@ -23,7 +23,12 @@ namespace DDS3ModelLibraryCLI
         private static void Main( string[] args )
         {
             {
-                var modelPack = new ModelPack( @"..\..\..\..\Resources\player_a.PB" );
+                File.Delete( "test.fbx" );
+                var modelPack = new ModelPack( @"D:\dumps\smt3_ntsc\DDS3\model\field\player_a.PB" );
+                //var modelPack = new ModelPack( @"D:\dumps\smt3_ntsc\DDS3\model\devil\on\0x126_on.PB");
+                FbxModelExporter.Instance.Export( modelPack.Models[0] , "test.fbx" , modelPack.TexturePack );
+                return;
+
                 //AssimpModelExporter.Instance.Export( modelPack.Models[ 0 ], "player_a.dae", modelPack.TexturePack );
                 //for ( var i = 0; i < modelPack.MotionPacks[ 0 ].Motions.Count; i++ )
                 //{

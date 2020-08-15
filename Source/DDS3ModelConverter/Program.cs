@@ -5,6 +5,7 @@ using DDS3ModelLibrary.Models;
 using DDS3ModelLibrary.Models.Conversion;
 using DDS3ModelLibrary.Models.Field;
 using DDS3ModelLibrary.Motions.Conversion;
+using DDS3ModelLibrary.Textures;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -24,6 +25,7 @@ namespace DDS3ModelConverter
         PB,
         MB,
         F1,
+        TB,
         OBJ,
         DAE,
         FBX,
@@ -37,12 +39,13 @@ namespace DDS3ModelConverter
         F1,
         OBJ,
         DAE,
-        FBX
+        FBX,
+        Folder
     }
 
     internal class Program
     {
-        public static string About { get; } = SimpleCommandLineFormatter.Default.FormatAbout<ProgramOptions>( 
+        public static string About { get; } = SimpleCommandLineFormatter.Default.FormatAbout<ProgramOptions>(
             "TGE", "A model converter for DDS3 engine games." );
 
         public static ProgramOptions Options { get; set; }
@@ -75,6 +78,18 @@ namespace DDS3ModelConverter
                         break;
                     case InputFormat.F1:
                         ConvertF1();
+                        break;
+                    case InputFormat.TB:
+                        {
+                            var textures = Resource.Load<TexturePack>( Options.Input );
+                            var outDirPath = GetOutDirPath();
+                            for ( int i = 0; i < textures.Count; i++ )
+                            {
+                                Texture item = (Texture)textures[i];
+                                var name = $"texture_{i:D2}.png";
+                                item.GetBitmap().Save( Path.Combine( outDirPath, name ) );
+                            }
+                        }
                         break;
                     case InputFormat.OBJ:
                     case InputFormat.DAE:
@@ -118,7 +133,10 @@ namespace DDS3ModelConverter
                                 Options.Output :
                                 $"{Path.GetFileNameWithoutExtension( Options.Output )}_{i}.{Options.OutputFormat}";
 
-                        AssimpModelExporter.Instance.Export( modelPack.Models[i], modelOutfilePath, modelPack.TexturePack );
+                        if ( Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX )
+                            FbxModelExporter.Instance.Export( modelPack.Models[i], modelOutfilePath, modelPack.TexturePack );
+                        else
+                            AssimpModelExporter.Instance.Export( modelPack.Models[i], modelOutfilePath, modelPack.TexturePack );
 
                         if ( Options.Assimp.OutputPbMotion )
                         {
@@ -158,7 +176,10 @@ namespace DDS3ModelConverter
                 case OutputFormat.OBJ:
                 case OutputFormat.DAE:
                 case OutputFormat.FBX:
-                    AssimpModelExporter.Instance.Export( model, Options.Output );
+                    if ( Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX )
+                        FbxModelExporter.Instance.Export( model, Options.Output );
+                    else
+                        AssimpModelExporter.Instance.Export( model, Options.Output );
                     break;
                 default:
                     throw new Exception( "Unsupported output format" );
@@ -185,14 +206,28 @@ namespace DDS3ModelConverter
 
                             var model = ( Model )obj.Resource;
                             model.Nodes[0].Transform *= obj.Transform.Matrix;
-                            AssimpModelExporter.Instance.Export( model, 
-                                Path.Combine( Path.GetDirectoryName( Options.Output ), obj.Name, Path.GetExtension( Options.Output ) ) );
+
+                            var outDirPath = GetOutDirPath();
+                            var outFilePath = Path.Combine( outDirPath, obj.Name + Path.GetExtension( Options.Output ) );
+                            if ( Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX )
+                                FbxModelExporter.Instance.Export( model, outFilePath );
+                            else
+                                AssimpModelExporter.Instance.Export( model, outFilePath );
                         }
                     }
                     break;
                 default:
                     throw new Exception( "Unsupported output format" );
             }
+        }
+
+        private static string GetOutDirPath()
+        {
+            var outDirPath = Path.HasExtension( Options.Output ) ?
+                Path.Combine( Path.GetDirectoryName( Options.Output ), Path.GetFileNameWithoutExtension( Options.Output )) :
+                Options.Output;
+            Directory.CreateDirectory( outDirPath );
+            return outDirPath;
         }
 
         private static void ConvertAssimpModel()
@@ -270,30 +305,74 @@ namespace DDS3ModelConverter
             }
         }
 
-        static bool ParseArgs(string[] args)
+        static bool ParseArgs( string[] args )
         {
             try
             {
                 Options = SimpleCommandLineParser.Default.Parse<ProgramOptions>( args );
 
                 //-- Validate given input
+
+                if ( string.IsNullOrEmpty(Options.Input) )
+                {
+                    // Use first argument as input when not specified explicitly
+                    if ( args.Length > 0 )
+                        Options.Input = args[0];
+                    else
+                        return false;
+                }
+
                 if ( Options.InputFormat == InputFormat.Unknown )
                 {
-                    Options.InputFormat = ( InputFormat )Enum.Parse( typeof( InputFormat ), Path.GetExtension( Options.Input )
+                    // Guess input format based on extension
+                    var ext = Path.GetExtension( Options.Input );
+                    Options.InputFormat = (InputFormat)Enum.Parse( typeof( InputFormat ), ext
                         .TrimStart( '.' )
                         .ToLower(), true );
+                }
+
+                if ( string.IsNullOrEmpty( Options.Output ))
+                {
+                    // Guess output format based on input format
+                    var ext = string.Empty;
+                    switch ( Options.InputFormat )
+                    {
+                        case InputFormat.PB:
+                        case InputFormat.MB:
+                        case InputFormat.F1:
+                            ext = ".fbx";
+                            break;
+                        case InputFormat.TB:
+                            ext = null;
+                            break;
+                        case InputFormat.OBJ:
+                            ext = ".f1";
+                            break;
+                        case InputFormat.DAE:
+                        case InputFormat.FBX:
+                            ext = ".pb";
+                            break;
+                        default:
+                            return false;
+                    }
+
+                    Options.Output = Path.ChangeExtension( Options.Input, ext );
                 }
 
                 if ( Options.OutputFormat == OutputFormat.Unknown )
                 {
-                    Options.OutputFormat = ( OutputFormat )Enum.Parse( typeof( OutputFormat ), Path.GetExtension( Options.Output )
-                        .TrimStart( '.' )
-                        .ToLower(), true );
+                    var ext = Path.GetExtension( Options.Output );
+                    if ( string.IsNullOrEmpty( ext ) )
+                        Options.OutputFormat = OutputFormat.Folder;
+                    else
+                        Options.OutputFormat = (OutputFormat)Enum.Parse( typeof( OutputFormat ), ext
+                            .TrimStart( '.' )
+                            .ToLower(), true );
                 }
 
                 return true;
             }
-            catch (Exception e)
+            catch ( Exception e )
             {
                 Console.WriteLine( e.Message );
                 return false;
@@ -303,13 +382,13 @@ namespace DDS3ModelConverter
 
     public class ProgramOptions
     {
-        [Option( "i", "input", "filepath", "Specifies the path to the file to use as input.", Required = true )]
+        [Option( "i", "input", "filepath", "Specifies the path to the file to use as input." )]
         public string Input { get; set; }
 
-        [Option( "if", "input-format", "auto|pb|mb|f1|obj|dae|fbx", "Specifies the input format of the specified input file." )]
+        [Option( "if", "input-format", "auto|pb|mb|f1|tb|obj|dae|fbx", "Specifies the input format of the specified input file." )]
         public InputFormat InputFormat { get; set; }
 
-        [Option( "o", "output", "filepath", "Specifies the path to the file to save the output to.", Required = true )]
+        [Option( "o", "output", "filepath", "Specifies the path to the file to save the output to." )]
         public string Output { get; set; }
 
         [Option( "of", "output-format", "auto|pb|mb|f1|obj|dae|fbx", "Specifies the conversion output format." )]

@@ -1,3 +1,6 @@
 [submodule "Externals/SimpleCommandLine"]
 	path = Externals/SimpleCommandLine
 	url = https://github.com/TGEnigma/SimpleCommandLine
+[submodule "Externals/AtlusFileSystemLibrary"]
+	path = Externals/AtlusFileSystemLibrary
+	url = https://github.com/TGEnigma/AtlusFileSystemLibrary

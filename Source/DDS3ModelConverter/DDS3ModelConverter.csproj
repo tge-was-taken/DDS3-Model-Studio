@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>DDS3ModelConverter</RootNamespace>
     <AssemblyName>DDS3ModelConverter</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
@@ -34,11 +34,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="AtlusFileSystemLibrary">
-      <HintPath>..\..\..\AtlusFileSystemLibrary\Source\AtlusFileSystemLibrary\bin\Debug\AtlusFileSystemLibrary.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -55,9 +53,17 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Externals\AtlusFileSystemLibrary\Source\AtlusFileSystemLibrary\AtlusFileSystemLibrary.csproj">
+      <Project>{9960b785-6207-44e8-ba42-ec7f6f785344}</Project>
+      <Name>AtlusFileSystemLibrary</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Externals\SimpleCommandLine\Source\SimpleCommandLine\SimpleCommandLine.csproj">
       <Project>{7a1f22a9-5eed-4f8d-a3c9-a99b8ecfacb0}</Project>
       <Name>SimpleCommandLine</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DDS3ModelLibrary.Native\DDS3ModelLibrary.Native.vcxproj">
+      <Project>{9034cdf5-52ac-4e6c-9759-879b0b4f3887}</Project>
+      <Name>DDS3ModelLibrary.Native</Name>
     </ProjectReference>
     <ProjectReference Include="..\DDS3ModelLibrary\DDS3ModelLibrary.csproj">
       <Project>{D8D5B882-7D8F-4206-8DC7-DF0F0EB59A55}</Project>
