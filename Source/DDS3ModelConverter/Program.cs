@@ -142,7 +142,7 @@ namespace DDS3ModelConverter
                                 $"{Path.GetFileNameWithoutExtension( Options.Output )}_{i}.{Options.OutputFormat}";
 
                         if ( Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX )
-                            FbxModelExporter.Instance.Export( modelPack.Models[i], modelOutfilePath, config, modelPack.TexturePack );
+                            FbxModelExporter.Instance.Export( modelPack.Models[i], modelOutfilePath, FbxConfig, modelPack.TexturePack );
                         else
                             AssimpModelExporter.Instance.Export( modelPack.Models[i], modelOutfilePath, modelPack.TexturePack );
 
@@ -185,7 +185,7 @@ namespace DDS3ModelConverter
                 case OutputFormat.DAE:
                 case OutputFormat.FBX:
                     if ( Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX )
-                        FbxModelExporter.Instance.Export( model, Options.Output );
+                        FbxModelExporter.Instance.Export( model, Options.Output, FbxConfig, null );
                     else
                         AssimpModelExporter.Instance.Export( model, Options.Output );
                     break;
@@ -218,7 +218,7 @@ namespace DDS3ModelConverter
 
                             var outFilePath = Path.Combine( outDirPath, obj.Name + Path.GetExtension( Options.Output ) );
                             if ( Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX )
-                                FbxModelExporter.Instance.Export( model, outFilePath );
+                                FbxModelExporter.Instance.Export( model, outFilePath, FbxConfig, null );
                             else
                                 AssimpModelExporter.Instance.Export( model, outFilePath );
                         }
