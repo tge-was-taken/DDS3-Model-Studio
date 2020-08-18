@@ -101,6 +101,17 @@ namespace DDS3ModelLibrary::Models::Conversion
 		fGlobalSettings.SetAxisSystem( FbxAxisSystem::DirectX );
 		fGlobalSettings.SetSystemUnit( FbxSystemUnit::m );
 
+		if ( textures )
+		{
+			// Export textures
+			for ( size_t i = 0; i < textures->Count; i++ )
+			{
+				auto textureName = FormatTextureName( textures, nullptr, i );
+				textures[ i ]->GetBitmap( 0, 0 )->Save(
+					System::IO::Path::Combine( mOutDir, textureName + ".png" ) );
+			}
+		}
+
 		// Convert materials
 		for ( size_t i = 0; i < model->Materials->Count; i++ )
 			ConvertMaterialToFbxSurfacePhong( fScene, model, model->Materials[ i ], textures, i );
@@ -390,13 +401,6 @@ namespace DDS3ModelLibrary::Models::Conversion
 		if ( mat->TextureId.HasValue )
 		{
 			auto textureName = FormatTextureName( textures, nullptr, mat->TextureId.Value );
-
-			if ( textures != nullptr && textures->Count > mat->TextureId.Value )
-			{
-				// Export textures
-				textures[ mat->TextureId.Value ]->GetBitmap( 0, 0 )->Save(
-					System::IO::Path::Combine( mOutDir, textureName + ".png" ) );
-			}
 
 			// Create & connect file texture to material diffuse
 			IntPtr fTexPtr;
