@@ -50,6 +50,14 @@ namespace DDS3ModelConverter
 
         public static ProgramOptions Options { get; set; }
 
+        public static FbxModelExporterConfig FbxConfig { get; } =
+            new FbxModelExporterConfig()
+            {
+                ConvertBlendShapesToMeshes = true,
+                ExportMultipleUvLayers = true,
+                MergeMeshes = true
+            };
+
         static void Main( string[] args )
         {
             if ( args.Length == 0 )
@@ -82,7 +90,7 @@ namespace DDS3ModelConverter
                     case InputFormat.TB:
                         {
                             var textures = Resource.Load<TexturePack>( Options.Input );
-                            var outDirPath = GetOutDirPath();
+                            var outDirPath = GetDirectoryPath(Options.Output);
                             for ( int i = 0; i < textures.Count; i++ )
                             {
                                 Texture item = (Texture)textures[i];
@@ -134,7 +142,7 @@ namespace DDS3ModelConverter
                                 $"{Path.GetFileNameWithoutExtension( Options.Output )}_{i}.{Options.OutputFormat}";
 
                         if ( Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX )
-                            FbxModelExporter.Instance.Export( modelPack.Models[i], modelOutfilePath, modelPack.TexturePack );
+                            FbxModelExporter.Instance.Export( modelPack.Models[i], modelOutfilePath, config, modelPack.TexturePack );
                         else
                             AssimpModelExporter.Instance.Export( modelPack.Models[i], modelOutfilePath, modelPack.TexturePack );
 
@@ -199,6 +207,7 @@ namespace DDS3ModelConverter
                 case OutputFormat.DAE:
                 case OutputFormat.FBX:
                     {
+                        var outDirPath = GetDirectoryPath( Options.Output );
                         foreach ( var obj in fieldScene.Objects )
                         {
                             if ( obj.ResourceType != FieldObjectResourceType.Model || obj.Resource == null )
@@ -207,7 +216,6 @@ namespace DDS3ModelConverter
                             var model = ( Model )obj.Resource;
                             model.Nodes[0].Transform *= obj.Transform.Matrix;
 
-                            var outDirPath = GetOutDirPath();
                             var outFilePath = Path.Combine( outDirPath, obj.Name + Path.GetExtension( Options.Output ) );
                             if ( Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX )
                                 FbxModelExporter.Instance.Export( model, outFilePath );
@@ -221,11 +229,11 @@ namespace DDS3ModelConverter
             }
         }
 
-        private static string GetOutDirPath()
+        private static string GetDirectoryPath( string path )
         {
-            var outDirPath = Path.HasExtension( Options.Output ) ?
-                Path.Combine( Path.GetDirectoryName( Options.Output ), Path.GetFileNameWithoutExtension( Options.Output )) :
-                Options.Output;
+            var outDirPath = Path.HasExtension( path ) ?
+                Path.GetDirectoryName( path ) :
+                path;
             Directory.CreateDirectory( outDirPath );
             return outDirPath;
         }
@@ -313,7 +321,7 @@ namespace DDS3ModelConverter
 
                 //-- Validate given input
 
-                if ( string.IsNullOrEmpty(Options.Input) )
+                if ( string.IsNullOrEmpty( Options.Input ) )
                 {
                     // Use first argument as input when not specified explicitly
                     if ( args.Length > 0 )
@@ -331,7 +339,7 @@ namespace DDS3ModelConverter
                         .ToLower(), true );
                 }
 
-                if ( string.IsNullOrEmpty( Options.Output ))
+                if ( string.IsNullOrEmpty( Options.Output ) )
                 {
                     // Guess output format based on input format
                     var ext = string.Empty;
@@ -341,22 +349,32 @@ namespace DDS3ModelConverter
                         case InputFormat.MB:
                         case InputFormat.F1:
                             ext = ".fbx";
+                            Options.OutputFormat = OutputFormat.FBX;
                             break;
                         case InputFormat.TB:
                             ext = null;
+                            Options.OutputFormat = OutputFormat.Folder;
                             break;
                         case InputFormat.OBJ:
                             ext = ".f1";
+                            Options.OutputFormat = OutputFormat.F1;
                             break;
                         case InputFormat.DAE:
                         case InputFormat.FBX:
                             ext = ".pb";
+                            Options.OutputFormat = OutputFormat.FBX;
                             break;
                         default:
                             return false;
                     }
 
-                    Options.Output = Path.ChangeExtension( Options.Input, ext );
+                    var dirPath = Path.Combine( Path.GetDirectoryName( Options.Input ), Path.GetFileNameWithoutExtension( Options.Input ) );
+                    if ( ext != null )
+                        Options.Output = Path.Combine( dirPath, Path.GetFileNameWithoutExtension( Options.Input ) + ext );
+                    else
+                        Options.Output = dirPath;
+
+                    Directory.CreateDirectory( dirPath );
                 }
 
                 if ( Options.OutputFormat == OutputFormat.Unknown )

@@ -13,52 +13,61 @@ namespace DDS3ModelLibrary::Models::Conversion
 	{
 	public:
 		property bool ExportMultipleUvLayers;
+		property bool MergeMeshes;
+		property bool ConvertBlendShapesToMeshes;
 
 		inline FbxModelExporterConfig()
 		{
 			ExportMultipleUvLayers = true;
+			MergeMeshes = true;
+			ConvertBlendShapesToMeshes = true;
 		}
 	};
 
-	template<typename T>
-	ref struct Ptr
+
+	// Intermediate structures for meshes
+	value struct GenericBlendShape
 	{
 	public:
-		Ptr( T* ptr ) { mPtr = ptr; }
-		T& operator*() { return *mPtr; }
-		T* Get() { return mPtr; }
-	private:
-		T* mPtr;
+		array<Vector3>^ Vertices;
+		array<Vector3>^ Normals;
 	};
 
-
-	ref class MorphData
+	value struct GenericPrimitiveGroup
 	{
 	public:
-		List<Vector3> Vertices;
-		List<Vector3> Normals;
-	};
-
-	// Intermediate structure for meshes
-	ref class MeshData
-	{
-	public:
-		inline MeshData( MeshType type )
-		{
-			MeshType = type;
-		}
-
-		MeshType MeshType;
-		Node^ ParentNode;
-		List<Vector3> Vertices;
-		List<Vector3> Normals;
-		List<Color> Colors;
-		List<Vector2> UV1;
-		List<Vector2> UV2;
-		List<NodeWeight> Weights;
-		List<Triangle> Triangles;
 		int MaterialIndex;
-		List<MorphData^> MorphData;
+		array<Triangle>^ Triangles;
+	};
+
+	ref class GenericMesh
+	{
+	public:
+		Mesh^ Source;
+		Node^ ParentNode;
+		array<Vector3>^ Vertices;
+		array<Vector3>^ Normals;
+		array<Color>^ Colors;
+		array<Vector2>^ UV1;
+		array<Vector2>^ UV2;
+		array<array<NodeWeight>^>^ Weights;
+		array<GenericPrimitiveGroup>^ Groups;
+		array<GenericBlendShape>^ BlendShapes;
+	};
+
+	public ref class MeshConversionContext
+	{
+	public:
+		FbxMesh* Mesh;
+		FbxVector4* ControlPoints;
+		FbxGeometryElementNormal* ElementNormal;
+		FbxGeometryElementMaterial* ElementMaterial;
+		FbxGeometryElementVertexColor* ElementColor;
+		FbxGeometryElementUV* ElementUV;
+		FbxGeometryElementUV* ElementUV2;
+		FbxSkin* Skin;
+		Dictionary<int, IntPtr>^ ClusterLookup;
+		FbxBlendShape* BlendShape;
 	};
 
 	public ref class FbxModelExporter sealed : public ModelExporter<FbxModelExporter^, FbxModelExporterConfig^>
@@ -72,36 +81,45 @@ namespace DDS3ModelLibrary::Models::Conversion
 	private:
 		void Reset();
 		FbxScene* ConvertModelToFbxScene( Model^ model, TexturePack^ textures );
+		void ConvertBlendShapesToMeshes( System::Collections::Generic::List<DDS3ModelLibrary::Models::Conversion::GenericMesh^>^ meshes, DDS3ModelLibrary::Models::Model^ model );
+		void MergeMeshes( System::Collections::Generic::List<DDS3ModelLibrary::Models::Conversion::GenericMesh^>^& meshes, DDS3ModelLibrary::Models::Model^ model );
+		FbxNode* CreateFbxNodeForMesh( FbxScene* fScene, const char* name );
+		void ConvertProcessedMeshToFbxMesh( Model^ model, GenericMesh^ mesh, MeshConversionContext^ work, int vertexStart );
+		void AddRigidFbxClusterForParentNode( Model^ model, GenericMesh^ mesh, FbxSkin* fSkin, Dictionary<int, IntPtr>^ fClusterLookup, int vertexStart );
 		void ConvertMaterialToFbxSurfacePhong( fbxsdk::FbxScene* fScene, DDS3ModelLibrary::Models::Model^ model, DDS3ModelLibrary::Materials::Material^ mat, DDS3ModelLibrary::Textures::TexturePack^ textures, const size_t& i );
-		FbxNode* ConvertNodeToFbxNode( Model^ model, Node^ node, FbxScene* fScene, int index );
-		void PopulateConvertedFbxNode( Model^ model, Node^ node, FbxScene* fScene, FbxNode* fNode );
+		
+		void BuildNodeToFbxNodeMapping( Model^ model, FbxScene* fScene );
+		void ConvertNodeToFbxNode( Model^ model, Node^ node, FbxScene* fScene, FbxNode* fNode, List<GenericMesh^>^ processedMeshes );
 		FbxDouble3 ConvertNumericsVector3ToFbxDouble3( Vector3 value );
 		FbxDouble3 ConvertNumericsVector3RotationToFbxDouble3( Vector3 rotation );
-		void ConvertMeshListToFbxNodes( Model^ model, Node^ node, MeshList^ meshList, FbxScene* fScene, FbxNode* fNode );
+
+		void ProcessMeshList( Model^ model, Node^ node, MeshList^ meshList, List<GenericMesh^>^ processedMeshes );
 		FbxNode* CreateFbxNodeForMesh( Model^ model, Node^ node, const char* name, FbxScene* fScene );
-		FbxMesh* ConvertMeshToFbxMesh( Model^ model, Node^ node, Mesh^ mesh, FbxScene* fScene, FbxNode* fNode, FbxNode* fMeshNode );
-		FbxMesh* ConvertMeshType1ToFbxMesh( Model^ model, Node^ node, MeshType1^ mesh, FbxScene* fScene, FbxNode* fNode, FbxNode* fMeshNode );
-		FbxMesh* ConvertMeshType2ToFbxMesh( Model^ model, Node^ node, MeshType2^ mesh, FbxScene* fScene, FbxNode* fNode, FbxNode* fMeshNode );
-		FbxMesh* ConvertMeshType4ToFbxMesh( Model^ model, Node^ node, MeshType4^ mesh, FbxScene* fScene, FbxNode* fNode, FbxNode* fMeshNode );
-		FbxMesh* ConvertMeshType5ToFbxMesh( Model^ model, Node^ node, MeshType5^ mesh, FbxScene* fScene, FbxNode* fNode, FbxNode* fMeshNode );
-		FbxMesh* ConvertMeshType7ToFbxMesh( Model^ model, Node^ node, MeshType7^ mesh, FbxScene* fScene, FbxNode* fNode, FbxNode* fMeshNode );
-		FbxMesh* ConvertMeshType8ToFbxMesh( Model^ model, Node^ node, MeshType8^ mesh, FbxScene* fScene, FbxNode* fNode, FbxNode* fMeshNode );
-		void ConvertPositionsToFbxControlPoints( FbxVector4** fControlPoints, array<Vector3>^ positions );
+
+		void ProcessMesh( Model^ model, Node^ node, Mesh^ mesh, List<GenericMesh^>^ processedMeshes );
+		void ProcessMeshType1( Model^ model, Node^ node, MeshType1^ mesh, List<GenericMesh^>^ processedMeshes );
+		void ProcessMeshType2( Model^ model, Node^ node, MeshType2^ mesh, List<GenericMesh^>^ processedMeshes );
+		void ProcessMeshType4( Model^ model, Node^ node, MeshType4^ mesh, List<GenericMesh^>^ processedMeshes );
+		void ProcessMeshType5( Model^ model, Node^ node, MeshType5^ mesh, List<GenericMesh^>^ processedMeshes );
+		void ProcessMeshType7( Model^ model, Node^ node, MeshType7^ mesh, List<GenericMesh^>^ processedMeshes );
+		void ProcessMeshType8( Model^ model, Node^ node, MeshType8^ mesh, List<GenericMesh^>^ processedMeshes );
+
+		FbxVector4* ConvertPositionsToFbxControlPoints( FbxVector4* fControlPoints, array<Vector3>^ positions );
 		void ConvertNormalsToFbxLayerElementNormalDirectArray( FbxLayerElementNormal* fElementNormal, array<Vector3>^ normals, int vertexStart );
 		void ConvertTexCoordsToFbxLayerElementUV( FbxMesh* fMesh, const char* name, array<Vector2>^ texCoords, int layer );
 		void ConvertTexCoordsToFbxLayerElementUVDirectArray( FbxLayerElementUV* fElementUV, array<Vector2>^ texCoords, int vertexStart );
 		void ConvertColorsToFbxLayerElementVertexColorsDirectArray( FbxLayerElementVertexColor* fElementColors, array<Color>^ colors, int vertexStart );
-		void ConvertTrianglesToFbxPolygons( FbxMesh* fMesh, array<Triangle>^ triangles, int vertexStart );
+		void ConvertTrianglesToFbxPolygons( FbxMesh* fMesh, array<Triangle>^ triangles, int vertexStart, int materialIndex );
 		FbxAMatrix ConvertNumericsMatrix4x4ToFbxAMatrix( Matrix4x4& m );
 		void ConvertNodeWeightsToFbxClusters( array<array<DDS3ModelLibrary::Models::NodeWeight>^>^ weights, System::Collections::Generic::Dictionary<int, 
-			System::IntPtr>^ fClusterLookup, fbxsdk::FbxScene* fScene, FbxNode* fMeshNode, fbxsdk::FbxSkin* fSkin, int vertexStart, Model^ model );
+			System::IntPtr>^ fClusterLookup, fbxsdk::FbxScene* fScene, FbxNode* fMeshNode, fbxsdk::FbxSkin* fSkin, int vertexStart, Model^ model, GenericMesh^ mesh );
 
 		String^ FormatNodeName( Model^ model, Node^ node );
 		String^ FormatMaterialName( Model^ model, Material^ material );
 		String^ FormatTextureName( TexturePack^ textures, Texture^ texture, int index );
 
 		FbxLayer* GetFbxMeshLayer( fbxsdk::FbxMesh* fMesh, int layer );
-		FbxGeometryElementNormal* CreateFbxMeshElementNormal( fbxsdk::FbxMesh* fMesh );
+		FbxGeometryElementNormal* CreateFbxMeshElementNormal( fbxsdk::FbxGeometryBase* fMesh );
 		FbxGeometryElementMaterial* CreateFbxElementMaterial( fbxsdk::FbxMesh* fMesh );
 		FbxGeometryElementUV* CreateFbxMeshElementUV( fbxsdk::FbxMesh* fMesh, const char* name, int layer );
 		FbxGeometryElementVertexColor* CreateFbxMeshElementVertexColor( fbxsdk::FbxMesh* fMesh );
@@ -114,5 +132,6 @@ namespace DDS3ModelLibrary::Models::Conversion
 		Dictionary<int, IntPtr>^ mMaterialCache;
 		Dictionary<int, IntPtr>^ mTextureCache;
 		FbxModelExporterConfig^ mConfig;
+		String^ mOutDir;
 	};
 }

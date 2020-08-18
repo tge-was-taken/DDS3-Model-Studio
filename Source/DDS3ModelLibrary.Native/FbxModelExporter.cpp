@@ -23,9 +23,9 @@
 
 // TODO: 
 // - cache converted node world transform
-// - add option to merge all meshes into 1
-// - export morphs
 // - export animations
+// - fix vertex colors in max
+// - add unique names to root bones to prevent name clashes?
 
 using namespace System;
 using namespace System::Collections::Generic;
@@ -70,6 +70,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 		Reset();
 
 		mConfig = config;
+		mOutDir = System::IO::Path::GetDirectoryName( path );
 
 		// Create IO settings
 		auto fIos = FbxIOSettings::Create( mManager, IOSROOT );
@@ -110,14 +111,275 @@ namespace DDS3ModelLibrary::Models::Conversion
 		fScene->AddPose( fBindPose );
 
 		// Create nodes first so all nodes are created while populating
-		for ( size_t i = 0; i < model->Nodes->Count; i++ )
-			ConvertNodeToFbxNode( model, model->Nodes[i], fScene, (int)i );
+		BuildNodeToFbxNodeMapping( model, fScene );
 
-		// Fully populate the nodes
+		// Fully populate the nodes & process the meshes
+		auto meshes = gcnew List<GenericMesh^>( 256 );
 		for ( size_t i = 0; i < model->Nodes->Count; i++ )
-			PopulateConvertedFbxNode( model, model->Nodes[ i ], fScene, (FbxNode*)mConvertedNodes[ i ].ToPointer() );
+		{
+			ConvertNodeToFbxNode( model, model->Nodes[ i ], fScene, (FbxNode*)mConvertedNodes[ i ].ToPointer(),
+				meshes );
+		}
+
+		if ( mConfig->MergeMeshes )
+			MergeMeshes( meshes, model );
+
+		if ( mConfig->ConvertBlendShapesToMeshes )
+			ConvertBlendShapesToMeshes( meshes, model );
+
+		// Build FBX meshes for all of the processed meshes
+		for ( size_t i = 0; i < meshes->Count; i++ )
+		{
+			auto mesh = meshes[ i ];
+			int faceCount = 0;
+			for ( size_t j = 0; j < mesh->Groups->Length; j++ )
+				faceCount += mesh->Groups[ j ].Triangles->Length;
+
+			auto fMeshNode = CreateFbxNodeForMesh( fScene, Utf8String( String::Format( "mesh_{0}", i ) ).ToCStr() );
+			auto work = gcnew MeshConversionContext();
+			work->Mesh = FbxMesh::Create( fMeshNode, "" );
+			fMeshNode->SetNodeAttribute( work->Mesh );
+			work->Mesh->InitControlPoints( mesh->Vertices->Length );
+			work->ControlPoints = work->Mesh->GetControlPoints();
+			work->ElementNormal = mesh->Normals ? CreateFbxMeshElementNormal( work->Mesh ) : nullptr;
+			work->ElementMaterial = CreateFbxElementMaterial( work->Mesh );
+			work->ElementColor = mesh->Colors ? CreateFbxMeshElementVertexColor( work->Mesh ) : nullptr;
+			work->ElementUV = mesh->UV1 ? CreateFbxMeshElementUV( work->Mesh, "UVChannel_1", 0 ) : nullptr;
+			work->ElementUV2 = mesh->UV2 ? CreateFbxMeshElementUV( work->Mesh, "UVChannel_2", 1 ) : nullptr;
+
+			work->Skin = FbxSkin::Create( work->Mesh, "" );
+			work->Skin->SetSkinningType( FbxSkin::EType::eLinear );
+			work->Mesh->AddDeformer( work->Skin );
+			work->ClusterLookup = gcnew Dictionary<int, IntPtr>();
+
+			if ( mesh->BlendShapes )
+			{
+				work->BlendShape = FbxBlendShape::Create( work->Mesh, "" );
+				work->BlendShape->SetGeometry( work->Mesh );
+				work->Mesh->AddDeformer( work->BlendShape );
+			}
+			
+			ConvertProcessedMeshToFbxMesh( model, mesh, work, 0 );
+		}
 
 		return fScene;
+	}
+
+	void FbxModelExporter::ConvertBlendShapesToMeshes( List<GenericMesh^>^ meshes, Model^ model )
+	{
+		auto newMeshes = gcnew List<GenericMesh^>();
+
+		for ( size_t i = 0; i < meshes->Count; i++ )
+		{
+			if ( !meshes[ i ]->BlendShapes ) continue;
+			auto mesh = meshes[ i ];
+
+			for ( size_t j = 0; j < mesh->BlendShapes->Length; j++ )
+			{
+				auto bs = mesh->BlendShapes[ j ];
+				auto bsMesh = gcnew GenericMesh();
+				bsMesh->ParentNode = mesh->ParentNode;
+				bsMesh->Vertices = bs.Vertices;
+				bsMesh->Normals = bs.Normals;
+				bsMesh->Colors = mesh->Colors;
+				bsMesh->UV1 = mesh->UV1;
+				bsMesh->UV2 = mesh->UV2;
+				bsMesh->Weights = mesh->Weights;
+				bsMesh->Groups = mesh->Groups;
+				newMeshes->Add( bsMesh );
+			}
+
+			mesh->BlendShapes = nullptr;
+		}
+
+		for ( size_t i = 0; i < newMeshes->Count; i++ )
+			meshes->Add( newMeshes[ i ] );
+	}
+
+	void FbxModelExporter::MergeMeshes( List<GenericMesh^>^& meshes, Model^ model )
+	{
+		auto newMeshes = gcnew List<GenericMesh^>( 2 );
+
+		// calculate vertex count
+		int vertexCount = 0;
+		int groupCount = 0;
+		bool usesNormals = false, usesColors = false, usesUV1 = false, 
+			usesUV2 = false, usesWeights = false;
+		for ( size_t i = 0; i < meshes->Count; i++ )
+		{
+			if ( meshes[ i ]->BlendShapes ) continue;
+			vertexCount += meshes[ i ]->Vertices->Length;
+			groupCount += meshes[ i ]->Groups->Length;
+			if ( meshes[ i ]->Normals ) usesNormals = true;
+			if ( meshes[ i ]->Colors ) usesColors = true;
+			if ( meshes[ i ]->UV1 ) usesUV1 = true;
+			if ( meshes[ i ]->UV2 ) usesUV2 = true;
+			if ( meshes[ i ]->Weights ) usesWeights = true;
+		}
+
+		// build merged mesh
+		auto mergedMesh = gcnew GenericMesh();
+		mergedMesh->ParentNode = model->Nodes[ 0 ];
+		mergedMesh->Vertices = gcnew array<Vector3>( vertexCount );
+		mergedMesh->Normals = usesNormals ? gcnew array<Vector3>( vertexCount ) : nullptr;
+		mergedMesh->Colors = usesColors ? gcnew array<Color>( vertexCount ) : nullptr;
+		mergedMesh->UV1 = usesUV1 ? gcnew array<Vector2>( vertexCount ) : nullptr;
+		mergedMesh->UV2 = usesUV2 ? gcnew array<Vector2>( vertexCount ) : nullptr;
+		mergedMesh->Weights = usesWeights ? gcnew array<array<NodeWeight>^>( vertexCount ) : nullptr;
+		mergedMesh->Groups = gcnew array<GenericPrimitiveGroup>( groupCount );
+		newMeshes->Add( mergedMesh );
+
+		// merge meshes
+		int vertexOffset = 0;
+		int groupOffset = 0;
+		for ( size_t i = 0; i < meshes->Count; i++ )
+		{
+			if ( meshes[ i ]->BlendShapes ) continue;
+			auto mesh = meshes[ i ];
+
+			Array::Copy( mesh->Vertices, 0, mergedMesh->Vertices, vertexOffset, mesh->Vertices->Length );
+			if ( mesh->Normals ) Array::Copy( mesh->Normals, 0, mergedMesh->Normals, vertexOffset, mesh->Normals->Length );
+			if ( mesh->Colors ) Array::Copy( mesh->Colors, 0, mergedMesh->Colors, vertexOffset, mesh->Colors->Length );
+			if ( mesh->UV1 ) Array::Copy( mesh->UV1, 0, mergedMesh->UV1, vertexOffset, mesh->UV1->Length );
+			if ( mesh->UV2 ) Array::Copy( mesh->UV2, 0, mergedMesh->UV2, vertexOffset, mesh->UV2->Length );
+
+			if ( mesh->Weights ) Array::Copy( mesh->Weights, 0, mergedMesh->Weights, vertexOffset, mesh->Weights->Length );
+			else if ( usesWeights )
+			{
+				// generate weights
+				auto nodeIndex = model->Nodes->IndexOf( mesh->ParentNode );
+				for ( size_t i = 0; i < mesh->Vertices->Length; i++ )
+				{
+					auto weights = mergedMesh->Weights[ vertexOffset + i ] = gcnew array<NodeWeight>( 1 );
+					weights[ 0 ].NodeIndex = nodeIndex;
+					weights[ 0 ].Weight = 1;
+				}
+			}
+
+			Array::Copy( mesh->Groups, 0, mergedMesh->Groups, groupOffset, mesh->Groups->Length );
+			for ( size_t j = 0; j < mesh->Groups->Length; j++ )
+			{
+				// adjust vertex indices
+				auto% grp = mergedMesh->Groups[ groupOffset + j ];
+				for ( size_t k = 0; k < grp.Triangles->Length; k++ )
+				{
+					grp.Triangles[ k ].A += vertexOffset;
+					grp.Triangles[ k ].B += vertexOffset;
+					grp.Triangles[ k ].C += vertexOffset;
+				}
+			}
+
+			vertexOffset += mesh->Vertices->Length;
+			groupOffset += mesh->Groups->Length;
+		}
+
+		// add blend shape meshes as-is
+		for ( size_t i = 0; i < meshes->Count; i++ )
+		{
+			if ( !meshes[ i ]->BlendShapes ) continue;
+			newMeshes->Add( meshes[ i ] );
+		}
+
+		meshes->Clear();
+		meshes = newMeshes;
+	}
+
+	FbxNode* FbxModelExporter::CreateFbxNodeForMesh( FbxScene* fScene, const char* name )
+	{
+		auto fMeshNode = FbxNode::Create( fScene, name );
+		fScene->GetRootNode()->AddChild( fMeshNode );
+
+		// 3ds Max requires every node including nodes not used for skeletal animation to be in the bind pose, otherwise it is ignored entirely.
+		fScene->GetPose( 0 )->Add( fMeshNode, fMeshNode->EvaluateGlobalTransform() );
+		return fMeshNode;
+	}
+
+	void FbxModelExporter::ConvertProcessedMeshToFbxMesh( Model^ model, GenericMesh^ mesh, MeshConversionContext^ work, int vertexStart )
+	{
+		work->ControlPoints = ConvertPositionsToFbxControlPoints( work->ControlPoints, mesh->Vertices );
+
+		if ( mesh->Normals ) ConvertNormalsToFbxLayerElementNormalDirectArray( work->ElementNormal, mesh->Normals, vertexStart );
+		if ( mesh->Colors ) ConvertColorsToFbxLayerElementVertexColorsDirectArray( work->ElementColor, mesh->Colors, vertexStart );
+		if ( mesh->UV1 ) ConvertTexCoordsToFbxLayerElementUVDirectArray( work->ElementUV, mesh->UV1, vertexStart );
+		if ( mesh->UV2 ) ConvertTexCoordsToFbxLayerElementUVDirectArray( work->ElementUV2, mesh->UV2, vertexStart );
+
+		if ( mesh->Weights )
+		{
+			ConvertNodeWeightsToFbxClusters( mesh->Weights, work->ClusterLookup, work->Mesh->GetScene(), work->Mesh->GetNode(), work->Skin, 
+				vertexStart, model, mesh );
+		}
+		else
+		{
+			// Add cluster that rigidly binds it to the parent node
+			AddRigidFbxClusterForParentNode( model, mesh, work->Skin, work->ClusterLookup, vertexStart );
+		}
+
+		if ( mesh->BlendShapes )
+		{
+			for ( size_t i = 0; i < mesh->BlendShapes->Length; i++ )
+			{
+				auto blendShape = mesh->BlendShapes[ i ];
+
+				// Each shape will be stored in its own channel
+				auto fChannel = FbxBlendShapeChannel::Create( work->Mesh, "" );
+				work->BlendShape->AddBlendShapeChannel( fChannel );
+
+				auto fShape = FbxShape::Create( work->Mesh, "" );
+				fChannel->AddTargetShape( fShape );
+				fShape->SetAbsoluteMode( true );				
+
+				// Convert vertices
+				fShape->InitControlPoints( blendShape.Vertices->Length );
+				ConvertPositionsToFbxControlPoints( fShape->GetControlPoints(), blendShape.Vertices );
+
+				// Convert normals
+				fShape->InitNormals( blendShape.Normals->Length );
+				FbxLayerElementArrayTemplate<FbxVector4>* fNormalsArray;
+				fShape->GetNormals( &fNormalsArray );
+				auto fNormals = (FbxVector4*)fNormalsArray->GetLocked();
+				ConvertPositionsToFbxControlPoints( fNormals, blendShape.Normals );
+			}
+		}
+
+		int faceOffset = 0;
+		for ( size_t i = 0; i < mesh->Groups->Length; i++ )
+		{
+			auto grp = mesh->Groups[ i ];
+
+			// Add material to mesh node 
+			auto fMaterial = (FbxSurfaceMaterial*)mMaterialCache[ grp.MaterialIndex ].ToPointer();
+			auto materialIndex = work->Mesh->GetNode()->GetMaterialIndex( fMaterial->GetNameOnly() ); 
+			if ( materialIndex == -1 )
+			{
+				materialIndex = work->Mesh->GetNode()->AddMaterial( fMaterial );
+				assert( materialIndex >= 0 );
+			}
+
+			// Convert triangles
+			ConvertTrianglesToFbxPolygons( work->Mesh, grp.Triangles, vertexStart, materialIndex );
+			faceOffset += grp.Triangles->Length;
+		}
+	}
+
+	void FbxModelExporter::AddRigidFbxClusterForParentNode( Model^ model, GenericMesh^ mesh, 
+		FbxSkin* fSkin, Dictionary<int, IntPtr>^ fClusterLookup, int vertexStart )
+	{
+		IntPtr fClusterPtr;
+		auto nodeIndex = model->Nodes->IndexOf( mesh->ParentNode );
+		if ( !fClusterLookup->TryGetValue( nodeIndex, fClusterPtr ) )
+		{
+			auto fCluster = FbxCluster::Create( fSkin, "" );
+			fCluster->SetLink( (FbxNode*)mNodeToFbxNodeLookup[ mesh->ParentNode ].ToPointer() );
+			fCluster->SetLinkMode( FbxCluster::ELinkMode::eNormalize );
+			fCluster->SetTransformLinkMatrix( fCluster->GetLink()->EvaluateGlobalTransform() );
+			fSkin->AddCluster( fCluster );
+			fClusterPtr = (IntPtr)fCluster;
+			fClusterLookup[ nodeIndex ] = fClusterPtr;
+		}
+
+		auto fCluster = (FbxCluster*)fClusterPtr.ToPointer();
+		for ( size_t j = 0; j < mesh->Vertices->Length; j++ )
+			fCluster->AddControlPointIndex( vertexStart + j, 1 );
 	}
 
 	void FbxModelExporter::ConvertMaterialToFbxSurfacePhong( FbxScene* fScene, Model^ model, Material^ mat, TexturePack^ textures, const size_t& i )
@@ -132,7 +394,8 @@ namespace DDS3ModelLibrary::Models::Conversion
 			if ( textures != nullptr && textures->Count > mat->TextureId.Value )
 			{
 				// Export textures
-				textures[ mat->TextureId.Value ]->GetBitmap( 0, 0 )->Save( textureName + ".png" );
+				textures[ mat->TextureId.Value ]->GetBitmap( 0, 0 )->Save(
+					System::IO::Path::Combine( mOutDir, textureName + ".png" ) );
 			}
 
 			// Create & connect file texture to material diffuse
@@ -161,22 +424,25 @@ namespace DDS3ModelLibrary::Models::Conversion
 		mMaterialCache[ i ] = (IntPtr)fMat;
 	}
 
-	FbxNode* FbxModelExporter::ConvertNodeToFbxNode( Model^ model, Node^ node, FbxScene* fScene, int index )
+	void FbxModelExporter::BuildNodeToFbxNodeMapping( Model^ model, FbxScene* fScene )
 	{
-		auto fNode = FbxNode::Create( fScene, Utf8String( FormatNodeName( model, node ) ).ToCStr() );
-		mNodeToFbxNodeLookup->Add( node, (IntPtr)fNode );
+		for ( size_t i = 0; i < model->Nodes->Count; i++ )
+		{
+			auto node = model->Nodes[ i ];
+			auto fNode = FbxNode::Create( fScene, Utf8String( FormatNodeName( model, node ) ).ToCStr() );
+			mNodeToFbxNodeLookup->Add( node, (IntPtr)fNode );
+			mConvertedNodes->Add( (IntPtr)fNode );
+		}
+	}
 
+	void FbxModelExporter::ConvertNodeToFbxNode( Model^ model, Node^ node, FbxScene* fScene, FbxNode* fNode, List<GenericMesh^>^ meshes )
+	{
 		// Setup transform
 		fNode->LclRotation.Set( ConvertNumericsVector3RotationToFbxDouble3( node->Rotation ) );
 		fNode->LclScaling.Set( ConvertNumericsVector3ToFbxDouble3( node->Scale ) );
 		fNode->LclTranslation.Set( ConvertNumericsVector3ToFbxDouble3( node->Position ) );
 		fNode->SetPreferedAngle( fNode->LclRotation.Get() );
-		mConvertedNodes->Add( (IntPtr)fNode );
-		return fNode;
-	}
 
-	void FbxModelExporter::PopulateConvertedFbxNode( Model^ model, Node^ node, FbxScene* fScene, FbxNode* fNode )
-	{
 		// Set parent
 		FbxNode* fParentNode;
 		if ( node->Parent != nullptr )
@@ -199,17 +465,17 @@ namespace DDS3ModelLibrary::Models::Conversion
 		if ( node->Geometry != nullptr )
 		{
 			if ( node->Geometry->Meshes != nullptr && node->Geometry->Meshes->Count > 0 )
-				ConvertMeshListToFbxNodes( model, node, node->Geometry->Meshes, fScene, fNode );
+				ProcessMeshList( model, node, node->Geometry->Meshes, meshes );
 
 			if ( node->Geometry->TranslucentMeshes != nullptr && node->Geometry->TranslucentMeshes->Count > 0 )
-				ConvertMeshListToFbxNodes( model, node, node->Geometry->TranslucentMeshes, fScene, fNode );
+				ProcessMeshList( model, node, node->Geometry->TranslucentMeshes, meshes );
 		}
 
 		if ( node->DeprecatedMeshList != nullptr && node->DeprecatedMeshList->Count > 0 )
-			ConvertMeshListToFbxNodes( model, node, node->DeprecatedMeshList, fScene, fNode );
+			ProcessMeshList( model, node, node->DeprecatedMeshList, meshes );
 
 		if ( node->DeprecatedMeshList2 != nullptr && node->DeprecatedMeshList2->Count > 0 )
-			ConvertMeshListToFbxNodes( model, node, node->DeprecatedMeshList2, fScene, fNode );
+			ProcessMeshList( model, node, node->DeprecatedMeshList2, meshes );
 	}
 
 	FbxDouble3 FbxModelExporter::ConvertNumericsVector3RotationToFbxDouble3( Vector3 rotation )
@@ -226,15 +492,10 @@ namespace DDS3ModelLibrary::Models::Conversion
 		return FbxDouble3( value.X, value.Y, value.Z );
 	}
 
-	void FbxModelExporter::ConvertMeshListToFbxNodes( Model^ model, Node^ node, MeshList^ meshList, FbxScene* fScene, FbxNode* fNode )
+	void FbxModelExporter::ProcessMeshList( Model^ model, Node^ node, MeshList^ meshList, List<GenericMesh^>^ processedMeshes )
 	{
 		for ( size_t i = 0; i < meshList->Count; i++ )
-		{
-			auto mesh = meshList[ i ];
-			auto fMeshNode = CreateFbxNodeForMesh( model, node, Utf8String( FormatNodeName( model, node ) + "_mesh" + i ).ToCStr(), fScene );
-			auto fMesh = ConvertMeshToFbxMesh( model, node, mesh, fScene, fNode, fMeshNode );
-			fMeshNode->SetNodeAttribute( fMesh );
-		}
+			ProcessMesh( model, node, meshList[i], processedMeshes );
 	}
 
 	FbxNode* FbxModelExporter::CreateFbxNodeForMesh( Model^ model, Node^ node, const char* name, FbxScene* fScene )
@@ -247,309 +508,206 @@ namespace DDS3ModelLibrary::Models::Conversion
 		return fMeshNode;
 	}
 
-	FbxMesh* FbxModelExporter::ConvertMeshToFbxMesh( Model^ model, Node^ node, Mesh^ mesh, FbxScene* fScene, FbxNode* fNode, FbxNode* fMeshNode )
+	void FbxModelExporter::ProcessMesh( Model^ model, Node^ node, Mesh^ mesh, List<GenericMesh^>^ meshes )
 	{
 		switch ( mesh->Type )
 		{
 		case MeshType::Type1:
-			return ConvertMeshType1ToFbxMesh( model, node, (MeshType1^)mesh, fScene, fNode, fMeshNode );
+			return ProcessMeshType1( model, node, (MeshType1^)mesh, meshes );
 
 		case MeshType::Type2:
-			return ConvertMeshType2ToFbxMesh( model, node, (MeshType2^)mesh, fScene, fNode, fMeshNode );
+			return ProcessMeshType2( model, node, (MeshType2^)mesh, meshes );
 
-		case MeshType::Type4:
-			return ConvertMeshType4ToFbxMesh( model, node, (MeshType4^)mesh, fScene, fNode, fMeshNode );
-
-		case MeshType::Type5:
-			return ConvertMeshType5ToFbxMesh( model, node, (MeshType5^)mesh, fScene, fNode, fMeshNode );
-
-		case MeshType::Type7:
-			return ConvertMeshType7ToFbxMesh( model, node, (MeshType7^)mesh, fScene, fNode, fMeshNode );
-
-		case MeshType::Type8:
-			return ConvertMeshType8ToFbxMesh( model, node, (MeshType8^)mesh, fScene, fNode, fMeshNode );
+		case MeshType::Type4:												 
+			return ProcessMeshType4( model, node, (MeshType4^)mesh, meshes );
+																			 
+		case MeshType::Type5:												
+			return ProcessMeshType5( model, node, (MeshType5^)mesh, meshes );
+																			
+		case MeshType::Type7:												 
+			return ProcessMeshType7( model, node, (MeshType7^)mesh, meshes );
+																			
+		case MeshType::Type8:												
+			return ProcessMeshType8( model, node, (MeshType8^)mesh, meshes );
 		default:
 			break;
 		}
-
-		return nullptr;
 	}
 
-	FbxMesh* FbxModelExporter::ConvertMeshType1ToFbxMesh( Model^ model, Node^ node, MeshType1^ mesh, FbxScene* fScene, FbxNode* fNode, FbxNode* fMeshNode )
+	void FbxModelExporter::ProcessMeshType1( Model^ model, Node^ node, MeshType1^ mesh, List<GenericMesh^>^ meshes )
 	{
-		// Convert batches (positions, normals)
-		auto fMesh = FbxMesh::Create( fMeshNode, "" );
-		fMesh->InitControlPoints( mesh->VertexCount );
-		auto fControlPoints = fMesh->GetControlPoints();
-		auto fElementNormal = CreateFbxMeshElementNormal( fMesh );
-		CreateFbxElementMaterial( fMesh );
-		auto fElementColors = CreateFbxMeshElementVertexColor( fMesh );
-		auto fElementUV = CreateFbxMeshElementUV( fMesh, "UVChannel_1", 0 );
-		auto fElementUV2 = mConfig->ExportMultipleUvLayers ? CreateFbxMeshElementUV( fMesh, "UVChannel_2", 1 ) : nullptr;
-
-		int vertexStart = 0;
 		for ( size_t i = 0; i < mesh->Batches->Count; i++ )
 		{
 			auto batch = mesh->Batches[ i ];
 			auto transformed = batch->Transform( node->WorldTransform );
-			ConvertPositionsToFbxControlPoints( &fControlPoints, transformed.Item1 );
-
-			if ( batch->Normals != nullptr )
-				ConvertNormalsToFbxLayerElementNormalDirectArray( fElementNormal, transformed.Item2, vertexStart );
-
-			if ( batch->TexCoords != nullptr )
-				ConvertTexCoordsToFbxLayerElementUVDirectArray( fElementUV, batch->TexCoords, vertexStart );
-
-			if ( mConfig->ExportMultipleUvLayers && batch->TexCoords2 != nullptr )
-				ConvertTexCoordsToFbxLayerElementUVDirectArray( fElementUV2, batch->TexCoords2, vertexStart );
-
-			if ( batch->Colors != nullptr )
-				ConvertColorsToFbxLayerElementVertexColorsDirectArray( fElementColors, batch->Colors, vertexStart );
-
-			// Convert triangles
-			ConvertTrianglesToFbxPolygons( fMesh, batch->Triangles, vertexStart );
-			vertexStart += batch->VertexCount;
+			auto gMesh = gcnew GenericMesh();
+			gMesh->Source = mesh;
+			gMesh->ParentNode = node;
+			gMesh->Vertices = transformed.Item1;
+			gMesh->Normals = transformed.Item2;
+			gMesh->UV1 = batch->TexCoords;
+			gMesh->UV2 = batch->TexCoords2;
+			gMesh->Colors = batch->Colors;
+			gMesh->Groups = gcnew array<GenericPrimitiveGroup>( 1 );
+			gMesh->Groups[ 0 ].MaterialIndex = mesh->MaterialIndex;
+			gMesh->Groups[ 0 ].Triangles = batch->Triangles;
+			meshes->Add( gMesh );
 		}
-
-		// Add skin that rigidly binds it to the parent node
-		CreateFbxSkinForRigidParentNodeBinding( fScene, fNode, fMesh );
-
-		// Add material to mesh node
-		fMeshNode->AddMaterial( (FbxSurfaceMaterial*)mMaterialCache[ mesh->MaterialIndex ].ToPointer() );
-
-		return fMesh;
 	}
 
-	FbxMesh* FbxModelExporter::ConvertMeshType2ToFbxMesh( Model^ model, Node^ node, MeshType2^ mesh, FbxScene* fScene, FbxNode* fNode, FbxNode* fMeshNode )
+	void FbxModelExporter::ProcessMeshType2( Model^ model, Node^ node, MeshType2^ mesh, List<GenericMesh^>^ meshes )
 	{
-		// Convert batches (positions, normals)
-		auto fMesh = FbxMesh::Create( fMeshNode, "" );
-		fMesh->InitControlPoints( mesh->VertexCount );
-		auto fControlPoints = fMesh->GetControlPoints();
-		auto fElementNormal = CreateFbxMeshElementNormal( fMesh );
-		CreateFbxElementMaterial( fMesh );
-		auto fElementColors = CreateFbxMeshElementVertexColor( fMesh );
-		auto fElementUV = CreateFbxMeshElementUV( fMesh, "UVChannel_1", 0 );
-		auto fElementUV2 = mConfig->ExportMultipleUvLayers ? CreateFbxMeshElementUV( fMesh, "UVChannel_2", 1 ) : nullptr;
-
-		// Create skin to hold the weights
-		auto fSkin = FbxSkin::Create( fScene, "" );
-		fMesh->AddDeformer( fSkin );
-
-		auto fClusterLookup = gcnew Dictionary<int, IntPtr>();
-		int vertexStart = 0;
 		for ( size_t i = 0; i < mesh->Batches->Count; i++ )
 		{
 			auto batch = mesh->Batches[ i ];
 			auto transformed = batch->Transform( model->Nodes );
-			ConvertPositionsToFbxControlPoints( &fControlPoints, transformed.Item1 );
-
-			if ( transformed.Item2 != nullptr )
-				ConvertNormalsToFbxLayerElementNormalDirectArray( fElementNormal, transformed.Item2, vertexStart );
-
-			if ( batch->TexCoords != nullptr )
-				ConvertTexCoordsToFbxLayerElementUVDirectArray( fElementUV, batch->TexCoords, vertexStart );
-
-			if ( mConfig->ExportMultipleUvLayers && batch->TexCoords2 != nullptr )
-				ConvertTexCoordsToFbxLayerElementUVDirectArray( fElementUV2, batch->TexCoords2, vertexStart );
-
-			if ( batch->Colors != nullptr )
-				ConvertColorsToFbxLayerElementVertexColorsDirectArray( fElementColors, batch->Colors, vertexStart );
-
-			// Convert triangles
-			ConvertTrianglesToFbxPolygons( fMesh, batch->Triangles, vertexStart );
-
-			// Convert weights
-			ConvertNodeWeightsToFbxClusters( transformed.Item3, fClusterLookup, fScene, fMeshNode, fSkin, vertexStart, model );
-			vertexStart += batch->VertexCount;
+			auto gMesh = gcnew GenericMesh();
+			gMesh->Source = mesh;
+			gMesh->ParentNode = node;
+			gMesh->Vertices = transformed.Item1;
+			gMesh->Normals = transformed.Item2;
+			gMesh->UV1 = batch->TexCoords;
+			gMesh->UV2 = batch->TexCoords2;
+			gMesh->Colors = batch->Colors;
+			gMesh->Weights = transformed.Item3;
+			gMesh->Groups = gcnew array<GenericPrimitiveGroup>( 1 );
+			gMesh->Groups[ 0 ].MaterialIndex = mesh->MaterialIndex;
+			gMesh->Groups[ 0 ].Triangles = batch->Triangles;
+			meshes->Add( gMesh );
 		}
-
-		// Add material to mesh node
-		fMeshNode->AddMaterial( (FbxSurfaceMaterial*)mMaterialCache[ mesh->MaterialIndex ].ToPointer() );
-
-		return fMesh;
 	}
 
-	FbxMesh* FbxModelExporter::ConvertMeshType4ToFbxMesh( Model^ model, Node^ node, MeshType4^ mesh, FbxScene* fScene, FbxNode* fNode, FbxNode* fMeshNode )
+	void FbxModelExporter::ProcessMeshType4( Model^ model, Node^ node, MeshType4^ mesh, List<GenericMesh^>^ meshes )
 	{
-		// Convert batches (positions, normals)
-		auto fMesh = FbxMesh::Create( fMeshNode, "" );
-		fMesh->InitControlPoints( mesh->VertexCount );
-		auto fControlPoints = fMesh->GetControlPoints();
-		auto fElementNormal = CreateFbxMeshElementNormal( fMesh );
-		CreateFbxElementMaterial( fMesh );
-
-		// Create skin to hold the weights
 		auto transformed = mesh->Transform( node->WorldTransform );
-		ConvertPositionsToFbxControlPoints( &fControlPoints, transformed.Item1 );
-
-		if ( transformed.Item2 != nullptr )
-			ConvertNormalsToFbxLayerElementNormalDirectArray( fElementNormal, transformed.Item2, 0 );
-
-		// Convert triangles
-		ConvertTrianglesToFbxPolygons( fMesh, mesh->Triangles, 0 );
-
-		// Add skin that rigidly binds it to the parent node
-		CreateFbxSkinForRigidParentNodeBinding( fScene, fNode, fMesh );
-
-		// Add material to mesh node
-		fMeshNode->AddMaterial( (FbxSurfaceMaterial*)mMaterialCache[ mesh->MaterialIndex ].ToPointer() );
-
-		return fMesh;
+		auto gMesh = gcnew GenericMesh();
+		gMesh->Source = mesh;
+		gMesh->ParentNode = node;
+		gMesh->Vertices = transformed.Item1;
+		gMesh->Normals = transformed.Item2;
+		gMesh->Groups = gcnew array<GenericPrimitiveGroup>( 1 );
+		gMesh->Groups[ 0 ].MaterialIndex = mesh->MaterialIndex;
+		gMesh->Groups[ 0 ].Triangles = mesh->Triangles;
+		meshes->Add( gMesh );
 	}
 
-	FbxMesh* FbxModelExporter::ConvertMeshType5ToFbxMesh( Model^ model, Node^ node, MeshType5^ mesh, FbxScene* fScene, FbxNode* fNode, FbxNode* fMeshNode )
+	void FbxModelExporter::ProcessMeshType5( Model^ model, Node^ node, MeshType5^ mesh, List<GenericMesh^>^ meshes )
 	{
-		// Convert batches (positions, normals)
-		auto fMesh = FbxMesh::Create( fMeshNode, "" );
-		fMesh->InitControlPoints( mesh->VertexCount );
-		auto fControlPoints = fMesh->GetControlPoints();
-		auto fElementNormal = CreateFbxMeshElementNormal( fMesh );
-		CreateFbxElementMaterial( fMesh );
-		auto fElementColor = CreateFbxMeshElementVertexColor( fMesh );
-		auto fElementUV = CreateFbxMeshElementUV( fMesh, "UVChannel_1", 0 );
-		auto fElementUV2 = mConfig->ExportMultipleUvLayers ? CreateFbxMeshElementUV( fMesh, "UVChannel_2", 1 ) : nullptr;
-
-		// Create skin to hold the weights
 		if ( mesh->UsedNodeCount == 0 )
 		{
-			// TODO morphers
 			auto transformed = mesh->Transform( node->WorldTransform );
+			auto gMesh = gcnew GenericMesh();
+			gMesh->Source = mesh;
+			gMesh->ParentNode = node;
+			gMesh->Vertices = transformed[0].Item1;
+			gMesh->Normals = transformed[0].Item2;
+			gMesh->UV1 = mesh->TexCoords;
+			gMesh->UV2 = mesh->TexCoords2;
+			gMesh->Groups = gcnew array<GenericPrimitiveGroup>( 1 );
+			gMesh->Groups[ 0 ].MaterialIndex = mesh->MaterialIndex;
+			gMesh->Groups[ 0 ].Triangles = mesh->Triangles;
 
-			ConvertPositionsToFbxControlPoints( &fControlPoints, transformed[ 0 ].Item1 );
+			gMesh->BlendShapes = gcnew array<GenericBlendShape>( transformed->Length - 1 );
+			for ( size_t i = 0; i < gMesh->BlendShapes->Length; i++ )
+			{
+				auto morphData = GenericBlendShape();
+				morphData.Vertices = transformed[ 1 + i ].Item1;
+				morphData.Normals = transformed[ 1 + i ].Item2;
+				gMesh->BlendShapes[ i ] = morphData;
+			}
 
-			if ( transformed[ 0 ].Item2 != nullptr )
-				ConvertNormalsToFbxLayerElementNormalDirectArray( fElementNormal, transformed[ 0 ].Item2, 0 );
-
-			if ( mesh->TexCoords != nullptr )
-				ConvertTexCoordsToFbxLayerElementUVDirectArray( fElementUV, mesh->TexCoords, 0 );
-
-			if ( mConfig->ExportMultipleUvLayers && mesh->TexCoords2 != nullptr )
-				ConvertTexCoordsToFbxLayerElementUVDirectArray( fElementUV2, mesh->TexCoords2, 0 );
-
-			// Convert triangles
-			ConvertTrianglesToFbxPolygons( fMesh, mesh->Triangles, 0 );
-
-			// Add skin that rigidly binds it to the parent node
-			CreateFbxSkinForRigidParentNodeBinding( fScene, fNode, fMesh );
+			meshes->Add( gMesh );
 		}
 		else
 		{
 			auto transformed = mesh->Transform( model->Nodes );		
-			ConvertPositionsToFbxControlPoints( &fControlPoints, transformed.Item1 );
-
-			if ( transformed.Item2 != nullptr )
-				ConvertNormalsToFbxLayerElementNormalDirectArray( fElementNormal, transformed.Item2, 0 );
-
-			if ( mesh->TexCoords != nullptr )
-				ConvertTexCoordsToFbxLayerElementUVDirectArray( fElementUV, mesh->TexCoords, 0 );
-
-			if ( mConfig->ExportMultipleUvLayers && mesh->TexCoords2 != nullptr )
-				ConvertTexCoordsToFbxLayerElementUVDirectArray( fElementUV2, mesh->TexCoords2, 0 );
-
-			// Convert weights
-			auto fSkin = FbxSkin::Create( fScene, "" );
-			fMesh->AddDeformer( fSkin );
-			auto fClusterLookup = gcnew Dictionary<int, IntPtr>();
-			ConvertNodeWeightsToFbxClusters( transformed.Item3, fClusterLookup, fScene, fMeshNode, fSkin, 0, model );
-
-			// Convert triangles
-			ConvertTrianglesToFbxPolygons( fMesh, mesh->Triangles, 0 );
+			auto gMesh = gcnew GenericMesh();
+			gMesh->Source = mesh;
+			gMesh->ParentNode = node;
+			gMesh->Vertices = transformed.Item1;
+			gMesh->Normals = transformed.Item2;
+			gMesh->UV1 = mesh->TexCoords;
+			gMesh->UV2 = mesh->TexCoords2;
+			gMesh->Weights = transformed.Item3;
+			gMesh->Groups = gcnew array<GenericPrimitiveGroup>( 1 );
+			gMesh->Groups[ 0 ].MaterialIndex = mesh->MaterialIndex;
+			gMesh->Groups[ 0 ].Triangles = mesh->Triangles;
+			meshes->Add( gMesh );
 		}
-
-		// Add material to mesh node
-		fMeshNode->AddMaterial( (FbxSurfaceMaterial*)mMaterialCache[ mesh->MaterialIndex ].ToPointer() );
-
-		return fMesh;
 	}
 
-	FbxMesh* FbxModelExporter::ConvertMeshType7ToFbxMesh( Model^ model, Node^ node, MeshType7^ mesh, FbxScene* fScene, FbxNode* fNode, FbxNode* fMeshNode )
+	void FbxModelExporter::ProcessMeshType7( Model^ model, Node^ node, MeshType7^ mesh, List<GenericMesh^>^ meshes )
 	{
-		// Convert batches (positions, normals)
-		auto fMesh = FbxMesh::Create( fMeshNode, "" );
-		fMesh->InitControlPoints( mesh->VertexCount );
-		auto fControlPoints = fMesh->GetControlPoints();
-		auto fElementNormal = CreateFbxMeshElementNormal( fMesh );
-		CreateFbxElementMaterial( fMesh );
-		auto fElementUV = CreateFbxMeshElementUV( fMesh, "UVChannel_1", 0 );
+		auto gMesh = gcnew GenericMesh();
+		gMesh->Source = mesh;
+		gMesh->ParentNode = node;
+		gMesh->Vertices = gcnew array<Vector3>( mesh->VertexCount );
+		gMesh->UV2 = mesh->TexCoords2;
+		gMesh->Weights = gcnew array<array<NodeWeight>^>( mesh->VertexCount );
+		gMesh->Groups = gcnew array<GenericPrimitiveGroup>( 1 );
+		gMesh->Groups[ 0 ].MaterialIndex = mesh->MaterialIndex;
+		gMesh->Groups[ 0 ].Triangles = mesh->Triangles;
 
-		// Create skin to hold the weights
-		auto fSkin = FbxSkin::Create( fScene, "" );
-		fSkin->SetSkinningType( FbxSkin::EType::eLinear );
-		fMesh->AddDeformer( fSkin );
-
-		auto fClusterLookup = gcnew Dictionary<int, IntPtr>();
 		int vertexStart = 0;
 		for ( size_t i = 0; i < mesh->Batches->Count; i++ )
 		{
 			auto batch = mesh->Batches[ i ];
 			auto transformed = batch->Transform( model->Nodes );
-			ConvertPositionsToFbxControlPoints( &fControlPoints, transformed.Item1 );
+			Array::Copy( transformed.Item1, 0, gMesh->Vertices, vertexStart, transformed.Item1->Length );
 
 			if ( transformed.Item2 != nullptr )
-				ConvertNormalsToFbxLayerElementNormalDirectArray( fElementNormal, transformed.Item2, vertexStart );
+			{
+				if ( gMesh->Normals == nullptr ) gMesh->Normals = gcnew array<Vector3>( mesh->VertexCount );
+				Array::Copy( transformed.Item2, 0, gMesh->Normals, vertexStart, transformed.Item2->Length );
+			}
 
 			if ( batch->TexCoords != nullptr )
-				ConvertTexCoordsToFbxLayerElementUVDirectArray( fElementUV, batch->TexCoords, vertexStart );
+			{
+				if ( gMesh->UV1 == nullptr ) gMesh->UV1 = gcnew array<Vector2>( mesh->VertexCount );
+				Array::Copy( batch->TexCoords, 0, gMesh->UV1, vertexStart, batch->TexCoords->Length );
+			}
 
-			// Convert weights
-			ConvertNodeWeightsToFbxClusters( transformed.Item3, fClusterLookup, fScene, fMeshNode, fSkin, vertexStart, model );
+			Array::Copy( transformed.Item3, 0, gMesh->Weights, vertexStart, transformed.Item3->Length );
 			vertexStart += batch->VertexCount;
 		}
 
-		// Convert triangles
-		ConvertTrianglesToFbxPolygons( fMesh, mesh->Triangles, 0 );
-
-		// Convert UV channel 2
-		if ( mConfig->ExportMultipleUvLayers && mesh->TexCoords2 != nullptr )
-			ConvertTexCoordsToFbxLayerElementUV( fMesh, "UVChannel_2", mesh->TexCoords2, 1 );
-
-		// Add material to mesh node
-		fMeshNode->AddMaterial( (FbxSurfaceMaterial*)mMaterialCache[ mesh->MaterialIndex ].ToPointer() );
-
-		return fMesh;
+		meshes->Add( gMesh );
 	}
 
-	FbxMesh* FbxModelExporter::ConvertMeshType8ToFbxMesh( Model^ model, Node^ node, MeshType8^ mesh, FbxScene* fScene, FbxNode* fNode, FbxNode* fMeshNode )
+	void FbxModelExporter::ProcessMeshType8( Model^ model, Node^ node, MeshType8^ mesh, List<GenericMesh^>^ meshes )
 	{
-		// Convert batches (positions, normals)
-		auto fMesh = FbxMesh::Create( fMeshNode, "" );
-		fMesh->InitControlPoints( mesh->VertexCount );
-		auto fControlPoints = fMesh->GetControlPoints();
-		auto fElementNormal = CreateFbxMeshElementNormal( fMesh );
-		CreateFbxElementMaterial( fMesh );
-		auto fElementUV = CreateFbxMeshElementUV( fMesh, "UVChannel_1", 0 );
+		auto gMesh = gcnew GenericMesh();
+		gMesh->Source = mesh;
+		gMesh->ParentNode = node;
+		gMesh->Vertices = gcnew array<Vector3>( mesh->VertexCount );
+		gMesh->UV2 = mesh->TexCoords2;
+		gMesh->Groups = gcnew array<GenericPrimitiveGroup>( 1 );
+		gMesh->Groups[ 0 ].MaterialIndex = mesh->MaterialIndex;
+		gMesh->Groups[ 0 ].Triangles = mesh->Triangles;
 
 		int vertexStart = 0;
 		for ( size_t i = 0; i < mesh->Batches->Count; i++ )
 		{
 			auto batch = mesh->Batches[ i ];
 			auto transformed = batch->Transform( node->WorldTransform );
-			ConvertPositionsToFbxControlPoints( &fControlPoints, transformed.Item1 );
+			Array::Copy( transformed.Item1, 0, gMesh->Vertices, vertexStart, transformed.Item1->Length );
 
 			if ( transformed.Item2 != nullptr )
-				ConvertNormalsToFbxLayerElementNormalDirectArray( fElementNormal, transformed.Item2, vertexStart );
+			{
+				if ( gMesh->Normals == nullptr ) gMesh->Normals = gcnew array<Vector3>( mesh->VertexCount );
+				Array::Copy( transformed.Item2, 0, gMesh->Normals, vertexStart, transformed.Item2->Length );
+			}
 
 			if ( batch->TexCoords != nullptr )
-				ConvertTexCoordsToFbxLayerElementUVDirectArray( fElementUV, batch->TexCoords, vertexStart );
+			{
+				if ( gMesh->UV1 == nullptr ) gMesh->UV1 = gcnew array<Vector2>( mesh->VertexCount );
+				Array::Copy( batch->TexCoords, 0, gMesh->UV1, vertexStart, batch->TexCoords->Length );
+			}
 
 			vertexStart += batch->VertexCount;
 		}
 
-		// Add skin that rigidly binds it to the parent node
-		CreateFbxSkinForRigidParentNodeBinding( fScene, fNode, fMesh );
-
-		// Convert triangles
-		ConvertTrianglesToFbxPolygons( fMesh, mesh->Triangles, 0 );
-
-		// Convert UV channel 2
-		if ( mConfig->ExportMultipleUvLayers && mesh->TexCoords2 != nullptr )
-			ConvertTexCoordsToFbxLayerElementUV( fMesh, "UVChannel_2", mesh->TexCoords2, 1 );
-
-		// Add material to mesh node
-		fMeshNode->AddMaterial( (FbxSurfaceMaterial*)mMaterialCache[ mesh->MaterialIndex ].ToPointer() );
-
-		return fMesh;
+		meshes->Add( gMesh );
 	}
 
 	String^ FbxModelExporter::FormatNodeName( Model^ model, Node^ node )
@@ -569,12 +727,14 @@ namespace DDS3ModelLibrary::Models::Conversion
 	}
 
 	// Conversion -> FBX functions
-	void FbxModelExporter::ConvertPositionsToFbxControlPoints( FbxVector4** fControlPoints, array<Vector3>^ positions )
+	FbxVector4* FbxModelExporter::ConvertPositionsToFbxControlPoints( FbxVector4* fControlPoints, array<Vector3>^ positions )
 	{
 		for ( size_t j = 0; j < positions->Length; j++ )
 		{
-			*( *fControlPoints )++ = FbxVector4( positions[ j ].X, positions[ j ].Y, positions[ j ].Z );
+			*fControlPoints++ = FbxVector4( positions[ j ].X, positions[ j ].Y, positions[ j ].Z );
 		}
+
+		return fControlPoints;
 	}
 
 	void FbxModelExporter::ConvertNormalsToFbxLayerElementNormalDirectArray( FbxLayerElementNormal* fElementNormal, array<Vector3>^ normals, int vertexStart )
@@ -613,15 +773,17 @@ namespace DDS3ModelLibrary::Models::Conversion
 	{
 		for ( size_t i = 0; i < colors->Length; i++ )
 		{
-			fElementColors->GetDirectArray().SetAt( vertexStart + i, FbxColor( colors[ i ].R / 255.f, colors[ i ].G / 255.f, colors[ i ].B / 255.f, colors[ i ].A / 255.f ) );
+			fElementColors->GetDirectArray().SetAt( vertexStart + i, 
+				FbxColor( (double)colors[ i ].R / 255.0, (float)colors[ i ].G / 255.0, 
+						  (double)colors[ i ].B / 255.0, (float)colors[ i ].A / 128.0 ) );
 		}
 	}
 
-	void FbxModelExporter::ConvertTrianglesToFbxPolygons( FbxMesh* fMesh, array<Triangle>^ triangles, int vertexStart )
+	void FbxModelExporter::ConvertTrianglesToFbxPolygons( FbxMesh* fMesh, array<Triangle>^ triangles, int vertexStart, int materialIndex )
 	{
 		for ( size_t i = 0; i < triangles->Length; i++ )
 		{
-			fMesh->BeginPolygon();
+			fMesh->BeginPolygon( materialIndex, -1, -1, false );
 			fMesh->AddPolygon( vertexStart + triangles[ i ].A );
 			fMesh->AddPolygon( vertexStart + triangles[ i ].B );
 			fMesh->AddPolygon( vertexStart + triangles[ i ].C );
@@ -645,37 +807,46 @@ namespace DDS3ModelLibrary::Models::Conversion
 
 	void FbxModelExporter::ConvertNodeWeightsToFbxClusters( array<array<NodeWeight>^>^ weights, Dictionary<int,
 		System::IntPtr>^ fClusterLookup, fbxsdk::FbxScene* fScene, FbxNode* fMeshNode, fbxsdk::FbxSkin* fSkin,
-		int vertexStart, Model^ model )
+		int vertexStart, Model^ model, GenericMesh^ mesh )
 	{
 		for ( size_t vIdx = 0; vIdx < weights->Length; vIdx++ )
 		{
-			for ( size_t wIdx = 0; wIdx < weights[ vIdx ]->Length; wIdx++ )
+			auto vWeights = weights[ vIdx ];
+			if ( vWeights )
 			{
-				auto w = weights[ vIdx ][ wIdx ];
-				if ( w.Weight == 0.0f ) continue;
-
-				IntPtr fClusterPtr;
-				FbxCluster* fCluster;
-				if ( !fClusterLookup->TryGetValue( w.NodeIndex, fClusterPtr ) )
+				for ( size_t wIdx = 0; wIdx < vWeights->Length; wIdx++ )
 				{
-					auto fNode = (FbxNode*)mConvertedNodes[ w.NodeIndex ].ToPointer();
-					fCluster = FbxCluster::Create( fScene, "" );
-					fCluster->SetLink( fNode );
-					fCluster->SetLinkMode( FbxCluster::ELinkMode::eNormalize );
+					auto w = weights[ vIdx ][ wIdx ];
+					if ( w.Weight == 0.0f ) continue;
 
-					// NOTE: DO NOT USE 'EvaluateGlobalTransform', IT IS BROKEN
-					// AND DOES NOT ALWAYS RETURN THE CORRECT MATRIX!!!!
-					auto worldTfm = model->Nodes[ w.NodeIndex ]->WorldTransform;
-					fCluster->SetTransformLinkMatrix( ConvertNumericsMatrix4x4ToFbxAMatrix( worldTfm ) );
-					fSkin->AddCluster( fCluster );
-					fClusterLookup[ w.NodeIndex ] = (IntPtr)fCluster;
-				}
-				else
-				{
-					fCluster = (FbxCluster*)fClusterPtr.ToPointer();
-				}
+					IntPtr fClusterPtr;
+					FbxCluster* fCluster;
+					if ( !fClusterLookup->TryGetValue( w.NodeIndex, fClusterPtr ) )
+					{
+						auto fNode = (FbxNode*)mConvertedNodes[ w.NodeIndex ].ToPointer();
+						fCluster = FbxCluster::Create( fScene, "" );
+						fCluster->SetLink( fNode );
+						fCluster->SetLinkMode( FbxCluster::ELinkMode::eNormalize );
 
-				fCluster->AddControlPointIndex( vertexStart + vIdx, w.Weight );
+						// NOTE: DO NOT USE 'EvaluateGlobalTransform', IT IS BROKEN
+						// AND DOES NOT ALWAYS RETURN THE CORRECT MATRIX!!!!
+						auto worldTfm = model->Nodes[ w.NodeIndex ]->WorldTransform;
+						fCluster->SetTransformLinkMatrix( ConvertNumericsMatrix4x4ToFbxAMatrix( worldTfm ) );
+						fSkin->AddCluster( fCluster );
+						fClusterLookup[ w.NodeIndex ] = (IntPtr)fCluster;
+					}
+					else
+					{
+						fCluster = (FbxCluster*)fClusterPtr.ToPointer();
+					}
+
+					fCluster->AddControlPointIndex( vertexStart + vIdx, w.Weight );
+				}
+			}
+			else
+			{
+				// Add cluster that rigidly binds it to the parent node
+				AddRigidFbxClusterForParentNode( model, mesh, fSkin, fClusterLookup, vertexStart );
 			}
 		}
 	}
@@ -693,7 +864,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 		return fLayer;
 	}
 
-	FbxGeometryElementNormal* FbxModelExporter::CreateFbxMeshElementNormal( fbxsdk::FbxMesh* fMesh )
+	FbxGeometryElementNormal* FbxModelExporter::CreateFbxMeshElementNormal( fbxsdk::FbxGeometryBase* fMesh )
 	{
 		auto fElementNormal = fMesh->CreateElementNormal();
 		fElementNormal->SetMappingMode( FbxLayerElement::EMappingMode::eByControlPoint );
@@ -707,9 +878,8 @@ namespace DDS3ModelLibrary::Models::Conversion
 		// Technically not necessary to add, however 3ds Max adds this by default
 		// so we do so as well to maintain compat
 		auto fElementMaterial = fMesh->CreateElementMaterial();
-		fElementMaterial->SetMappingMode( FbxLayerElement::EMappingMode::eAllSame );
+		fElementMaterial->SetMappingMode( FbxLayerElement::EMappingMode::eByPolygon );
 		fElementMaterial->SetReferenceMode( FbxLayerElement::EReferenceMode::eIndexToDirect );
-		fElementMaterial->GetIndexArray().Add( 0 );
 		return fElementMaterial;
 	}
 
@@ -731,6 +901,9 @@ namespace DDS3ModelLibrary::Models::Conversion
 		fElementColors->SetMappingMode( FbxLayerElement::EMappingMode::eByControlPoint );
 		fElementColors->SetReferenceMode( FbxLayerElement::EReferenceMode::eDirect );
 		fElementColors->GetDirectArray().SetCount( fMesh->GetControlPointsCount() );
+		for ( size_t i = 0; i < fElementColors->GetDirectArray().GetCount(); i++ )
+			fElementColors->GetDirectArray().SetAt( i, FbxColor( 1, 1, 1, 1 ) );
+
 		return fElementColors;
 	}
 
@@ -742,8 +915,8 @@ namespace DDS3ModelLibrary::Models::Conversion
 			gcnew Exception( "Failed to set FBX export version" );
 
 		// Initialize exporter
-		auto fileFormat = mManager->GetIOPluginRegistry()->GetNativeWriterFormat();
-		if ( !exporter->Initialize( Utf8String( path ).ToCStr(), fileFormat, mManager->GetIOSettings() ) )
+		//auto fileFormat = mManager->GetIOPluginRegistry()->GetNativeWriterFormat();
+		if ( !exporter->Initialize( Utf8String( path ).ToCStr(), -1, mManager->GetIOSettings() ) )
 		{
 			auto errorMsg = gcnew String( exporter->GetStatus().GetErrorString() );
 			gcnew Exception( "Failed to initialize FBX exporter: " + errorMsg );
