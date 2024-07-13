@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29123.88
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35027.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS3ModelLibrary", "DDS3ModelLibrary\DDS3ModelLibrary.csproj", "{D8D5B882-7D8F-4206-8DC7-DF0F0EB59A55}"
 EndProject
@@ -101,7 +101,7 @@ Global
 		{9960B785-6207-44E8-BA42-EC7F6F785344}.Release|x64.Build.0 = Release|x64
 		{9960B785-6207-44E8-BA42-EC7F6F785344}.Release|x86.ActiveCfg = Release|Any CPU
 		{9960B785-6207-44E8-BA42-EC7F6F785344}.Release|x86.Build.0 = Release|Any CPU
-		{9034CDF5-52AC-4E6C-9759-879B0B4F3887}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{9034CDF5-52AC-4E6C-9759-879B0B4F3887}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{9034CDF5-52AC-4E6C-9759-879B0B4F3887}.Debug|x64.ActiveCfg = Debug|x64
 		{9034CDF5-52AC-4E6C-9759-879B0B4F3887}.Debug|x64.Build.0 = Debug|x64
 		{9034CDF5-52AC-4E6C-9759-879B0B4F3887}.Debug|x86.ActiveCfg = Debug|Win32
