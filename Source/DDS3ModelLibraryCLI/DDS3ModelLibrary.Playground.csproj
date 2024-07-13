@@ -1,83 +1,40 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{6453CE1B-556C-4584-B10D-70A51071C055}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>DDS3ModelLibraryCLI</RootNamespace>
     <AssemblyName>DDS3ModelLibraryCLI</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <TargetFramework>net48</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <Deterministic>true</Deterministic>
-    <TargetFrameworkProfile />
+    <AssemblyTitle>DDS3ModelLibraryCLI</AssemblyTitle>
+    <Product>DDS3ModelLibraryCLI</Product>
+    <LangVersion>7.2</LangVersion>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <PostBuildEvent>xcopy $(SolutionDir)..\Resources Resources /q /e /d /y /i</PostBuildEvent>
+    <PostBuildEvent>xcopy $(SolutionDir)..\Resources Resources /q /e /d /y /i</PostBuildEvent>
+    <PostBuildEvent>xcopy $(SolutionDir)..\Resources Resources /q /e /d /y /i</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>x64</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Externals\AtlusFileSystemLibrary\Source\AtlusFileSystemLibrary\AtlusFileSystemLibrary.csproj">
-      <Project>{9960b785-6207-44e8-ba42-ec7f6f785344}</Project>
-      <Name>AtlusFileSystemLibrary</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DDS3ModelLibrary.Native\DDS3ModelLibrary.Native.vcxproj">
-      <Project>{9034cdf5-52ac-4e6c-9759-879b0b4f3887}</Project>
-      <Name>DDS3ModelLibrary.Native</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DDS3ModelLibrary\DDS3ModelLibrary.csproj">
-      <Project>{d8d5b882-7d8f-4206-8dc7-df0f0eb59a55}</Project>
-      <Name>DDS3ModelLibrary</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="AssimpNet">
-      <Version>4.1.0</Version>
-    </PackageReference>
-    <PackageReference Include="Newtonsoft.Json">
-      <Version>12.0.1-beta1</Version>
-    </PackageReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy $(SolutionDir)..\Resources Resources /q /e /d /y /i</PostBuildEvent>
   </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="AssimpNet" Version="4.1.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Externals\AtlusFileSystemLibrary\Source\AtlusFileSystemLibrary\AtlusFileSystemLibrary.csproj" />
+    <ProjectReference Include="..\DDS3ModelLibrary.Native\DDS3ModelLibrary.Native.vcxproj" />
+    <ProjectReference Include="..\DDS3ModelLibrary\DDS3ModelLibrary.csproj" />
+  </ItemGroup>
 </Project>

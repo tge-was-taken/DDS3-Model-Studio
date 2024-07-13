@@ -1,226 +1,43 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{D8D5B882-7D8F-4206-8DC7-DF0F0EB59A55}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DDS3ModelLibrary</RootNamespace>
-    <AssemblyName>DDS3ModelLibrary</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-    <TargetFrameworkProfile />
+    <TargetFramework>net48</TargetFramework>
+    <AssemblyTitle>DDS3ModelLibrary</AssemblyTitle>
+    <Product>DDS3ModelLibrary</Product>
+    <LangVersion>7.2</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <PreBuildEvent />
+    <PostBuildEvent>xcopy $(SolutionDir)..\Resources Resources /q /e /d /y /i</PostBuildEvent>
+    <PreBuildEvent />
+    <PostBuildEvent>xcopy $(SolutionDir)..\Resources Resources /q /e /d /y /i</PostBuildEvent>
+    <PreBuildEvent />
+    <PostBuildEvent>xcopy $(SolutionDir)..\Resources Resources /q /e /d /y /i</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>7.2</LangVersion>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="AssimpNet, Version=4.1.0.0, Culture=neutral, PublicKeyToken=0d51b391f59f42a6, processorArchitecture=MSIL">
-      <HintPath>..\packages\AssimpNet.4.1.0\lib\net40\AssimpNet.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.12.0.1-beta1\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.2\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Models\Conversion\AssimpModelExporter.Config.cs" />
-    <Compile Include="Models\Conversion\AssimpModelExporter.cs" />
-    <Compile Include="Models\Conversion\ModelExporter.cs" />
-    <Compile Include="Models\Conversion\ModelImporter.cs" />
-    <Compile Include="Motions\Conversion\AssimpMotionExporter.Config.cs" />
-    <Compile Include="Motions\Conversion\AssimpMotionExporter.cs" />
-    <Compile Include="Motions\Conversion\AssimpMotionImporter.Config.cs" />
-    <Compile Include="Motions\Conversion\AssimpMotionImporter.cs" />
-    <Compile Include="Motions\Conversion\MotionExporter.cs" />
-    <Compile Include="Motions\Conversion\IMotionImporter.cs" />
-    <Compile Include="Utilities\Singleton.cs" />
-    <Compile Include="Motions\Keyframes.cs" />
-    <Compile Include="Motions\Internal\KeyframeTrack.cs" />
-    <Compile Include="Motions\Motion.cs" />
-    <Compile Include="Motions\NodeController.cs" />
-    <Compile Include="Motions\ControllerType.cs" />
-    <Compile Include="Motions\Internal\MotionControllerDefinition.cs" />
-    <Compile Include="Motions\Internal\MotionDefinition.cs" />
-    <Compile Include="Motions\MotionPack.cs" />
-    <Compile Include="IO\AbstractResource.cs" />
-    <Compile Include="IO\Common\EndianBinaryWriter.ExplicitWriteMethods.cs" />
-    <Compile Include="IO\Common\IBinarySerializableExtensions.cs" />
-    <Compile Include="IO\Common\Utilities\EncodingExtensions.cs" />
-    <Compile Include="Models\Field\FieldEffect.cs" />
-    <Compile Include="Models\Field\FieldLight.cs" />
-    <Compile Include="Models\Field\FieldObject.cs" />
-    <Compile Include="Models\Field\FieldObjectField14Data.cs" />
-    <Compile Include="Models\Field\FieldObjectList.cs" />
-    <Compile Include="Models\Field\FieldObjectResourceType3.cs" />
-    <Compile Include="Models\Field\FieldObjectTransform.cs" />
-    <Compile Include="Models\Field\FieldObjectResourceType.cs" />
-    <Compile Include="IO\FieldResource.cs" />
-    <Compile Include="IO\FieldResourceHeader.cs" />
-    <Compile Include="Models\Field\FieldScene.cs" />
-    <Compile Include="Models\Field\FieldSceneField1CData.cs" />
-    <Compile Include="Models\Field\FieldTextureListFileName.cs" />
-    <Compile Include="Models\Geometry.cs" />
-    <Compile Include="Models\Field\IFieldObjectResource.cs" />
-    <Compile Include="IO\Common\BinarySourceInfo.cs" />
-    <Compile Include="Materials\Material.cs" />
-    <Compile Include="Materials\MaterialFlags.cs" />
-    <Compile Include="Materials\MaterialPresetStore.cs" />
-    <Compile Include="Models\Mesh.cs" />
-    <Compile Include="Models\MeshFlagsHelper.cs" />
-    <Compile Include="Models\MeshTypes\MeshType1Batch.cs" />
-    <Compile Include="Models\MeshTypes\MeshBatchRenderMode.cs" />
-    <Compile Include="Models\MeshTypes\MeshType2.cs" />
-    <Compile Include="Models\MeshTypes\MeshType2Batch.cs" />
-    <Compile Include="Models\MeshTypes\MeshType2NodeBatch.cs" />
-    <Compile Include="Models\MeshTypes\MeshType4.cs" />
-    <Compile Include="Models\MeshTypes\MeshType5.cs" />
-    <Compile Include="Models\MeshTypes\MeshType5BlendShape.cs" />
-    <Compile Include="Models\MeshTypes\MeshType5NodeBatch.cs" />
-    <Compile Include="Models\MeshTypes\MeshType7Batch.cs" />
-    <Compile Include="Models\MeshTypes\MeshType8Batch.cs" />
-    <Compile Include="Models\MeshFlags.cs" />
-    <Compile Include="Models\MeshList.cs" />
-    <Compile Include="Models\MeshTypes\MeshType7NodeBatch.cs" />
-    <Compile Include="Models\MeshTypes\MeshType.cs" />
-    <Compile Include="Models\MeshTypes\MeshType1.cs" />
-    <Compile Include="Models\MeshTypes\MeshType7.cs" />
-    <Compile Include="Models\MeshTypes\MeshType8.cs" />
-    <Compile Include="Models\MeshTypes\MeshTypeTraits.cs" />
-    <Compile Include="Models\ModelExtension.cs" />
-    <Compile Include="Models\ModelExtensionHeader.cs" />
-    <Compile Include="Models\ModelBinaryExtension.cs" />
-    <Compile Include="Models\ModelExtensionIdentifier.cs" />
-    <Compile Include="Models\Utilities\AssimpExtensions.cs" />
-    <Compile Include="Models\Utilities\AssimpHelper.cs" />
-    <Compile Include="Models\Utilities\Matrix4x4Extensions.cs" />
-    <Compile Include="Models\Utilities\QuaternionExtensions.cs" />
-    <Compile Include="Models\Processing\TagName.cs" />
-    <Compile Include="Models\Processing\TagNameParseException.cs" />
-    <Compile Include="Models\Processing\TagNameParser.cs" />
-    <Compile Include="Models\Node.cs" />
-    <Compile Include="Models\NodeWeight.cs" />
-    <Compile Include="Models\BoundingBox.cs" />
-    <Compile Include="IO\Common\Bits.cs" />
-    <Compile Include="Models\Model.cs" />
-    <Compile Include="PS2\GS\GSHelper.cs" />
-    <Compile Include="PS2\VIF\VifCode.cs" />
-    <Compile Include="PS2\VIF\VifTag.cs" />
-    <Compile Include="PS2\VIF\VifCommand.cs" />
-    <Compile Include="PS2\VIF\VifPacket.cs" />
-    <Compile Include="PS2\VIF\VifUnpackElementFormat.cs" />
-    <Compile Include="IO\Internal\RelocationTableEncoding.cs" />
-    <Compile Include="PS2\GS\GSPixelFormat.cs" />
-    <Compile Include="PS2\GS\GSPixelFormatHelper.cs" />
-    <Compile Include="IO\BinaryResource.cs" />
-    <Compile Include="IO\Common\AlignmentHelper.cs" />
-    <Compile Include="IO\Common\EndianBinaryReader.cs" />
-    <Compile Include="IO\Common\EndianBinaryWriter.cs" />
-    <Compile Include="IO\Common\Endianness.cs" />
-    <Compile Include="IO\Common\EndiannessHelper.cs" />
-    <Compile Include="IO\Common\FileHelper.cs" />
-    <Compile Include="IO\Common\IBinarySerializable.cs" />
-    <Compile Include="IO\Common\StreamView.cs" />
-    <Compile Include="IO\Common\StringBinaryFormat.cs" />
-    <Compile Include="IO\Common\Unsafe.cs" />
-    <Compile Include="Models\ModelPack.cs" />
-    <Compile Include="Models\ModelPackEffectInfo.cs" />
-    <Compile Include="Models\ModelPackInfo.cs" />
-    <Compile Include="Models\Color.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="IO\Resource.cs" />
-    <Compile Include="IO\ResourceDescriptor.cs" />
-    <Compile Include="IO\ResourceFileType.cs" />
-    <Compile Include="IO\ResourceHeader.cs" />
-    <Compile Include="IO\ResourceIdentifier.cs" />
-    <Compile Include="Data\ResourceStore.cs" />
-    <Compile Include="Textures\Texture.cs" />
-    <Compile Include="Textures\TexturePack.cs" />
-    <Compile Include="Textures\Exchange\DDS\DDSCodec.cs" />
-    <Compile Include="Textures\Exchange\DDS\DDSFormatDetails.cs" />
-    <Compile Include="Textures\Exchange\DDS\DDSHeader.cs" />
-    <Compile Include="Textures\Exchange\DDS\DDSHeaderCaps.cs" />
-    <Compile Include="Textures\Exchange\DDS\DDSHeaderFlags.cs" />
-    <Compile Include="Textures\Exchange\DDS\DDSHelper.cs" />
-    <Compile Include="Textures\Exchange\DDS\DDSPixelFormat.cs" />
-    <Compile Include="Textures\Exchange\DDS\DDSPixelFormatFlags.cs" />
-    <Compile Include="Textures\Exchange\DDS\DDSPixelFormatFourCC.cs" />
-    <Compile Include="Textures\Utilities\TextureImportHelper.cs" />
-    <Compile Include="Textures\Processing\BitmapHelper.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\Box.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\ColorData.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\CubeCut.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\IWuQuantizer.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\Lookup.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\LookupData.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\Pixel.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\QuantizationException.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\QuantizedPalette.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\WuQuantizer.cs" />
-    <Compile Include="Textures\Processing\WuQuantizer\WuQuantizerBase.cs" />
-    <Compile Include="Textures\TextureWrapMode.cs" />
-    <Compile Include="Models\Triangle.cs" />
-    <Compile Include="PS2\VIF\VifCodeStreamBuilder.cs" />
-    <Compile Include="Utilities\ByteArrayExtensions.cs" />
-    <Compile Include="Utilities\ListExtensions.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="..\packages\AssimpNet.4.1.0\build\AssimpNet.targets" Condition="Exists('..\packages\AssimpNet.4.1.0\build\AssimpNet.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\AssimpNet.4.1.0\build\AssimpNet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\AssimpNet.4.1.0\build\AssimpNet.targets'))" />
-  </Target>
   <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
+    <PreBuildEvent />
   </PropertyGroup>
   <PropertyGroup>
     <PostBuildEvent>xcopy $(SolutionDir)..\Resources Resources /q /e /d /y /i</PostBuildEvent>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="AssimpNet" Version="4.1.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Externals\AtlusFileSystemLibrary\Source\AtlusFileSystemLibrary\AtlusFileSystemLibrary.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
 </Project>
