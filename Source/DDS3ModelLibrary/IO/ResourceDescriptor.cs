@@ -6,9 +6,9 @@
 
         public ResourceIdentifier Identifier { get; }
 
-        public ResourceDescriptor( ResourceFileType fileType, ResourceIdentifier identifier )
+        public ResourceDescriptor(ResourceFileType fileType, ResourceIdentifier identifier)
         {
-            FileType   = fileType;
+            FileType = fileType;
             Identifier = identifier;
         }
     }

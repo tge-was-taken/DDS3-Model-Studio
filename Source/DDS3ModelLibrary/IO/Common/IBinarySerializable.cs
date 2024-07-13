@@ -15,13 +15,13 @@
         /// </summary>
         /// <param name="reader">The reader to read with.</param>
         /// <param name="context">Custom context data to be used during reading.</param>
-        void Read( EndianBinaryReader reader, object context = null );
+        void Read(EndianBinaryReader reader, object context = null);
 
         /// <summary>
         /// Writes the object to a stream using the provided writer.
         /// </summary>
         /// <param name="writer">The writer to writer with.</param>
         /// <param name="context">Custom context data to be used during writing.</param>
-        void Write( EndianBinaryWriter writer, object context = null );
+        void Write(EndianBinaryWriter writer, object context = null);
     }
 }

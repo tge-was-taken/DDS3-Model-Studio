@@ -10,13 +10,13 @@
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static bool HasWeights( MeshType type ) => type == MeshType.Type2 || type == MeshType.Type7;
+        public static bool HasWeights(MeshType type) => type == MeshType.Type2 || type == MeshType.Type7;
 
         /// <summary>
         /// Gets if the type supports morph shapes.
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public static bool HasMorphers( MeshType type ) => type == MeshType.Type3 || type == MeshType.Type5;
+        public static bool HasMorphers(MeshType type) => type == MeshType.Type3 || type == MeshType.Type5;
     }
 }

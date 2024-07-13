@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using DDS3ModelLibrary.IO.Common;
+using System.Collections.Generic;
 using System.Numerics;
-using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary.Models.Field
 {
@@ -15,7 +15,7 @@ namespace DDS3ModelLibrary.Models.Field
         public Field08Data Field08 { get; set; }
         public int Field0C { get; set; }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
             Field00 = reader.ReadInt32();
             Field04 = reader.ReadInt32();
@@ -23,12 +23,12 @@ namespace DDS3ModelLibrary.Models.Field
             Field0C = reader.ReadInt32();
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.Write( Field00 );
-            writer.Write( Field04 );
-            writer.ScheduleWriteObjectOffsetAligned( Field08, 16 );
-            writer.Write( Field0C );
+            writer.Write(Field00);
+            writer.Write(Field04);
+            writer.ScheduleWriteObjectOffsetAligned(Field08, 16);
+            writer.Write(Field0C);
         }
 
         public class Field08Data : IBinarySerializable
@@ -47,42 +47,42 @@ namespace DDS3ModelLibrary.Models.Field
                 Field08 = 1;
             }
 
-            void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+            void IBinarySerializable.Read(EndianBinaryReader reader, object context)
             {
                 var field0CDataCount = reader.ReadInt32();
                 var field10DataCount = reader.ReadInt32();
                 Field08 = reader.ReadInt32();
-                reader.ReadOffset( () => Field0C = reader.ReadVector4List( field0CDataCount ) );
-                Field10 = reader.ReadObjectListOffset<Field10Data>( field10DataCount );
+                reader.ReadOffset(() => Field0C = reader.ReadVector4List(field0CDataCount));
+                Field10 = reader.ReadObjectListOffset<Field10Data>(field10DataCount);
                 Field14 = reader.ReadObjectOffset<Field14Data>();
                 Field18 = reader.ReadInt32();
                 Field1C = reader.ReadInt32();
             }
 
-            void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+            void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
             {
-                writer.Write( Field0C.Count );
-                writer.Write( Field10.Count );
-                writer.Write( Field08 );
-                writer.ScheduleWriteOffsetAligned( 16, () => writer.Write( Field0C ) );
-                writer.ScheduleWriteObjectListOffsetAligned( Field10, 16 );
-                writer.ScheduleWriteObjectOffsetAligned( Field14, 16 );
-                writer.Write( Field18 );
-                writer.Write( Field1C );
+                writer.Write(Field0C.Count);
+                writer.Write(Field10.Count);
+                writer.Write(Field08);
+                writer.ScheduleWriteOffsetAligned(16, () => writer.Write(Field0C));
+                writer.ScheduleWriteObjectListOffsetAligned(Field10, 16);
+                writer.ScheduleWriteObjectOffsetAligned(Field14, 16);
+                writer.Write(Field18);
+                writer.Write(Field1C);
             }
 
             public class Field10Data : IBinarySerializable
             {
                 BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-                public int   Field00 { get; set; }
-                public int   Field04 { get; set; }
-                public int   Field08 { get; set; }
-                public int   Field0C { get; set; }
-                public int   Field10 { get; set; }
-                public int   Field14 { get; set; }
-                public int   Field18 { get; set; }
-                public int   Field1C { get; set; }
+                public int Field00 { get; set; }
+                public int Field04 { get; set; }
+                public int Field08 { get; set; }
+                public int Field0C { get; set; }
+                public int Field10 { get; set; }
+                public int Field14 { get; set; }
+                public int Field18 { get; set; }
+                public int Field1C { get; set; }
                 public short Field20 { get; set; }
                 public short Field22 { get; set; }
 
@@ -93,7 +93,7 @@ namespace DDS3ModelLibrary.Models.Field
                     Field22 = 4;
                 }
 
-                void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+                void IBinarySerializable.Read(EndianBinaryReader reader, object context)
                 {
                     Field00 = reader.ReadInt32();
                     Field04 = reader.ReadInt32();
@@ -107,18 +107,18 @@ namespace DDS3ModelLibrary.Models.Field
                     Field22 = reader.ReadInt16();
                 }
 
-                void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+                void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
                 {
-                    writer.Write( Field00 );
-                    writer.Write( Field04 );
-                    writer.Write( Field08 );
-                    writer.Write( Field0C );
-                    writer.Write( Field10 );
-                    writer.Write( Field14 );
-                    writer.Write( Field18 );
-                    writer.Write( Field1C );
-                    writer.Write( Field20 );
-                    writer.Write( Field22 );
+                    writer.Write(Field00);
+                    writer.Write(Field04);
+                    writer.Write(Field08);
+                    writer.Write(Field0C);
+                    writer.Write(Field10);
+                    writer.Write(Field14);
+                    writer.Write(Field18);
+                    writer.Write(Field1C);
+                    writer.Write(Field20);
+                    writer.Write(Field22);
                 }
             }
             public class Field14Data : IBinarySerializable
@@ -134,7 +134,7 @@ namespace DDS3ModelLibrary.Models.Field
                 public int Field18 { get; set; }
                 public int Field1C { get; set; }
 
-                void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+                void IBinarySerializable.Read(EndianBinaryReader reader, object context)
                 {
                     Field00 = reader.ReadInt32();
                     Field04 = reader.ReadInt32();
@@ -146,16 +146,16 @@ namespace DDS3ModelLibrary.Models.Field
                     Field1C = reader.ReadInt32();
                 }
 
-                void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+                void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
                 {
-                    writer.Write( Field00 );
-                    writer.Write( Field04 );
-                    writer.Write( Field08 );
-                    writer.Write( Field0C );
-                    writer.Write( Field10 );
-                    writer.Write( Field14 );
-                    writer.Write( Field18 );
-                    writer.Write( Field1C );
+                    writer.Write(Field00);
+                    writer.Write(Field04);
+                    writer.Write(Field08);
+                    writer.Write(Field0C);
+                    writer.Write(Field10);
+                    writer.Write(Field14);
+                    writer.Write(Field18);
+                    writer.Write(Field1C);
                 }
             }
         }

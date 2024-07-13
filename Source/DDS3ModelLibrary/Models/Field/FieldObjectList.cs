@@ -1,7 +1,7 @@
-﻿using System;
+﻿using DDS3ModelLibrary.IO.Common;
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary.Models.Field
 {
@@ -18,43 +18,43 @@ namespace DDS3ModelLibrary.Models.Field
             mList = new List<FieldObject>();
         }
 
-        public FieldObjectList( IEnumerable<FieldObject> objects )
+        public FieldObjectList(IEnumerable<FieldObject> objects)
         {
             mList = new List<FieldObject>();
 
             var typeKnown = false;
-            foreach ( var fieldObject in objects )
+            foreach (var fieldObject in objects)
             {
-                if ( !typeKnown )
+                if (!typeKnown)
                 {
                     Type = fieldObject.ResourceType;
                     typeKnown = true;
                 }
-                else if ( Type != fieldObject.ResourceType )
+                else if (Type != fieldObject.ResourceType)
                 {
-                    throw new InvalidOperationException( $"{nameof( FieldObjectList )} only supports a list of field objects of the same type" );
+                    throw new InvalidOperationException($"{nameof(FieldObjectList)} only supports a list of field objects of the same type");
                 }
 
-                Add( fieldObject );
+                Add(fieldObject);
             }
         }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
-            Type = ( FieldObjectResourceType )reader.ReadInt32();
+            Type = (FieldObjectResourceType)reader.ReadInt32();
             var count = reader.ReadInt32();
-            reader.ReadOffset( () =>
+            reader.ReadOffset(() =>
             {
-                for ( int i = 0; i < count; i++ )
-                    Add( reader.ReadObject<FieldObject>() );
+                for (int i = 0; i < count; i++)
+                    Add(reader.ReadObject<FieldObject>());
             });
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.Write( ( int ) Type );
-            writer.Write( Count );
-            writer.ScheduleWriteListOffsetAligned( this, 16 );
+            writer.Write((int)Type);
+            writer.Write(Count);
+            writer.ScheduleWriteListOffsetAligned(this, 16);
         }
 
         #region IList
@@ -65,12 +65,12 @@ namespace DDS3ModelLibrary.Models.Field
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ( ( IEnumerable ) mList ).GetEnumerator();
+            return ((IEnumerable)mList).GetEnumerator();
         }
 
-        public void Add( FieldObject item )
+        public void Add(FieldObject item)
         {
-            mList.Add( item );
+            mList.Add(item);
         }
 
         public void Clear()
@@ -78,44 +78,44 @@ namespace DDS3ModelLibrary.Models.Field
             mList.Clear();
         }
 
-        public bool Contains( FieldObject item )
+        public bool Contains(FieldObject item)
         {
-            return mList.Contains( item );
+            return mList.Contains(item);
         }
 
-        public void CopyTo( FieldObject[] array, int arrayIndex )
+        public void CopyTo(FieldObject[] array, int arrayIndex)
         {
-            mList.CopyTo( array, arrayIndex );
+            mList.CopyTo(array, arrayIndex);
         }
 
-        public bool Remove( FieldObject item )
+        public bool Remove(FieldObject item)
         {
-            return mList.Remove( item );
+            return mList.Remove(item);
         }
 
         public int Count => mList.Count;
 
         public bool IsReadOnly => false;
 
-        public int IndexOf( FieldObject item )
+        public int IndexOf(FieldObject item)
         {
-            return mList.IndexOf( item );
+            return mList.IndexOf(item);
         }
 
-        public void Insert( int index, FieldObject item )
+        public void Insert(int index, FieldObject item)
         {
-            mList.Insert( index, item );
+            mList.Insert(index, item);
         }
 
-        public void RemoveAt( int index )
+        public void RemoveAt(int index)
         {
-            mList.RemoveAt( index );
+            mList.RemoveAt(index);
         }
 
-        public FieldObject this[ int index ]
+        public FieldObject this[int index]
         {
-            get => mList[ index ];
-            set => mList[ index ] = value;
+            get => mList[index];
+            set => mList[index] = value;
         }
         #endregion
     }

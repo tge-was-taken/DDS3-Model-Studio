@@ -1,15 +1,15 @@
-﻿using System;
+﻿using DDS3ModelLibrary.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Text;
-using DDS3ModelLibrary.Models;
 
 namespace DDS3ModelLibrary.IO.Common
 {
     public sealed class EndianBinaryReader : BinaryReader
     {
-        private static readonly Encoding sEncoding = Encoding.GetEncoding( 932 );
+        private static readonly Encoding sEncoding = Encoding.GetEncoding(932);
 
         private Endianness mEndianness;
         private Dictionary<long, object> mObjectLookup;
@@ -41,188 +41,188 @@ namespace DDS3ModelLibrary.IO.Common
 
         public Encoding Encoding { get; set; }
 
-        public EndianBinaryReader( Stream input, Endianness endianness )
-            : base( input )
+        public EndianBinaryReader(Stream input, Endianness endianness)
+            : base(input)
         {
             FileName = input is FileStream fs ? fs.Name : null;
-            Init( sEncoding, endianness );
+            Init(sEncoding, endianness);
         }
 
-        public EndianBinaryReader( Stream input, string fileName, Endianness endianness )
-            : base( input )
+        public EndianBinaryReader(Stream input, string fileName, Endianness endianness)
+            : base(input)
         {
             FileName = input is FileStream fs ? fs.Name : fileName;
-            Init( sEncoding, endianness );
+            Init(sEncoding, endianness);
         }
 
-        public EndianBinaryReader( string filepath, Endianness endianness )
-            : base( File.OpenRead( filepath ) )
+        public EndianBinaryReader(string filepath, Endianness endianness)
+            : base(File.OpenRead(filepath))
         {
             FileName = filepath;
-            Init( sEncoding, endianness );
+            Init(sEncoding, endianness);
         }
 
-        public EndianBinaryReader( Stream input, Encoding encoding, Endianness endianness )
-            : base( input, encoding )
+        public EndianBinaryReader(Stream input, Encoding encoding, Endianness endianness)
+            : base(input, encoding)
         {
             FileName = input is FileStream fs ? fs.Name : null;
-            Init( encoding, endianness );
+            Init(encoding, endianness);
         }
 
-        public EndianBinaryReader( Stream input, bool leaveOpen, Endianness endianness )
-            : base( input, Encoding.Default, leaveOpen )
+        public EndianBinaryReader(Stream input, bool leaveOpen, Endianness endianness)
+            : base(input, Encoding.Default, leaveOpen)
         {
             FileName = input is FileStream fs ? fs.Name : null;
-            Init( sEncoding, endianness );
+            Init(sEncoding, endianness);
         }
 
-        public EndianBinaryReader( Stream input, Encoding encoding, bool leaveOpen, Endianness endianness )
-            : base( input, encoding, leaveOpen )
+        public EndianBinaryReader(Stream input, Encoding encoding, bool leaveOpen, Endianness endianness)
+            : base(input, encoding, leaveOpen)
         {
             FileName = input is FileStream fs ? fs.Name : null;
-            Init( encoding, endianness );
+            Init(encoding, endianness);
         }
 
-        private void Init( Encoding encoding, Endianness endianness )
+        private void Init(Encoding encoding, Endianness endianness)
         {
             Encoding = encoding;
             Endianness = endianness;
             mBaseOffsetStack = new Stack<long>();
-            mBaseOffsetStack.Push( 0 );
+            mBaseOffsetStack.Push(0);
             mObjectLookup = new Dictionary<long, object> { [0] = null };
         }
 
-        public void Seek( long offset, SeekOrigin origin )
+        public void Seek(long offset, SeekOrigin origin)
         {
-            BaseStream.Seek( offset, origin );
+            BaseStream.Seek(offset, origin);
         }
 
-        public void SeekBegin( long offset )
+        public void SeekBegin(long offset)
         {
-            BaseStream.Seek( offset, SeekOrigin.Begin );
+            BaseStream.Seek(offset, SeekOrigin.Begin);
         }
 
-        public void SeekCurrent( long offset )
+        public void SeekCurrent(long offset)
         {
-            BaseStream.Seek( offset, SeekOrigin.Current );
+            BaseStream.Seek(offset, SeekOrigin.Current);
         }
 
-        public void SeekEnd( long offset )
+        public void SeekEnd(long offset)
         {
-            BaseStream.Seek( offset, SeekOrigin.End );
+            BaseStream.Seek(offset, SeekOrigin.End);
         }
 
-        public void PushBaseOffset() => mBaseOffsetStack.Push( Position );
+        public void PushBaseOffset() => mBaseOffsetStack.Push(Position);
 
-        public void PushBaseOffset( long position ) => mBaseOffsetStack.Push( position );
+        public void PushBaseOffset(long position) => mBaseOffsetStack.Push(position);
 
         public void PopBaseOffset() => mBaseOffsetStack.Pop();
 
-        public bool IsValidOffset( int offset )
+        public bool IsValidOffset(int offset)
         {
-            if ( offset == 0 )
+            if (offset == 0)
                 return true;
 
-            if ( ( offset % 4 ) != 0 )
+            if ((offset % 4) != 0)
                 return false;
 
             var effectiveOffset = offset + BaseOffset;
             return offset >= 0 && effectiveOffset >= 0 && effectiveOffset <= Length;
         }
 
-        public void ReadOffset( Action action )
+        public void ReadOffset(Action action)
         {
             var offset = ReadInt32();
-            if ( offset != 0 )
+            if (offset != 0)
             {
                 long current = Position;
-                SeekBegin( offset + BaseOffset );
+                SeekBegin(offset + BaseOffset);
                 action();
-                SeekBegin( current );
+                SeekBegin(current);
             }
         }
 
-        public void ReadOffset( int count, Action<int> action )
+        public void ReadOffset(int count, Action<int> action)
         {
-            ReadOffset( () =>
+            ReadOffset(() =>
             {
-                for ( var i = 0; i < count; ++i )
-                    action( i );
-            } );
+                for (var i = 0; i < count; ++i)
+                    action(i);
+            });
         }
 
-        public void ReadAtOffset( long offset, Action action )
+        public void ReadAtOffset(long offset, Action action)
         {
-            if ( offset == 0 )
+            if (offset == 0)
                 return;
 
             long current = Position;
-            SeekBegin( offset + BaseOffset );
+            SeekBegin(offset + BaseOffset);
             action();
-            SeekBegin( current );
+            SeekBegin(current);
         }
 
-        public void ReadAtOffset( long offset, int count, Action<int> action )
+        public void ReadAtOffset(long offset, int count, Action<int> action)
         {
-            if ( offset == 0 )
+            if (offset == 0)
                 return;
 
-            ReadAtOffset( offset, () =>
+            ReadAtOffset(offset, () =>
             {
-                for ( var i = 0; i < count; ++i )
-                    action( i );
-            } );
+                for (var i = 0; i < count; ++i)
+                    action(i);
+            });
         }
 
-        public void ReadAtOffset<T>( long offset, int count, List<T> list, object context = null ) where T : IBinarySerializable, new()
+        public void ReadAtOffset<T>(long offset, int count, List<T> list, object context = null) where T : IBinarySerializable, new()
         {
-            if ( offset == 0 )
+            if (offset == 0)
                 return;
 
-            ReadAtOffset( offset, () =>
+            ReadAtOffset(offset, () =>
             {
-                for ( var i = 0; i < count; ++i )
+                for (var i = 0; i < count; ++i)
                 {
                     var item = new T();
-                    item.Read( this, context );
-                    list.Add( item );
+                    item.Read(this, context);
+                    list.Add(item);
                 }
-            } );
+            });
         }
 
-        public byte ReadByteExpects( byte expected, string message )
+        public byte ReadByteExpects(byte expected, string message)
         {
             var actual = ReadByte();
-            if ( actual != expected )
-                throw new InvalidDataException( message );
+            if (actual != expected)
+                throw new InvalidDataException(message);
 
             return actual;
         }
 
-        public List<byte> ReadByteList( int count )
+        public List<byte> ReadByteList(int count)
         {
-            var list = new List<byte>( count );
-            for ( var i = 0; i < list.Capacity; i++ )
+            var list = new List<byte>(count);
+            for (var i = 0; i < list.Capacity; i++)
             {
-                list.Add( ReadByte() );
+                list.Add(ReadByte());
             }
 
             return list;
         }
 
-        public sbyte[] ReadSBytes( int count )
+        public sbyte[] ReadSBytes(int count)
         {
             var array = new sbyte[count];
-            for ( var i = 0; i < array.Length; i++ )
+            for (var i = 0; i < array.Length; i++)
                 array[i] = ReadSByte();
 
             return array;
         }
 
-        public bool[] ReadBooleans( int count )
+        public bool[] ReadBooleans(int count)
         {
             var array = new bool[count];
-            for ( var i = 0; i < array.Length; i++ )
+            for (var i = 0; i < array.Length; i++)
                 array[i] = ReadBoolean();
 
             return array;
@@ -230,22 +230,22 @@ namespace DDS3ModelLibrary.IO.Common
 
         public override short ReadInt16()
         {
-            return SwapBytes ? EndiannessHelper.Swap( base.ReadInt16() ) : base.ReadInt16();
+            return SwapBytes ? EndiannessHelper.Swap(base.ReadInt16()) : base.ReadInt16();
         }
 
-        public short ReadInt16Expects( short expected, string message )
+        public short ReadInt16Expects(short expected, string message)
         {
             var actual = ReadInt16();
-            if ( actual != expected )
-                throw new InvalidDataException( message );
+            if (actual != expected)
+                throw new InvalidDataException(message);
 
             return actual;
         }
 
-        public short[] ReadInt16Array( int count )
+        public short[] ReadInt16Array(int count)
         {
             var array = new short[count];
-            for ( var i = 0; i < array.Length; i++ )
+            for (var i = 0; i < array.Length; i++)
             {
                 array[i] = ReadInt16();
             }
@@ -253,12 +253,12 @@ namespace DDS3ModelLibrary.IO.Common
             return array;
         }
 
-        public List<short> ReadInt16List( int count )
+        public List<short> ReadInt16List(int count)
         {
-            var list = new List<short>( count );
-            for ( var i = 0; i < list.Capacity; i++ )
+            var list = new List<short>(count);
+            for (var i = 0; i < list.Capacity; i++)
             {
-                list.Add( ReadInt16() );
+                list.Add(ReadInt16());
             }
 
             return list;
@@ -266,22 +266,22 @@ namespace DDS3ModelLibrary.IO.Common
 
         public override ushort ReadUInt16()
         {
-            return SwapBytes ? EndiannessHelper.Swap( base.ReadUInt16() ) : base.ReadUInt16();
+            return SwapBytes ? EndiannessHelper.Swap(base.ReadUInt16()) : base.ReadUInt16();
         }
 
-        public ushort ReadUInt16( ushort expected, string message )
+        public ushort ReadUInt16(ushort expected, string message)
         {
             var actual = ReadUInt16();
-            if ( actual != expected )
-                throw new InvalidDataException( message );
+            if (actual != expected)
+                throw new InvalidDataException(message);
 
             return actual;
         }
 
-        public ushort[] ReadUInt16Array( int count )
+        public ushort[] ReadUInt16Array(int count)
         {
             var array = new ushort[count];
-            for ( var i = 0; i < array.Length; i++ )
+            for (var i = 0; i < array.Length; i++)
             {
                 array[i] = ReadUInt16();
             }
@@ -291,13 +291,13 @@ namespace DDS3ModelLibrary.IO.Common
 
         public override decimal ReadDecimal()
         {
-            return SwapBytes ? EndiannessHelper.Swap( base.ReadDecimal() ) : base.ReadDecimal();
+            return SwapBytes ? EndiannessHelper.Swap(base.ReadDecimal()) : base.ReadDecimal();
         }
 
-        public decimal[] ReadDecimals( int count )
+        public decimal[] ReadDecimals(int count)
         {
             var array = new decimal[count];
-            for ( var i = 0; i < array.Length; i++ )
+            for (var i = 0; i < array.Length; i++)
             {
                 array[i] = ReadDecimal();
             }
@@ -307,13 +307,13 @@ namespace DDS3ModelLibrary.IO.Common
 
         public override double ReadDouble()
         {
-            return SwapBytes ? EndiannessHelper.Swap( base.ReadDouble() ) : base.ReadDouble();
+            return SwapBytes ? EndiannessHelper.Swap(base.ReadDouble()) : base.ReadDouble();
         }
 
-        public double[] ReadDoubles( int count )
+        public double[] ReadDoubles(int count)
         {
             var array = new double[count];
-            for ( var i = 0; i < array.Length; i++ )
+            for (var i = 0; i < array.Length; i++)
             {
                 array[i] = ReadDouble();
             }
@@ -323,22 +323,22 @@ namespace DDS3ModelLibrary.IO.Common
 
         public override int ReadInt32()
         {
-            return SwapBytes ? EndiannessHelper.Swap( base.ReadInt32() ) : base.ReadInt32();
+            return SwapBytes ? EndiannessHelper.Swap(base.ReadInt32()) : base.ReadInt32();
         }
 
-        public int ReadInt32Expects( int expected, string message = "Unexpected value" )
+        public int ReadInt32Expects(int expected, string message = "Unexpected value")
         {
             var actual = ReadInt32();
-            if ( actual != expected )
-                throw new InvalidDataException( message );
+            if (actual != expected)
+                throw new InvalidDataException(message);
 
             return actual;
         }
 
-        public int[] ReadInt32s( int count )
+        public int[] ReadInt32s(int count)
         {
             var array = new int[count];
-            for ( var i = 0; i < array.Length; i++ )
+            for (var i = 0; i < array.Length; i++)
             {
                 array[i] = ReadInt32();
             }
@@ -348,13 +348,13 @@ namespace DDS3ModelLibrary.IO.Common
 
         public override long ReadInt64()
         {
-            return SwapBytes ? EndiannessHelper.Swap( base.ReadInt64() ) : base.ReadInt64();
+            return SwapBytes ? EndiannessHelper.Swap(base.ReadInt64()) : base.ReadInt64();
         }
 
-        public long[] ReadInt64s( int count )
+        public long[] ReadInt64s(int count)
         {
             var array = new long[count];
-            for ( var i = 0; i < array.Length; i++ )
+            for (var i = 0; i < array.Length; i++)
             {
                 array[i] = ReadInt64();
             }
@@ -364,22 +364,22 @@ namespace DDS3ModelLibrary.IO.Common
 
         public override float ReadSingle()
         {
-            return SwapBytes ? EndiannessHelper.Swap( base.ReadSingle() ) : base.ReadSingle();
+            return SwapBytes ? EndiannessHelper.Swap(base.ReadSingle()) : base.ReadSingle();
         }
 
-        public float ReadSingleExpects( float expected, string message )
+        public float ReadSingleExpects(float expected, string message)
         {
             var actual = ReadSingle();
-            if ( actual != expected )
-                throw new InvalidDataException( message );
+            if (actual != expected)
+                throw new InvalidDataException(message);
 
             return actual;
         }
 
-        public float[] ReadSingleArray( int count )
+        public float[] ReadSingleArray(int count)
         {
             var array = new float[count];
-            for ( var i = 0; i < array.Length; i++ )
+            for (var i = 0; i < array.Length; i++)
             {
                 array[i] = ReadSingle();
             }
@@ -389,22 +389,22 @@ namespace DDS3ModelLibrary.IO.Common
 
         public override uint ReadUInt32()
         {
-            return SwapBytes ? EndiannessHelper.Swap( base.ReadUInt32() ) : base.ReadUInt32();
+            return SwapBytes ? EndiannessHelper.Swap(base.ReadUInt32()) : base.ReadUInt32();
         }
 
-        public uint ReadUInt32Expects( uint expected, string message )
+        public uint ReadUInt32Expects(uint expected, string message)
         {
             var actual = ReadUInt32();
-            if ( actual != expected )
-                throw new InvalidDataException( message );
+            if (actual != expected)
+                throw new InvalidDataException(message);
 
             return actual;
         }
 
-        public uint[] ReadUInt32s( int count )
+        public uint[] ReadUInt32s(int count)
         {
             var array = new uint[count];
-            for ( var i = 0; i < array.Length; i++ )
+            for (var i = 0; i < array.Length; i++)
             {
                 array[i] = ReadUInt32();
             }
@@ -423,10 +423,10 @@ namespace DDS3ModelLibrary.IO.Common
             return color;
         }
 
-        public Color[] ReadColors( int count )
+        public Color[] ReadColors(int count)
         {
             var array = new Color[count];
-            for ( var i = 0; i < array.Length; i++ )
+            for (var i = 0; i < array.Length; i++)
                 array[i] = ReadColor();
 
             return array;
@@ -434,13 +434,13 @@ namespace DDS3ModelLibrary.IO.Common
 
         public override ulong ReadUInt64()
         {
-            return SwapBytes ? EndiannessHelper.Swap( base.ReadUInt64() ) : base.ReadUInt64();
+            return SwapBytes ? EndiannessHelper.Swap(base.ReadUInt64()) : base.ReadUInt64();
         }
 
-        public ulong[] ReadUInt64s( int count )
+        public ulong[] ReadUInt64s(int count)
         {
             var array = new ulong[count];
-            for ( var i = 0; i < array.Length; i++ )
+            for (var i = 0; i < array.Length; i++)
             {
                 array[i] = ReadUInt64();
             }
@@ -450,13 +450,13 @@ namespace DDS3ModelLibrary.IO.Common
 
         public Vector2 ReadVector2()
         {
-            return new Vector2( ReadSingle(), ReadSingle() );
+            return new Vector2(ReadSingle(), ReadSingle());
         }
 
-        public Vector2[] ReadVector2Array( int count )
+        public Vector2[] ReadVector2Array(int count)
         {
             var array = new Vector2[count];
-            for ( var i = 0; i < array.Length; i++ )
+            for (var i = 0; i < array.Length; i++)
                 array[i] = ReadVector2();
 
             return array;
@@ -464,13 +464,13 @@ namespace DDS3ModelLibrary.IO.Common
 
         public Vector3 ReadVector3()
         {
-            return new Vector3( ReadSingle(), ReadSingle(), ReadSingle() );
+            return new Vector3(ReadSingle(), ReadSingle(), ReadSingle());
         }
 
-        public Vector3[] ReadVector3Array( int count )
+        public Vector3[] ReadVector3Array(int count)
         {
             var array = new Vector3[count];
-            for ( var i = 0; i < array.Length; i++ )
+            for (var i = 0; i < array.Length; i++)
                 array[i] = ReadVector3();
 
             return array;
@@ -478,56 +478,56 @@ namespace DDS3ModelLibrary.IO.Common
 
         public Vector4 ReadVector4()
         {
-            return new Vector4( ReadSingle(), ReadSingle(), ReadSingle(), ReadSingle() );
+            return new Vector4(ReadSingle(), ReadSingle(), ReadSingle(), ReadSingle());
         }
 
-        public Vector4[] ReadVector4Array( int count )
+        public Vector4[] ReadVector4Array(int count)
         {
             var array = new Vector4[count];
-            for ( var i = 0; i < array.Length; i++ )
+            for (var i = 0; i < array.Length; i++)
                 array[i] = ReadVector4();
 
             return array;
         }
 
-        public List<Vector4> ReadVector4List( int count )
+        public List<Vector4> ReadVector4List(int count)
         {
-            var list = new List<Vector4>( count );
-            for ( var i = 0; i < count; i++ )
-                list.Add( ReadVector4() );
+            var list = new List<Vector4>(count);
+            for (var i = 0; i < count; i++)
+                list.Add(ReadVector4());
 
             return list;
         }
 
-        public string ReadString( StringBinaryFormat format, int fixedLength = -1 )
+        public string ReadString(StringBinaryFormat format, int fixedLength = -1)
         {
             var bytes = new List<byte>();
 
-            switch ( format )
+            switch (format)
             {
                 case StringBinaryFormat.NullTerminated:
                     {
                         byte b;
-                        while ( ( b = ReadByte() ) != 0 )
-                            bytes.Add( b );
+                        while ((b = ReadByte()) != 0)
+                            bytes.Add(b);
                     }
                     break;
 
                 case StringBinaryFormat.FixedLength:
                     {
-                        if ( fixedLength == -1 )
-                            throw new ArgumentException( "Invalid fixed length specified" );
+                        if (fixedLength == -1)
+                            throw new ArgumentException("Invalid fixed length specified");
 
                         byte b;
                         var terminated = false;
-                        for ( var i = 0; i < fixedLength; i++ )
+                        for (var i = 0; i < fixedLength; i++)
                         {
                             b = ReadByte();
-                            if ( b == 0 )
+                            if (b == 0)
                                 terminated = true;
 
-                            if ( !terminated )
-                                bytes.Add( b );
+                            if (!terminated)
+                                bytes.Add(b);
                         }
                     }
                     break;
@@ -535,104 +535,104 @@ namespace DDS3ModelLibrary.IO.Common
                 case StringBinaryFormat.PrefixedLength8:
                     {
                         byte length = ReadByte();
-                        for ( var i = 0; i < length; i++ )
-                            bytes.Add( ReadByte() );
+                        for (var i = 0; i < length; i++)
+                            bytes.Add(ReadByte());
                     }
                     break;
 
                 case StringBinaryFormat.PrefixedLength16:
                     {
                         ushort length = ReadUInt16();
-                        for ( var i = 0; i < length; i++ )
-                            bytes.Add( ReadByte() );
+                        for (var i = 0; i < length; i++)
+                            bytes.Add(ReadByte());
                     }
                     break;
 
                 case StringBinaryFormat.PrefixedLength32:
                     {
                         uint length = ReadUInt32();
-                        for ( var i = 0; i < length; i++ )
-                            bytes.Add( ReadByte() );
+                        for (var i = 0; i < length; i++)
+                            bytes.Add(ReadByte());
                     }
                     break;
 
                 default:
-                    throw new ArgumentException( "Unknown string format", nameof( format ) );
+                    throw new ArgumentException("Unknown string format", nameof(format));
             }
 
-            return Encoding.GetString( bytes.ToArray() );
+            return Encoding.GetString(bytes.ToArray());
         }
 
-        public string ReadStringAtOffset( long offset, StringBinaryFormat format, int fixedLength = -1 )
+        public string ReadStringAtOffset(long offset, StringBinaryFormat format, int fixedLength = -1)
         {
-            if ( offset == 0 )
+            if (offset == 0)
                 return null;
 
             string str = null;
-            ReadAtOffset( offset, () => str = ReadString( format, fixedLength ) );
+            ReadAtOffset(offset, () => str = ReadString(format, fixedLength));
             return str;
         }
 
-        public string ReadStringOffset( StringBinaryFormat format = StringBinaryFormat.NullTerminated, int fixedLength = -1 )
+        public string ReadStringOffset(StringBinaryFormat format = StringBinaryFormat.NullTerminated, int fixedLength = -1)
         {
             var offset = ReadInt32();
-            if ( offset == 0 )
+            if (offset == 0)
                 return null;
 
-            return ReadStringAtOffset( offset, format, fixedLength );
+            return ReadStringAtOffset(offset, format, fixedLength);
         }
 
-        public string[] ReadStrings( int count, StringBinaryFormat format, int fixedLength = -1 )
+        public string[] ReadStrings(int count, StringBinaryFormat format, int fixedLength = -1)
         {
             var value = new string[count];
-            for ( var i = 0; i < value.Length; i++ )
-                value[i] = ReadString( format, fixedLength );
+            for (var i = 0; i < value.Length; i++)
+                value[i] = ReadString(format, fixedLength);
 
             return value;
         }
 
-        public string[] ReadStringsAtOffset( long offset, int count, StringBinaryFormat format, int fixedLength = -1 )
+        public string[] ReadStringsAtOffset(long offset, int count, StringBinaryFormat format, int fixedLength = -1)
         {
             string[] str = null;
-            ReadAtOffset( offset, () => str = ReadStrings( count, format, fixedLength ) );
+            ReadAtOffset(offset, () => str = ReadStrings(count, format, fixedLength));
             return str;
         }
 
-        public T ReadObject<T>( object context = null ) where T : IBinarySerializable, new()
+        public T ReadObject<T>(object context = null) where T : IBinarySerializable, new()
         {
             var obj = new T
             {
-                SourceInfo = new BinarySourceInfo( FileName, Position, Endianness )
+                SourceInfo = new BinarySourceInfo(FileName, Position, Endianness)
             };
 
-            obj.Read( this, context );
+            obj.Read(this, context);
             return obj;
         }
 
-        public List<T> ReadObjectListOffset<T>( int count, object context = null ) where T : IBinarySerializable, new()
+        public List<T> ReadObjectListOffset<T>(int count, object context = null) where T : IBinarySerializable, new()
         {
             List<T> list = null;
-            ReadOffset( () => { list = ReadObjects<T>( count, context ); } );
+            ReadOffset(() => { list = ReadObjects<T>(count, context); });
             return list;
         }
 
-        public List<T> ReadObjects<T>( int count, object context = null ) where T : IBinarySerializable, new()
+        public List<T> ReadObjects<T>(int count, object context = null) where T : IBinarySerializable, new()
         {
-            var list = new List<T>( count );
-            for ( int i = 0; i < count; i++ )
+            var list = new List<T>(count);
+            for (int i = 0; i < count; i++)
             {
-                list.Add( ReadObject<T>( context ) );
+                list.Add(ReadObject<T>(context));
             }
 
             return list;
         }
 
-        public List<T> ReadObjectOffsets<T>( int count, object context = null ) where T : IBinarySerializable, new()
+        public List<T> ReadObjectOffsets<T>(int count, object context = null) where T : IBinarySerializable, new()
         {
-            var list = new List<T>( count );
-            for ( int i = 0; i < count; i++ )
+            var list = new List<T>(count);
+            for (int i = 0; i < count; i++)
             {
-                list.Add( ReadObjectOffset<T>( context ) );
+                list.Add(ReadObjectOffset<T>(context));
             }
 
             return list;
@@ -645,21 +645,21 @@ namespace DDS3ModelLibrary.IO.Common
         /// <param name="offset"></param>
         /// <param name="context"></param>
         /// <returns></returns>
-        public T ReadObjectAtOffset<T>( long offset, object context = null ) where T : IBinarySerializable, new()
+        public T ReadObjectAtOffset<T>(long offset, object context = null) where T : IBinarySerializable, new()
         {
             object obj = null;
             var effectiveOffset = offset + BaseOffset;
 
-            if ( offset != 0 && !mObjectLookup.TryGetValue( effectiveOffset, out obj ) )
+            if (offset != 0 && !mObjectLookup.TryGetValue(effectiveOffset, out obj))
             {
                 long current = Position;
-                SeekBegin( effectiveOffset );
-                obj = ReadObject<T>( context );
-                SeekBegin( current );
+                SeekBegin(effectiveOffset);
+                obj = ReadObject<T>(context);
+                SeekBegin(current);
                 mObjectLookup[effectiveOffset] = obj;
             }
 
-            return ( T )obj;
+            return (T)obj;
         }
 
         /// <summary>
@@ -668,18 +668,18 @@ namespace DDS3ModelLibrary.IO.Common
         /// <typeparam name="T"></typeparam>
         /// <param name="context"></param>
         /// <returns></returns>
-        public T ReadObjectOffset<T>( object context = null ) where T : IBinarySerializable, new()
+        public T ReadObjectOffset<T>(object context = null) where T : IBinarySerializable, new()
         {
             var offset = ReadInt32();
-            if ( offset == 0 )
-                return default( T );
+            if (offset == 0)
+                return default(T);
 
-            return ReadObjectAtOffset<T>( offset, context );
+            return ReadObjectAtOffset<T>(offset, context);
         }
 
-        public void Align( int i )
+        public void Align(int i)
         {
-            SeekBegin( AlignmentHelper.Align( Position, i ) );
+            SeekBegin(AlignmentHelper.Align(Position, i));
         }
     }
 }

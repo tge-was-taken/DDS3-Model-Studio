@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using Assimp;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
-using Assimp;
 using Matrix4x4 = Assimp.Matrix4x4;
 using Quaternion = Assimp.Quaternion;
 
@@ -10,94 +10,94 @@ namespace DDS3ModelLibrary.Models.Utilities
 {
     public static class AssimpExtensions
     {
-        public static Vector3D ToAssimp( this Vector3 value ) => new Vector3D( value.X, value.Y, value.Z );
+        public static Vector3D ToAssimp(this Vector3 value) => new Vector3D(value.X, value.Y, value.Z);
 
-        public static IEnumerable<Vector3D> ToAssimp( this IEnumerable<Vector3> values ) => values.Select( x => x.ToAssimp() );
+        public static IEnumerable<Vector3D> ToAssimp(this IEnumerable<Vector3> values) => values.Select(x => x.ToAssimp());
 
-        public static Vector3D ToAssimp( this Vector2 value ) => new Vector3D( value.X, value.Y, 0 );
+        public static Vector3D ToAssimp(this Vector2 value) => new Vector3D(value.X, value.Y, 0);
 
-        public static IEnumerable<Vector3D> ToAssimp( this IEnumerable<Vector2> values ) => values.Select( x => x.ToAssimp() );
+        public static IEnumerable<Vector3D> ToAssimp(this IEnumerable<Vector2> values) => values.Select(x => x.ToAssimp());
 
-        public static Color4D ToAssimp( this Vector4 value ) => new Color4D( value.X, value.Y, value.Z, value.W );
+        public static Color4D ToAssimp(this Vector4 value) => new Color4D(value.X, value.Y, value.Z, value.W);
 
-        public static IEnumerable<Color4D> ToAssimp( this IEnumerable<Vector4> values ) => values.Select( x => x.ToAssimp() );
+        public static IEnumerable<Color4D> ToAssimp(this IEnumerable<Vector4> values) => values.Select(x => x.ToAssimp());
 
-        public static Quaternion ToAssimp( this System.Numerics.Quaternion quaternion ) =>
-            new Quaternion( quaternion.W, quaternion.X, quaternion.Y, quaternion.Z );
+        public static Quaternion ToAssimp(this System.Numerics.Quaternion quaternion) =>
+            new Quaternion(quaternion.W, quaternion.X, quaternion.Y, quaternion.Z);
 
-        public static Matrix4x4 ToAssimp( this System.Numerics.Matrix4x4 matrix )
+        public static Matrix4x4 ToAssimp(this System.Numerics.Matrix4x4 matrix)
         {
-            return new Matrix4x4( matrix.M11, matrix.M21, matrix.M31, matrix.M41,
+            return new Matrix4x4(matrix.M11, matrix.M21, matrix.M31, matrix.M41,
                                          matrix.M12, matrix.M22, matrix.M32, matrix.M42,
                                          matrix.M13, matrix.M23, matrix.M33, matrix.M43,
-                                         matrix.M14, matrix.M24, matrix.M34, matrix.M44 );
+                                         matrix.M14, matrix.M24, matrix.M34, matrix.M44);
         }
 
-        public static Color4D ToAssimp( this Color value )
+        public static Color4D ToAssimp(this Color value)
         {
-            return new Color4D( value.R / 255f,
+            return new Color4D(value.R / 255f,
                                        value.G / 255f,
                                        value.B / 255f,
-                                       value.A / 255f );
+                                       value.A / 255f);
         }
 
-        public static IEnumerable<Color4D> ToAssimp( this IEnumerable<Color> values ) => values.Select( x => x.ToAssimp() );
+        public static IEnumerable<Color4D> ToAssimp(this IEnumerable<Color> values) => values.Select(x => x.ToAssimp());
 
-        public static void ExportColladaFile( this Scene aiScene, string path )
+        public static void ExportColladaFile(this Scene aiScene, string path)
         {
-            using ( var aiContext = new AssimpContext() )
-                aiContext.ExportFile( aiScene, path, "collada", PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.FlipUVs | PostProcessSteps.GenerateSmoothNormals );
+            using (var aiContext = new AssimpContext())
+                aiContext.ExportFile(aiScene, path, "collada", PostProcessSteps.JoinIdenticalVertices | PostProcessSteps.FlipUVs | PostProcessSteps.GenerateSmoothNormals);
         }
 
-        public static Color FromAssimp( this Color4D value )
+        public static Color FromAssimp(this Color4D value)
         {
-            return new Color( ( byte )( value.R * 255f ),
-                              ( byte )( value.G * 255f ),
-                              ( byte )( value.B * 255f ),
-                              ( byte )( value.A * 255f ) );
+            return new Color((byte)(value.R * 255f),
+                              (byte)(value.G * 255f),
+                              (byte)(value.B * 255f),
+                              (byte)(value.A * 255f));
         }
 
-        public static IEnumerable<Color> FromAssimp( this IEnumerable<Color4D> values ) => values.Select( x => x.FromAssimp() );
+        public static IEnumerable<Color> FromAssimp(this IEnumerable<Color4D> values) => values.Select(x => x.FromAssimp());
 
-        public static System.Numerics.Matrix4x4 FromAssimp( this Matrix4x4 matrix )
+        public static System.Numerics.Matrix4x4 FromAssimp(this Matrix4x4 matrix)
         {
-            return new System.Numerics.Matrix4x4( matrix.A1, matrix.B1, matrix.C1, matrix.D1,
+            return new System.Numerics.Matrix4x4(matrix.A1, matrix.B1, matrix.C1, matrix.D1,
                                   matrix.A2, matrix.B2, matrix.C2, matrix.D2,
                                   matrix.A3, matrix.B3, matrix.C3, matrix.D3,
-                                  matrix.A4, matrix.B4, matrix.C4, matrix.D4 );
+                                  matrix.A4, matrix.B4, matrix.C4, matrix.D4);
         }
 
-        public static Vector3 FromAssimp( this Vector3D value )
+        public static Vector3 FromAssimp(this Vector3D value)
         {
-            return new Vector3( value.X, value.Y, value.Z );
+            return new Vector3(value.X, value.Y, value.Z);
         }
 
-        public static IEnumerable<Vector3> FromAssimp( this IEnumerable<Vector3D> values ) => values.Select( x => x.FromAssimp() );
+        public static IEnumerable<Vector3> FromAssimp(this IEnumerable<Vector3D> values) => values.Select(x => x.FromAssimp());
 
-        public static Vector2 FromAssimpAsVector2( this Vector3D value )
+        public static Vector2 FromAssimpAsVector2(this Vector3D value)
         {
-            return new Vector2( value.X, value.Y );
+            return new Vector2(value.X, value.Y);
         }
 
-        public static IEnumerable<Vector2> FromAssimpAsVector2( this IEnumerable<Vector3D> values ) => values.Select( x => x.FromAssimpAsVector2() );
+        public static IEnumerable<Vector2> FromAssimpAsVector2(this IEnumerable<Vector3D> values) => values.Select(x => x.FromAssimpAsVector2());
 
-        public static System.Numerics.Quaternion FromAssimp( this Quaternion value )
+        public static System.Numerics.Quaternion FromAssimp(this Quaternion value)
         {
-            return new System.Numerics.Quaternion( value.X, value.Y, value.Z, value.W );
+            return new System.Numerics.Quaternion(value.X, value.Y, value.Z, value.W);
         }
 
-        public static System.Numerics.Matrix4x4 CalculateWorldTransform( this Assimp.Node node )
+        public static System.Numerics.Matrix4x4 CalculateWorldTransform(this Assimp.Node node)
         {
-            Matrix4x4 CalculateWorldTransformInternal( Assimp.Node currentNode )
+            Matrix4x4 CalculateWorldTransformInternal(Assimp.Node currentNode)
             {
                 var transform = currentNode.Transform;
-                if ( currentNode.Parent != null )
-                    transform *= CalculateWorldTransformInternal( currentNode.Parent );
+                if (currentNode.Parent != null)
+                    transform *= CalculateWorldTransformInternal(currentNode.Parent);
 
                 return transform;
             }
 
-            return FromAssimp( CalculateWorldTransformInternal( node ) );
+            return FromAssimp(CalculateWorldTransformInternal(node));
         }
 
         /// <summary>
@@ -105,28 +105,28 @@ namespace DDS3ModelLibrary.Models.Utilities
         /// </summary>
         /// <param name="mesh"></param>
         /// <returns></returns>
-        public static List<(Bone Bone, float Weight)>[] GetVertexWeights( this Assimp.Mesh mesh )
+        public static List<(Bone Bone, float Weight)>[] GetVertexWeights(this Assimp.Mesh mesh)
         {
             // Map out the vertex weights for each vertex
             var vertexWeights = new List<(Bone, float)>[mesh.VertexCount];
             var missingVertexWeights = new List<int>();
-            for ( int i = 0; i < mesh.VertexCount; i++ )
+            for (int i = 0; i < mesh.VertexCount; i++)
             {
                 var weights = new List<(Bone, float)>();
-                foreach ( var bone in mesh.Bones )
+                foreach (var bone in mesh.Bones)
                 {
-                    foreach ( var vertexWeight in bone.VertexWeights )
+                    foreach (var vertexWeight in bone.VertexWeights)
                     {
-                        if ( vertexWeight.VertexID == i )
+                        if (vertexWeight.VertexID == i)
                         {
-                            weights.Add( (bone, vertexWeight.Weight) );
+                            weights.Add((bone, vertexWeight.Weight));
                         }
                     }
                 }
 
-                if ( weights.Count == 0 )
+                if (weights.Count == 0)
                 {
-                    missingVertexWeights.Add( i );
+                    missingVertexWeights.Add(i);
                     continue;
                 }
 
@@ -134,23 +134,23 @@ namespace DDS3ModelLibrary.Models.Utilities
             }
 
             // Resolve vertices without any weights by finding the closest vertex next to it that does, and taking its weights
-            foreach ( var i in missingVertexWeights )
+            foreach (var i in missingVertexWeights)
             {
                 var position = mesh.Vertices[i];
                 var range = 0.001f;
                 List<(Bone, float)> weights = null;
 
-                while ( weights == null )
+                while (weights == null)
                 {
-                    for ( var j = 0; j < mesh.Vertices.Count; j++ )
+                    for (var j = 0; j < mesh.Vertices.Count; j++)
                     {
-                        if ( missingVertexWeights.Contains( j ) )
+                        if (missingVertexWeights.Contains(j))
                             continue;
 
                         // ＤＥＬＴＡ
                         var otherPosition = mesh.Vertices[j];
                         var delta = position - otherPosition;
-                        if ( IsWithinRange( delta, range ) )
+                        if (IsWithinRange(delta, range))
                         {
                             weights = vertexWeights[j];
                             break;
@@ -163,15 +163,15 @@ namespace DDS3ModelLibrary.Models.Utilities
                 vertexWeights[i] = weights;
             }
 
-            Debug.Assert( vertexWeights.All( x => x != null ) );
+            Debug.Assert(vertexWeights.All(x => x != null));
             return vertexWeights;
         }
 
-        private static bool IsWithinRange( Vector3D position, float range )
+        private static bool IsWithinRange(Vector3D position, float range)
         {
-            return ( position.X < 0 ? position.X >= -range : position.X <= range ) &&
-                   ( position.Y < 0 ? position.Y >= -range : position.Y <= range ) &&
-                   ( position.Z < 0 ? position.Z >= -range : position.Z <= range );
+            return (position.X < 0 ? position.X >= -range : position.X <= range) &&
+                   (position.Y < 0 ? position.Y >= -range : position.Y <= range) &&
+                   (position.Z < 0 ? position.Z >= -range : position.Z <= range);
         }
     }
 }

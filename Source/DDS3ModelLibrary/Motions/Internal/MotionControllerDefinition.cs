@@ -1,5 +1,5 @@
-﻿using System;
-using DDS3ModelLibrary.IO.Common;
+﻿using DDS3ModelLibrary.IO.Common;
+using System;
 
 namespace DDS3ModelLibrary.Motions.Internal
 {
@@ -10,12 +10,12 @@ namespace DDS3ModelLibrary.Motions.Internal
         public short NodeIndex;
         public short Field06;
 
-        public override bool Equals( object obj )
+        public override bool Equals(object obj)
         {
-            return obj is MotionControllerDefinition definition && Equals( definition );
+            return obj is MotionControllerDefinition definition && Equals(definition);
         }
 
-        public bool Equals( MotionControllerDefinition other )
+        public bool Equals(MotionControllerDefinition other)
         {
             return Type == other.Type &&
                    Field02 == other.Field02 &&
@@ -33,34 +33,34 @@ namespace DDS3ModelLibrary.Motions.Internal
             return hashCode;
         }
 
-        public static bool operator ==( MotionControllerDefinition definition1, MotionControllerDefinition definition2 )
+        public static bool operator ==(MotionControllerDefinition definition1, MotionControllerDefinition definition2)
         {
-            return definition1.Equals( definition2 );
+            return definition1.Equals(definition2);
         }
 
-        public static bool operator !=( MotionControllerDefinition definition1, MotionControllerDefinition definition2 )
+        public static bool operator !=(MotionControllerDefinition definition1, MotionControllerDefinition definition2)
         {
-            return !( definition1 == definition2 );
+            return !(definition1 == definition2);
         }
 
 
         // -- IBinarySerializable
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
-            Type      = ( ControllerType )reader.ReadUInt16();
-            Field02   = reader.ReadInt16();
+            Type = (ControllerType)reader.ReadUInt16();
+            Field02 = reader.ReadInt16();
             NodeIndex = reader.ReadInt16();
-            Field06   = reader.ReadInt16();
+            Field06 = reader.ReadInt16();
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.WriteInt16( ( short )Type );
-            writer.WriteInt16( Field02 );
-            writer.WriteInt16( NodeIndex );
-            writer.WriteInt16( Field06 );
+            writer.WriteInt16((short)Type);
+            writer.WriteInt16(Field02);
+            writer.WriteInt16(NodeIndex);
+            writer.WriteInt16(Field06);
         }
     }
 }

@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
-using DDS3ModelLibrary.Models;
+﻿using DDS3ModelLibrary.Models;
 using JetBrains.Annotations;
+using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace DDS3ModelStudio.GUI.TreeView.DataNodes
 {
@@ -14,17 +14,17 @@ namespace DDS3ModelStudio.GUI.TreeView.DataNodes
             => DataNodeAction.Delete | DataNodeAction.Export | DataNodeAction.Replace | DataNodeAction.Move;
 
 
-        [DisplayName( "ID")]
+        [DisplayName("ID")]
         public short Id
         {
             get => GetDataProperty<short>();
-            set => SetDataProperty( value );
+            set => SetDataProperty(value);
         }
 
-        public List<short> Fields 
+        public List<short> Fields
             => GetDataProperty<List<short>>();
 
-        public ModelPackEffectInfoNode( [NotNull] string name, [NotNull] ModelPackEffectInfo data ) : base( name, data )
+        public ModelPackEffectInfoNode([NotNull] string name, [NotNull] ModelPackEffectInfo data) : base(name, data)
         {
         }
 

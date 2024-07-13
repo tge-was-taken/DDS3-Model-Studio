@@ -11,13 +11,13 @@ namespace DDS3ModelLibrary.Models.Field
         /// <summary>
         /// Always 0.
         /// </summary>
-        public int   Field00 { get; set; }
-        public int   Field04 { get; set; }
-        public int   Field08 { get; set; }
+        public int Field00 { get; set; }
+        public int Field04 { get; set; }
+        public int Field08 { get; set; }
         public float Field0C { get; set; }
         public float Field10 { get; set; }
         public float Field14 { get; set; }
-        public int   Field18 { get; set; }
+        public int Field18 { get; set; }
         public float Field1C { get; set; }
         public float Field20 { get; set; }
         public float Field24 { get; set; }
@@ -35,7 +35,7 @@ namespace DDS3ModelLibrary.Models.Field
             Field28 = Field2C = Field30 = 0.4f;
         }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
             Field00 = reader.ReadInt32(); // always 0
             Field04 = reader.ReadInt32(); // 0, 4
@@ -52,21 +52,21 @@ namespace DDS3ModelLibrary.Models.Field
             Field30 = reader.ReadSingle();
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.Write( Field00 );
-            writer.Write( Field04 );
-            writer.Write( Field08 );
-            writer.Write( Field0C );
-            writer.Write( Field10 );
-            writer.Write( Field14 );
-            writer.Write( Field18 );
-            writer.Write( Field1C );
-            writer.Write( Field20 );
-            writer.Write( Field24 );
-            writer.Write( Field28 );
-            writer.Write( Field2C );
-            writer.Write( Field30 );
+            writer.Write(Field00);
+            writer.Write(Field04);
+            writer.Write(Field08);
+            writer.Write(Field0C);
+            writer.Write(Field10);
+            writer.Write(Field14);
+            writer.Write(Field18);
+            writer.Write(Field1C);
+            writer.Write(Field20);
+            writer.Write(Field24);
+            writer.Write(Field28);
+            writer.Write(Field2C);
+            writer.Write(Field30);
         }
     }
 }

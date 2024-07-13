@@ -1,6 +1,6 @@
-﻿using System.Numerics;
-using DDS3ModelLibrary.IO.Common;
+﻿using DDS3ModelLibrary.IO.Common;
 using DDS3ModelLibrary.Models.Utilities;
+using System.Numerics;
 
 namespace DDS3ModelLibrary.Models.Field
 {
@@ -18,7 +18,7 @@ namespace DDS3ModelLibrary.Models.Field
             get => mPosition;
             set
             {
-                if ( value != mPosition )
+                if (value != mPosition)
                 {
                     mPosition = value;
                     UpdateMatrix();
@@ -31,7 +31,7 @@ namespace DDS3ModelLibrary.Models.Field
             get => mRotation;
             set
             {
-                if ( value != mRotation )
+                if (value != mRotation)
                 {
                     mRotation = value;
                     UpdateMatrix();
@@ -44,7 +44,7 @@ namespace DDS3ModelLibrary.Models.Field
             get => mScale;
             set
             {
-                if ( value != mScale )
+                if (value != mScale)
                 {
                     mScale = value;
                     UpdateMatrix();
@@ -57,7 +57,7 @@ namespace DDS3ModelLibrary.Models.Field
             get => mMatrix;
             set
             {
-                if ( value != mMatrix )
+                if (value != mMatrix)
                 {
                     mMatrix = value;
                     UpdatePRS();
@@ -70,7 +70,7 @@ namespace DDS3ModelLibrary.Models.Field
             mMatrix = Matrix4x4.Identity;
         }
 
-        public FieldObjectTransform( Vector3 position, Vector3 rotation, Vector3 scale )
+        public FieldObjectTransform(Vector3 position, Vector3 rotation, Vector3 scale)
         {
             mPosition = position;
             mRotation = rotation;
@@ -78,48 +78,48 @@ namespace DDS3ModelLibrary.Models.Field
             UpdateMatrix();
         }
 
-        public FieldObjectTransform( Matrix4x4 matrix )
+        public FieldObjectTransform(Matrix4x4 matrix)
         {
-            Matrix = matrix; 
+            Matrix = matrix;
         }
 
         private void UpdateMatrix()
         {
-            mMatrix = Matrix4x4.CreateRotationX( Rotation.X ) * Matrix4x4.CreateRotationY( Rotation.Y ) *
-                            Matrix4x4.CreateRotationZ( Rotation.Z );
+            mMatrix = Matrix4x4.CreateRotationX(Rotation.X) * Matrix4x4.CreateRotationY(Rotation.Y) *
+                            Matrix4x4.CreateRotationZ(Rotation.Z);
 
-            mMatrix *= Matrix4x4.CreateScale( Scale );
-            mMatrix.Translation =  Position;
+            mMatrix *= Matrix4x4.CreateScale(Scale);
+            mMatrix.Translation = Position;
         }
 
         private void UpdatePRS()
         {
-            Matrix4x4.Decompose( mMatrix, out var scale, out var rotation, out var translation );
+            Matrix4x4.Decompose(mMatrix, out var scale, out var rotation, out var translation);
             mPosition = translation;
             mRotation = rotation.ToEulerAngles();
-            mScale    = scale;
+            mScale = scale;
         }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
             Position = reader.ReadVector3();
-            reader.SeekCurrent( 4 );
+            reader.SeekCurrent(4);
 
             Rotation = reader.ReadVector3();
-            reader.SeekCurrent( 4 );
+            reader.SeekCurrent(4);
 
             Scale = reader.ReadVector3();
-            reader.SeekCurrent( 4 );
+            reader.SeekCurrent(4);
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.Write( Position );
-            writer.Write( 1f );
-            writer.Write( Rotation );
-            writer.Write( 1f );
-            writer.Write( Scale );
-            writer.Write( 1f );
+            writer.Write(Position);
+            writer.Write(1f);
+            writer.Write(Rotation);
+            writer.Write(1f);
+            writer.Write(Scale);
+            writer.Write(1f);
         }
     }
 }

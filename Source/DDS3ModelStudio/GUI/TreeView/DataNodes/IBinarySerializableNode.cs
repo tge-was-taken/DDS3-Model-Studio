@@ -9,7 +9,7 @@ namespace DDS3ModelStudio.GUI.TreeView.DataNodes
 
         public override DataNodeAction SupportedActions => DataNodeAction.Delete | DataNodeAction.Export | DataNodeAction.Move | DataNodeAction.Replace;
 
-        public BinarySerializableNode( [NotNull] string name, [NotNull] IBinarySerializable data ) : base( name, data )
+        public BinarySerializableNode([NotNull] string name, [NotNull] IBinarySerializable data) : base(name, data)
         {
         }
     }

@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using DDS3ModelLibrary.IO.Common;
+﻿using DDS3ModelLibrary.IO.Common;
 using DDS3ModelLibrary.Motions.Internal;
+using System.Collections.Generic;
 
 namespace DDS3ModelLibrary.Motions
 {
@@ -50,14 +49,14 @@ namespace DDS3ModelLibrary.Motions
             Keys = new List<IKey>();
         }
 
-        public NodeController( ControllerType type, short nodeIndex, string nodeName ) : this()
+        public NodeController(ControllerType type, short nodeIndex, string nodeName) : this()
         {
             Type = type;
             NodeIndex = nodeIndex;
             NodeName = nodeName;
         }
 
-        internal NodeController( MotionControllerDefinition definition, List<IKey> keys )
+        internal NodeController(MotionControllerDefinition definition, List<IKey> keys)
         {
             Type = definition.Type;
             Field02 = definition.Field02;
@@ -87,22 +86,22 @@ namespace DDS3ModelLibrary.Motions
             return hashCode;
         }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
-            Type = ( ControllerType )reader.ReadUInt16();
+            Type = (ControllerType)reader.ReadUInt16();
             Field02 = reader.ReadInt16();
             NodeIndex = reader.ReadInt16();
             Field06 = reader.ReadInt16();
             Keys = reader.ReadObject<KeyframeTrack>().Keyframes;
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.WriteInt16( ( short )Type );
-            writer.WriteInt16( Field02 );
-            writer.WriteInt16( NodeIndex );
-            writer.WriteInt16( Field06 );
-            writer.WriteObject( new KeyframeTrack( Keys ) );
+            writer.WriteInt16((short)Type);
+            writer.WriteInt16(Field02);
+            writer.WriteInt16(NodeIndex);
+            writer.WriteInt16(Field06);
+            writer.WriteObject(new KeyframeTrack(Keys));
         }
     }
 }

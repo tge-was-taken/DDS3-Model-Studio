@@ -13,12 +13,12 @@ namespace DDS3ModelLibrary.Textures.Exchange.DDS
         /// </summary>
         /// <param name="filepath"></param>
         /// <returns></returns>
-        public static Stream GetDDSStream( string filepath )
+        public static Stream GetDDSStream(string filepath)
         {
-            if ( Path.GetExtension( filepath ) == ".dds" )
-                return File.OpenRead( filepath );
+            if (Path.GetExtension(filepath) == ".dds")
+                return File.OpenRead(filepath);
             else
-                return new MemoryStream( DDSCodec.CompressImage( new Bitmap( filepath ) ) );
+                return new MemoryStream(DDSCodec.CompressImage(new Bitmap(filepath)));
         }
     }
 }

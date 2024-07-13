@@ -5,10 +5,10 @@
         public short NodeIndex;
         public float Weight;
 
-        public NodeWeight( short nodeIndex, float weight )
+        public NodeWeight(short nodeIndex, float weight)
         {
             NodeIndex = nodeIndex;
-            Weight    = weight;
+            Weight = weight;
         }
     }
 }

@@ -1,7 +1,6 @@
-﻿using System;
-using System.Diagnostics;
+﻿using DDS3ModelLibrary.IO.Common;
+using System;
 using System.Linq;
-using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary.Models
 {
@@ -19,8 +18,8 @@ namespace DDS3ModelLibrary.Models
             set
             {
                 mTranslucentMeshes = value;
-                if ( Meshes == null )
-                    throw new InvalidOperationException( $"{nameof( TranslucentMeshes )} must be null if {nameof( Meshes )} is null" );
+                if (Meshes == null)
+                    throw new InvalidOperationException($"{nameof(TranslucentMeshes)} must be null if {nameof(Meshes)} is null");
             }
         }
 
@@ -30,41 +29,41 @@ namespace DDS3ModelLibrary.Models
             TranslucentMeshes = null;
         }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
             Meshes = reader.ReadObjectOffset<MeshList>();
-            if ( Meshes != null )
+            if (Meshes != null)
                 TranslucentMeshes = reader.ReadObjectOffset<MeshList>();
 
-            if ( TranslucentMeshes != null )
+            if (TranslucentMeshes != null)
             {
                 // TODO: fix crash when meshes are in translucent slot
-                Meshes.AddRange( TranslucentMeshes );
+                Meshes.AddRange(TranslucentMeshes);
                 TranslucentMeshes = null;
             }
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
             void WriteMeshList(MeshList meshes)
             {
-                var canWrite = meshes?.Count > 0 && meshes.All( x => x.Type == MeshType.Type1 || x.Type == MeshType.Type2 || x.Type == MeshType.Type4 ||
-                                                                     x.Type == MeshType.Type5 || x.Type == MeshType.Type7 || x.Type == MeshType.Type8 
+                var canWrite = meshes?.Count > 0 && meshes.All(x => x.Type == MeshType.Type1 || x.Type == MeshType.Type2 || x.Type == MeshType.Type4 ||
+                                                                     x.Type == MeshType.Type5 || x.Type == MeshType.Type7 || x.Type == MeshType.Type8
                                                               );
 
-                if ( canWrite )
+                if (canWrite)
                 {
-                    writer.ScheduleWriteOffsetAligned( 16, () => { writer.WriteObject( meshes ); } );
+                    writer.ScheduleWriteOffsetAligned(16, () => { writer.WriteObject(meshes); });
                 }
                 else
                 {
-                    writer.Write( 0 );
+                    writer.Write(0);
                 }
             }
 
-            WriteMeshList( Meshes );
-            if ( Meshes != null )
-                WriteMeshList( TranslucentMeshes );
+            WriteMeshList(Meshes);
+            if (Meshes != null)
+                WriteMeshList(TranslucentMeshes);
         }
     }
 }

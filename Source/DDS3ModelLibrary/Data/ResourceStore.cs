@@ -4,6 +4,6 @@
     {
         public static string Path => "resources\\";
 
-        public static string GetPath( string path ) => System.IO.Path.Combine( Path, path );
+        public static string GetPath(string path) => System.IO.Path.Combine(Path, path);
     }
 }

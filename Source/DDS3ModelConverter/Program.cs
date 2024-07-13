@@ -7,14 +7,7 @@ using DDS3ModelLibrary.Models.Field;
 using DDS3ModelLibrary.Motions.Conversion;
 using DDS3ModelLibrary.Textures;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using TGE.SimpleCommandLine;
 
 namespace DDS3ModelConverter
@@ -46,7 +39,7 @@ namespace DDS3ModelConverter
     internal class Program
     {
         public static string About { get; } = SimpleCommandLineFormatter.Default.FormatAbout<ProgramOptions>(
-            "TGE", "A model converter for DDS3 engine games." );
+            "TGE", "A model converter for DDS3 engine games.");
 
         public static ProgramOptions Options { get; set; }
 
@@ -58,17 +51,17 @@ namespace DDS3ModelConverter
                 MergeMeshes = true
             };
 
-        static void Main( string[] args )
+        static void Main(string[] args)
         {
-            if ( args.Length == 0 )
+            if (args.Length == 0)
             {
-                Console.WriteLine( About );
+                Console.WriteLine(About);
                 return;
             }
 
-            if ( !ParseArgs( args ) )
+            if (!ParseArgs(args))
             {
-                Console.WriteLine( About );
+                Console.WriteLine(About);
                 return;
             }
 
@@ -76,7 +69,7 @@ namespace DDS3ModelConverter
             try
 #endif
             {
-                switch ( Options.InputFormat )
+                switch (Options.InputFormat)
                 {
                     case InputFormat.PB:
                         ConvertPB();
@@ -89,13 +82,13 @@ namespace DDS3ModelConverter
                         break;
                     case InputFormat.TB:
                         {
-                            var textures = Resource.Load<TexturePack>( Options.Input );
+                            var textures = Resource.Load<TexturePack>(Options.Input);
                             var outDirPath = GetDirectoryPath(Options.Output);
-                            for ( int i = 0; i < textures.Count; i++ )
+                            for (int i = 0; i < textures.Count; i++)
                             {
                                 Texture item = (Texture)textures[i];
                                 var name = $"texture_{i:D2}.png";
-                                item.GetBitmap().Save( Path.Combine( outDirPath, name ) );
+                                item.GetBitmap().Save(Path.Combine(outDirPath, name));
                             }
                         }
                         break;
@@ -116,54 +109,54 @@ namespace DDS3ModelConverter
             }
 #endif
 
-            Console.WriteLine( "Done" );
+            Console.WriteLine("Done");
         }
 
         private static void ConvertPB()
         {
             var modelPack = new ModelPack(Options.Input);
 
-            switch ( Options.OutputFormat )
+            switch (Options.OutputFormat)
             {
                 case OutputFormat.PB:
-                    modelPack.Save( Options.Output );
+                    modelPack.Save(Options.Output);
                     break;
                 case OutputFormat.MB:
-                    for ( int i = 0; i < modelPack.Models.Count; i++ )
-                        modelPack.Models[i].Save( modelPack.Models.Count == 1 ? Options.Output : $"{Path.GetFileNameWithoutExtension( Options.Output )}_{i}.MB" );
+                    for (int i = 0; i < modelPack.Models.Count; i++)
+                        modelPack.Models[i].Save(modelPack.Models.Count == 1 ? Options.Output : $"{Path.GetFileNameWithoutExtension(Options.Output)}_{i}.MB");
                     break;
                 case OutputFormat.OBJ:
                 case OutputFormat.DAE:
                 case OutputFormat.FBX:
-                    for ( int i = 0; i < modelPack.Models.Count; i++ )
+                    for (int i = 0; i < modelPack.Models.Count; i++)
                     {
                         var modelOutfilePath = modelPack.Models.Count == 1 ?
                                 Options.Output :
-                                $"{Path.GetFileNameWithoutExtension( Options.Output )}_{i}.{Options.OutputFormat}";
+                                $"{Path.GetFileNameWithoutExtension(Options.Output)}_{i}.{Options.OutputFormat}";
 
-                        if ( Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX )
-                            FbxModelExporter.Instance.Export( modelPack.Models[i], modelOutfilePath, FbxConfig, modelPack.TexturePack );
+                        if (Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX)
+                            FbxModelExporter.Instance.Export(modelPack.Models[i], modelOutfilePath, FbxConfig, modelPack.TexturePack);
                         else
-                            AssimpModelExporter.Instance.Export( modelPack.Models[i], modelOutfilePath, modelPack.TexturePack );
+                            AssimpModelExporter.Instance.Export(modelPack.Models[i], modelOutfilePath, modelPack.TexturePack);
 
-                        if ( Options.Assimp.OutputPbMotion )
+                        if (Options.Assimp.OutputPbMotion)
                         {
-                            for ( int j = 0; j < modelPack.MotionPacks.Count; j++ )
+                            for (int j = 0; j < modelPack.MotionPacks.Count; j++)
                             {
-                                for ( int k = 0; k < modelPack.MotionPacks[j].Motions.Count; k++ )
+                                for (int k = 0; k < modelPack.MotionPacks[j].Motions.Count; k++)
                                 {
                                     var outfilePath = modelPack.MotionPacks.Count == 1 ?
-                                            $"{Path.GetFileNameWithoutExtension( Options.Output )}_m_{j}.{Options.OutputFormat}" :
-                                            $"{Path.GetFileNameWithoutExtension( Options.Output )}_mp_{j}_m_{k}.{Options.OutputFormat}";
+                                            $"{Path.GetFileNameWithoutExtension(Options.Output)}_m_{j}.{Options.OutputFormat}" :
+                                            $"{Path.GetFileNameWithoutExtension(Options.Output)}_mp_{j}_m_{k}.{Options.OutputFormat}";
 
-                                    AssimpMotionExporter.Instance.Export( modelPack.Models[i], modelPack.MotionPacks[j].Motions[k], outfilePath );
+                                    AssimpMotionExporter.Instance.Export(modelPack.Models[i], modelPack.MotionPacks[j].Motions[k], outfilePath);
                                 }
                             }
                         }
                     }
                     break;
                 default:
-                    throw new Exception( "Unsupported output format" );
+                    throw new Exception("Unsupported output format");
             }
         }
 
@@ -171,26 +164,26 @@ namespace DDS3ModelConverter
         {
             var model = Resource.Load<Model>(Options.Input);
 
-            switch ( Options.OutputFormat )
+            switch (Options.OutputFormat)
             {
                 case OutputFormat.PB:
                     var modelPack = new ModelPack();
-                    modelPack.Models.Add( model );
-                    modelPack.Save( Options.Output );
+                    modelPack.Models.Add(model);
+                    modelPack.Save(Options.Output);
                     break;
                 case OutputFormat.MB:
-                    model.Save( Options.Output );
+                    model.Save(Options.Output);
                     break;
                 case OutputFormat.OBJ:
                 case OutputFormat.DAE:
                 case OutputFormat.FBX:
-                    if ( Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX )
-                        FbxModelExporter.Instance.Export( model, Options.Output, FbxConfig, null );
+                    if (Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX)
+                        FbxModelExporter.Instance.Export(model, Options.Output, FbxConfig, null);
                     else
-                        AssimpModelExporter.Instance.Export( model, Options.Output );
+                        AssimpModelExporter.Instance.Export(model, Options.Output);
                     break;
                 default:
-                    throw new Exception( "Unsupported output format" );
+                    throw new Exception("Unsupported output format");
             }
         }
 
@@ -198,152 +191,152 @@ namespace DDS3ModelConverter
         {
             var fieldScene = new FieldScene(Options.Input);
 
-            switch ( Options.OutputFormat )
+            switch (Options.OutputFormat)
             {
                 case OutputFormat.F1:
-                    fieldScene.Save( Options.Output );
+                    fieldScene.Save(Options.Output);
                     break;
                 case OutputFormat.OBJ:
                 case OutputFormat.DAE:
                 case OutputFormat.FBX:
                     {
-                        var outDirPath = GetDirectoryPath( Options.Output );
-                        foreach ( var obj in fieldScene.Objects )
+                        var outDirPath = GetDirectoryPath(Options.Output);
+                        foreach (var obj in fieldScene.Objects)
                         {
-                            if ( obj.ResourceType != FieldObjectResourceType.Model || obj.Resource == null )
+                            if (obj.ResourceType != FieldObjectResourceType.Model || obj.Resource == null)
                                 continue;
 
-                            var model = ( Model )obj.Resource;
+                            var model = (Model)obj.Resource;
                             model.Nodes[0].Transform *= obj.Transform.Matrix;
 
-                            var outFilePath = Path.Combine( outDirPath, obj.Name + Path.GetExtension( Options.Output ) );
-                            if ( Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX )
-                                FbxModelExporter.Instance.Export( model, outFilePath, FbxConfig, null );
+                            var outFilePath = Path.Combine(outDirPath, obj.Name + Path.GetExtension(Options.Output));
+                            if (Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX)
+                                FbxModelExporter.Instance.Export(model, outFilePath, FbxConfig, null);
                             else
-                                AssimpModelExporter.Instance.Export( model, outFilePath );
+                                AssimpModelExporter.Instance.Export(model, outFilePath);
                         }
                     }
                     break;
                 default:
-                    throw new Exception( "Unsupported output format" );
+                    throw new Exception("Unsupported output format");
             }
         }
 
-        private static string GetDirectoryPath( string path )
+        private static string GetDirectoryPath(string path)
         {
-            var outDirPath = Path.HasExtension( path ) ?
-                Path.GetDirectoryName( path ) :
+            var outDirPath = Path.HasExtension(path) ?
+                Path.GetDirectoryName(path) :
                 path;
-            Directory.CreateDirectory( outDirPath );
+            Directory.CreateDirectory(outDirPath);
             return outDirPath;
         }
 
         private static void ConvertAssimpModel()
         {
-            switch ( Options.OutputFormat )
+            switch (Options.OutputFormat)
             {
                 case OutputFormat.PB:
                     {
-                        if ( Options.PackedModel.ReplaceInput == null )
-                            throw new Exception( "You must specify a PB replacement input for conversion to PB" );
+                        if (Options.PackedModel.ReplaceInput == null)
+                            throw new Exception("You must specify a PB replacement input for conversion to PB");
 
                         var modelPack = new ModelPack();
-                        if ( Options.PackedModel.ReplaceInput != null )
-                            modelPack.Load( Options.PackedModel.ReplaceInput );
+                        if (Options.PackedModel.ReplaceInput != null)
+                            modelPack.Load(Options.PackedModel.ReplaceInput);
 
-                        if ( !Options.Assimp.TreatInputAsAnimation )
+                        if (!Options.Assimp.TreatInputAsAnimation)
                         {
-                            modelPack.Replace( Options.Input, Options.TmxScale, Options.Model.EnableMaterialOverlays, Options.Model.WeightedMeshType,
-                                Options.Model.UnweightedMeshType, Options.Model.MeshWeightLimit, Options.Model.BatchVertexLimit );
+                            modelPack.Replace(Options.Input, Options.TmxScale, Options.Model.EnableMaterialOverlays, Options.Model.WeightedMeshType,
+                                Options.Model.UnweightedMeshType, Options.Model.MeshWeightLimit, Options.Model.BatchVertexLimit);
                         }
                         else
                         {
                             var newMotion =
-                        AssimpMotionImporter.Instance.Import( Options.Input,
+                        AssimpMotionImporter.Instance.Import(Options.Input,
                                                           new AssimpMotionImporter.Config
                                                           {
-                                                              NodeIndexResolver = n => modelPack.Models[Options.PackedModel.ReplaceMotionModelIndex].Nodes.FindIndex( x => x.Name == n )
+                                                              NodeIndexResolver = n => modelPack.Models[Options.PackedModel.ReplaceMotionModelIndex].Nodes.FindIndex(x => x.Name == n)
                                                           });
 
-                            if ( Options.PackedModel.ReplaceMotionIndex < 0 || ( Options.PackedModel.ReplaceMotionIndex + 1 ) >
-                                modelPack.MotionPacks[Options.PackedModel.ReplaceMotionPackIndex].Motions.Count )
+                            if (Options.PackedModel.ReplaceMotionIndex < 0 || (Options.PackedModel.ReplaceMotionIndex + 1) >
+                                modelPack.MotionPacks[Options.PackedModel.ReplaceMotionPackIndex].Motions.Count)
                             {
                                 modelPack.MotionPacks[Options.PackedModel.ReplaceMotionPackIndex].Motions[Options.PackedModel.ReplaceMotionIndex] = newMotion;
                             }
                         }
 
-                        modelPack.Save( Options.Output );
+                        modelPack.Save(Options.Output);
                     }
                     break;
                 case OutputFormat.F1:
                     {
                         var modelPack = new ModelPack();
                         var model = new Model();
-                        model.Nodes.Add( new Node { Name = "model" } );
-                        modelPack.Models.Add( model );
-                        modelPack.Replace( Options.Input, Options.TmxScale, Options.Model.EnableMaterialOverlays,
-                            Options.Model.WeightedMeshType, Options.Model.UnweightedMeshType, Options.Model.MeshWeightLimit, Options.Model.BatchVertexLimit );
+                        model.Nodes.Add(new Node { Name = "model" });
+                        modelPack.Models.Add(model);
+                        modelPack.Replace(Options.Input, Options.TmxScale, Options.Model.EnableMaterialOverlays,
+                            Options.Model.WeightedMeshType, Options.Model.UnweightedMeshType, Options.Model.MeshWeightLimit, Options.Model.BatchVertexLimit);
 
                         var lb = new LBFileSystem();
-                        lb.Load( Options.Field.LbReplaceInput );
+                        lb.Load(Options.Field.LbReplaceInput);
 
-                        var f1Handle = lb.GetHandle( "F1" );
+                        var f1Handle = lb.GetHandle("F1");
 
                         FieldScene f1;
-                        using ( var stream = lb.OpenFile( f1Handle ) )
-                            f1 = new FieldScene( stream, true );
+                        using (var stream = lb.OpenFile(f1Handle))
+                            f1 = new FieldScene(stream, true);
 
-                        f1.Objects.RemoveAll( x => x.ResourceType == FieldObjectResourceType.Model );
+                        f1.Objects.RemoveAll(x => x.ResourceType == FieldObjectResourceType.Model);
                         f1.Objects.Clear();
-                        f1.Objects.Add( new FieldObject() { Id = 0, Name = "model", Transform = new FieldObjectTransform(), Resource = modelPack.Models[0] } );
+                        f1.Objects.Add(new FieldObject() { Id = 0, Name = "model", Transform = new FieldObjectTransform(), Resource = modelPack.Models[0] });
 
-                        lb.AddFile( f1Handle, f1.Save(), true, ConflictPolicy.Replace );
+                        lb.AddFile(f1Handle, f1.Save(), true, ConflictPolicy.Replace);
 
-                        if ( modelPack.TexturePack != null )
+                        if (modelPack.TexturePack != null)
                         {
-                            var tbHandle = lb.GetHandle( "TBN" );
-                            lb.AddFile( tbHandle, modelPack.TexturePack.Save(), true, ConflictPolicy.Replace );
+                            var tbHandle = lb.GetHandle("TBN");
+                            lb.AddFile(tbHandle, modelPack.TexturePack.Save(), true, ConflictPolicy.Replace);
                         }
 
-                        lb.Save( Options.Output );
+                        lb.Save(Options.Output);
                     }
                     break;
                 default:
-                    throw new Exception( "Unsupported output format" );
+                    throw new Exception("Unsupported output format");
             }
         }
 
-        static bool ParseArgs( string[] args )
+        static bool ParseArgs(string[] args)
         {
             try
             {
-                Options = SimpleCommandLineParser.Default.Parse<ProgramOptions>( args );
+                Options = SimpleCommandLineParser.Default.Parse<ProgramOptions>(args);
 
                 //-- Validate given input
 
-                if ( string.IsNullOrEmpty( Options.Input ) )
+                if (string.IsNullOrEmpty(Options.Input))
                 {
                     // Use first argument as input when not specified explicitly
-                    if ( args.Length > 0 )
+                    if (args.Length > 0)
                         Options.Input = args[0];
                     else
                         return false;
                 }
 
-                if ( Options.InputFormat == InputFormat.Unknown )
+                if (Options.InputFormat == InputFormat.Unknown)
                 {
                     // Guess input format based on extension
-                    var ext = Path.GetExtension( Options.Input );
-                    Options.InputFormat = (InputFormat)Enum.Parse( typeof( InputFormat ), ext
-                        .TrimStart( '.' )
-                        .ToLower(), true );
+                    var ext = Path.GetExtension(Options.Input);
+                    Options.InputFormat = (InputFormat)Enum.Parse(typeof(InputFormat), ext
+                        .TrimStart('.')
+                        .ToLower(), true);
                 }
 
-                if ( string.IsNullOrEmpty( Options.Output ) )
+                if (string.IsNullOrEmpty(Options.Output))
                 {
                     // Guess output format based on input format
                     var ext = string.Empty;
-                    switch ( Options.InputFormat )
+                    switch (Options.InputFormat)
                     {
                         case InputFormat.PB:
                         case InputFormat.MB:
@@ -368,31 +361,31 @@ namespace DDS3ModelConverter
                             return false;
                     }
 
-                    var dirPath = Path.Combine( Path.GetDirectoryName( Options.Input ), Path.GetFileNameWithoutExtension( Options.Input ) );
-                    if ( ext != null )
-                        Options.Output = Path.Combine( dirPath, Path.GetFileNameWithoutExtension( Options.Input ) + ext );
+                    var dirPath = Path.Combine(Path.GetDirectoryName(Options.Input), Path.GetFileNameWithoutExtension(Options.Input));
+                    if (ext != null)
+                        Options.Output = Path.Combine(dirPath, Path.GetFileNameWithoutExtension(Options.Input) + ext);
                     else
                         Options.Output = dirPath;
 
-                    Directory.CreateDirectory( dirPath );
+                    Directory.CreateDirectory(dirPath);
                 }
 
-                if ( Options.OutputFormat == OutputFormat.Unknown )
+                if (Options.OutputFormat == OutputFormat.Unknown)
                 {
-                    var ext = Path.GetExtension( Options.Output );
-                    if ( string.IsNullOrEmpty( ext ) )
+                    var ext = Path.GetExtension(Options.Output);
+                    if (string.IsNullOrEmpty(ext))
                         Options.OutputFormat = OutputFormat.Folder;
                     else
-                        Options.OutputFormat = (OutputFormat)Enum.Parse( typeof( OutputFormat ), ext
-                            .TrimStart( '.' )
-                            .ToLower(), true );
+                        Options.OutputFormat = (OutputFormat)Enum.Parse(typeof(OutputFormat), ext
+                            .TrimStart('.')
+                            .ToLower(), true);
                 }
 
                 return true;
             }
-            catch ( Exception e )
+            catch (Exception e)
             {
-                Console.WriteLine( e.Message );
+                Console.WriteLine(e.Message);
                 return false;
             }
         }
@@ -400,80 +393,80 @@ namespace DDS3ModelConverter
 
     public class ProgramOptions
     {
-        [Option( "i", "input", "filepath", "Specifies the path to the file to use as input." )]
+        [Option("i", "input", "filepath", "Specifies the path to the file to use as input.")]
         public string Input { get; set; }
 
-        [Option( "if", "input-format", "auto|pb|mb|f1|tb|obj|dae|fbx", "Specifies the input format of the specified input file." )]
+        [Option("if", "input-format", "auto|pb|mb|f1|tb|obj|dae|fbx", "Specifies the input format of the specified input file.")]
         public InputFormat InputFormat { get; set; }
 
-        [Option( "o", "output", "filepath", "Specifies the path to the file to save the output to." )]
+        [Option("o", "output", "filepath", "Specifies the path to the file to save the output to.")]
         public string Output { get; set; }
 
-        [Option( "of", "output-format", "auto|pb|mb|f1|obj|dae|fbx", "Specifies the conversion output format." )]
+        [Option("of", "output-format", "auto|pb|mb|f1|obj|dae|fbx", "Specifies the conversion output format.")]
         public OutputFormat OutputFormat { get; set; }
 
-        [Group( "ai" )]
+        [Group("ai")]
         public AssimpOptions Assimp { get; set; }
 
-        [Group( "pb" )]
+        [Group("pb")]
         public PackedModelOptions PackedModel { get; set; }
 
-        [Option( "ts", "tmx-scale", "decimal scale factor", "Specifies the scaling used for texture conversions.", DefaultValue = 1.0f )]
+        [Option("ts", "tmx-scale", "decimal scale factor", "Specifies the scaling used for texture conversions.", DefaultValue = 1.0f)]
         public float TmxScale { get; set; }
 
-        [Group( "mb" )]
+        [Group("mb")]
         public ModelOptions Model { get; set; }
 
-        [Group( "f1" )]
+        [Group("f1")]
         public FieldOptions Field { get; set; }
 
         public class AssimpOptions
         {
-            [Option( "a", "input-anim", "When specified, the input is treated as an animation file, rather than a model file which affects the conversion process." )]
+            [Option("a", "input-anim", "When specified, the input is treated as an animation file, rather than a model file which affects the conversion process.")]
             public bool TreatInputAsAnimation { get; set; }
 
-            [Option( "pbm", "output-pb-motion", "When specified, motions found within the given packed model file are exported when exporting a PB model obj/dae/fbx." )]
+            [Option("pbm", "output-pb-motion", "When specified, motions found within the given packed model file are exported when exporting a PB model obj/dae/fbx.")]
             public bool OutputPbMotion { get; set; }
         }
         public class PackedModelOptions
         {
-            [Option( "i", "replace-input", "filepath", "Specifies the base PB file to use for the conversion." )]
+            [Option("i", "replace-input", "filepath", "Specifies the base PB file to use for the conversion.")]
             public string ReplaceInput { get; set; }
 
-            [Option( "mi", "replace-motion-index", "0-based index", "Specifies the index of the motion in the PB file to replace." )]
+            [Option("mi", "replace-motion-index", "0-based index", "Specifies the index of the motion in the PB file to replace.")]
             public int ReplaceMotionIndex { get; set; } = -1;
 
-            [Option( "mpi", "replace-motion-pack-index", "0-based index", "Specifies the index of the motion pack in the PB file to replace.", DefaultValue = 0 )]
+            [Option("mpi", "replace-motion-pack-index", "0-based index", "Specifies the index of the motion pack in the PB file to replace.", DefaultValue = 0)]
             public int ReplaceMotionPackIndex { get; set; }
 
-            [Option( "mmi", "replace-motion-model-index", "0-based index", "Specifies the index of the model in the PB file to use when replacing motions.", DefaultValue = 0 )]
+            [Option("mmi", "replace-motion-model-index", "0-based index", "Specifies the index of the model in the PB file to use when replacing motions.", DefaultValue = 0)]
             public int ReplaceMotionModelIndex { get; set; }
         }
 
         public class ModelOptions
         {
-            [Option( "mo", "material-overlays", "When specified, enables the usage of overlay materials." )]
+            [Option("mo", "material-overlays", "When specified, enables the usage of overlay materials.")]
             public bool EnableMaterialOverlays { get; set; }
 
 
-            [Option( "umt", "unweighted-mesh-type", "1|8", "Specifies the mesh type to be used for unweighted meshes.", DefaultValue = 1 )]
+            [Option("umt", "unweighted-mesh-type", "1|8", "Specifies the mesh type to be used for unweighted meshes.", DefaultValue = 1)]
             public MeshType UnweightedMeshType { get; set; }
 
 
-            [Option( "wmt", "weighted-mesh-type", "2|7", "Specifies the mesh type to be used for weighted meshes.", DefaultValue = 7 )]
+            [Option("wmt", "weighted-mesh-type", "2|7", "Specifies the mesh type to be used for weighted meshes.", DefaultValue = 7)]
             public MeshType WeightedMeshType { get; set; }
 
 
-            [Option( "wl", "mesh-weight-limit", "integer", "Specifies the max number of weights to be used per mesh. 3 might give better results.", DefaultValue = 4 )]
+            [Option("wl", "mesh-weight-limit", "integer", "Specifies the max number of weights to be used per mesh. 3 might give better results.", DefaultValue = 4)]
             public int MeshWeightLimit { get; set; }
 
-            [Option( "vl", "batch-vertex-limit", "integer", "Specifies the max number of vertices to be used per batch.", DefaultValue = 24 )]
+            [Option("vl", "batch-vertex-limit", "integer", "Specifies the max number of vertices to be used per batch.", DefaultValue = 24)]
             public int BatchVertexLimit { get; set; }
         }
 
         public class FieldOptions
         {
-            [Option( "lbi", "lb-replace-input", "filepath", "Specifies the base field LB file to use for the conversion." )]
+            [Option("lbi", "lb-replace-input", "filepath", "Specifies the base field LB file to use for the conversion.")]
             public string LbReplaceInput { get; set; }
         }
     }

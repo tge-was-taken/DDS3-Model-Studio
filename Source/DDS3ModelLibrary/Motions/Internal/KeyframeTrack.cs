@@ -1,8 +1,8 @@
-﻿using System;
+﻿using DDS3ModelLibrary.IO.Common;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary.Motions.Internal
 {
@@ -17,28 +17,28 @@ namespace DDS3ModelLibrary.Motions.Internal
             Keyframes = new List<IKey>();
         }
 
-        public KeyframeTrack( List<IKey> keyframes )
+        public KeyframeTrack(List<IKey> keyframes)
         {
-            Keyframes = keyframes ?? throw new ArgumentNullException( nameof( keyframes ) );
+            Keyframes = keyframes ?? throw new ArgumentNullException(nameof(keyframes));
         }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
-            reader.SeekCurrent( 4 );
+            reader.SeekCurrent(4);
             var keyframeCount = reader.ReadInt16();
             var keyframeSize = reader.ReadInt16();
-            var keyframeTimings = reader.ReadInt16Array( keyframeCount );
-            reader.Align( 4 );
+            var keyframeTimings = reader.ReadInt16Array(keyframeCount);
+            reader.Align(4);
 
-            var controllerType = ( ControllerType )context;
-            for ( int i = 0; i < keyframeCount; i++ )
+            var controllerType = (ControllerType)context;
+            for (int i = 0; i < keyframeCount; i++)
             {
                 IKey key;
 
-                switch ( controllerType )
+                switch (controllerType)
                 {
                     case ControllerType.Position:
-                        switch ( keyframeSize )
+                        switch (keyframeSize)
                         {
                             case 4:
                                 key = reader.ReadObject<UInt32Key>();
@@ -58,7 +58,7 @@ namespace DDS3ModelLibrary.Motions.Internal
                         break;
 
                     case ControllerType.Type1:
-                        switch ( keyframeSize )
+                        switch (keyframeSize)
                         {
                             case 4:
                                 key = reader.ReadObject<UInt32Key>();
@@ -70,7 +70,7 @@ namespace DDS3ModelLibrary.Motions.Internal
                         break;
 
                     case ControllerType.Scale:
-                        switch ( keyframeSize )
+                        switch (keyframeSize)
                         {
                             case 12:
                                 key = reader.ReadObject<Vector3Key>();
@@ -86,7 +86,7 @@ namespace DDS3ModelLibrary.Motions.Internal
                         break;
 
                     case ControllerType.Rotation:
-                        switch ( keyframeSize )
+                        switch (keyframeSize)
                         {
                             case 8:
                                 key = reader.ReadObject<QuaternionKey>();
@@ -102,7 +102,7 @@ namespace DDS3ModelLibrary.Motions.Internal
                         break;
 
                     case ControllerType.Morph:
-                        switch ( keyframeSize )
+                        switch (keyframeSize)
                         {
                             case 1:
                                 key = reader.ReadObject<ByteKey>();
@@ -118,7 +118,7 @@ namespace DDS3ModelLibrary.Motions.Internal
                         break;
 
                     case ControllerType.Type5:
-                        switch ( keyframeSize )
+                        switch (keyframeSize)
                         {
                             case 4:
                                 key = reader.ReadObject<SingleKey>();
@@ -130,7 +130,7 @@ namespace DDS3ModelLibrary.Motions.Internal
                         break;
 
                     case ControllerType.Type8:
-                        switch ( keyframeSize )
+                        switch (keyframeSize)
                         {
                             case 4:
                                 key = reader.ReadObject<UInt32Key>();
@@ -145,34 +145,34 @@ namespace DDS3ModelLibrary.Motions.Internal
                         throw new NotImplementedException();
                 }
 
-                key.Time = keyframeTimings[ i ];
-                Keyframes.Add( key );
+                key.Time = keyframeTimings[i];
+                Keyframes.Add(key);
             }
 
-            reader.Align( 4 );
+            reader.Align(4);
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
             var start = writer.Position;
             var dataSize = 0;
-            var keyframeSize = Keyframes.Count > 0 ? Keyframes[ 0 ].Size : 0;
-            Debug.Assert( Keyframes.All( x => x.Size == keyframeSize ) );
+            var keyframeSize = Keyframes.Count > 0 ? Keyframes[0].Size : 0;
+            Debug.Assert(Keyframes.All(x => x.Size == keyframeSize));
 
-            var keyframes = Keyframes.OrderBy( x => x.Time );
-            writer.WriteInt32( dataSize );
-            writer.WriteInt16( ( short )Keyframes.Count );
-            writer.WriteInt16( ( short ) keyframeSize );
-            writer.WriteInt16s( keyframes.Select( x => x.Time ) );
-            writer.Align( 4 );
-            writer.WriteObjects( keyframes );
-            writer.Align( 4 );
+            var keyframes = Keyframes.OrderBy(x => x.Time);
+            writer.WriteInt32(dataSize);
+            writer.WriteInt16((short)Keyframes.Count);
+            writer.WriteInt16((short)keyframeSize);
+            writer.WriteInt16s(keyframes.Select(x => x.Time));
+            writer.Align(4);
+            writer.WriteObjects(keyframes);
+            writer.Align(4);
 
             var end = writer.Position;
-            writer.SeekBegin( start );
-            dataSize = ( int ) ( end - start );
-            writer.WriteInt32( dataSize );
-            writer.SeekBegin( end );
+            writer.SeekBegin(start);
+            dataSize = (int)(end - start);
+            writer.WriteInt32(dataSize);
+            writer.SeekBegin(end);
         }
     }
 }

@@ -9,20 +9,20 @@ namespace DDS3ModelLibrary.IO.Common
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static FileStream Create( string path )
+        public static FileStream Create(string path)
         {
-            path = Path.GetFullPath( path );
+            path = Path.GetFullPath(path);
 
-            if ( File.Exists( path ) )
-                File.Delete( path );
-            else if ( Directory.Exists( path ) )
-                Directory.Delete( path );
+            if (File.Exists(path))
+                File.Delete(path);
+            else if (Directory.Exists(path))
+                Directory.Delete(path);
 
-            var directoryName = Path.GetDirectoryName( path );
-            if ( directoryName != null )
-                Directory.CreateDirectory( directoryName );
+            var directoryName = Path.GetDirectoryName(path);
+            if (directoryName != null)
+                Directory.CreateDirectory(directoryName);
 
-            return File.Create( path );
+            return File.Create(path);
         }
     }
 }

@@ -7,29 +7,29 @@ namespace DDS3ModelLibrary.IO.Common
     /// </summary>
     public static class IBinarySerializableExtensions
     {
-        public static void Save( this IBinarySerializable @this, string filePath )
+        public static void Save(this IBinarySerializable @this, string filePath)
         {
-            using ( var writer = new EndianBinaryWriter( new MemoryStream(), Endianness.Little ) )
+            using (var writer = new EndianBinaryWriter(new MemoryStream(), Endianness.Little))
             {
-                @this.Write( writer );
-                using ( var fileStream = File.Create( filePath ) )
+                @this.Write(writer);
+                using (var fileStream = File.Create(filePath))
                 {
                     writer.BaseStream.Position = 0;
-                    writer.BaseStream.CopyTo( fileStream );
+                    writer.BaseStream.CopyTo(fileStream);
                 }
             }
         }
 
-        public static void Save( this IBinarySerializable @this, Stream stream, bool leaveOpen = true )
+        public static void Save(this IBinarySerializable @this, Stream stream, bool leaveOpen = true)
         {
-            using ( var writer = new EndianBinaryWriter( stream, leaveOpen, Endianness.Little ) )
-                @this.Write( writer );
+            using (var writer = new EndianBinaryWriter(stream, leaveOpen, Endianness.Little))
+                @this.Write(writer);
         }
 
-        public static MemoryStream Save( this IBinarySerializable @this )
+        public static MemoryStream Save(this IBinarySerializable @this)
         {
             var stream = new MemoryStream();
-            @this.Save( stream );
+            @this.Save(stream);
             stream.Position = 0;
             return stream;
         }

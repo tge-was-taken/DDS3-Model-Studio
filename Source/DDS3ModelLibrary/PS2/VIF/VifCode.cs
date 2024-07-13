@@ -1,5 +1,4 @@
-﻿using System.IO;
-using DDS3ModelLibrary.IO.Common;
+﻿using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary.PS2.VIF
 {
@@ -23,44 +22,44 @@ namespace DDS3ModelLibrary.PS2.VIF
             set => mCount = value;
         }
 
-        public virtual VifCommand Command => ( VifCommand )mCommand;
+        public virtual VifCommand Command => (VifCommand)mCommand;
 
         public VifCode()
         {
         }
 
-        public VifCode( ushort immediate, byte count, byte command )
+        public VifCode(ushort immediate, byte count, byte command)
         {
             Immediate = immediate;
             Count = count;
             mCommand = command;
         }
 
-        private void Read( EndianBinaryReader reader, VifTag tag )
+        private void Read(EndianBinaryReader reader, VifTag tag)
         {
-            if ( tag == null )
+            if (tag == null)
                 tag = reader.ReadObject<VifTag>();
 
-            mCommand = ( byte )tag.Command;
+            mCommand = (byte)tag.Command;
             mImmediate = tag.Immediate;
             mCount = tag.Count;
-            ReadContent( reader );
+            ReadContent(reader);
         }
 
-        protected virtual void ReadContent( EndianBinaryReader reader ) { }
-        protected virtual void WriteContent( EndianBinaryWriter writer ) { }
+        protected virtual void ReadContent(EndianBinaryReader reader) { }
+        protected virtual void WriteContent(EndianBinaryWriter writer) { }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
-            Read( reader, context as VifTag );
+            Read(reader, context as VifTag);
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.Write( mImmediate );
-            writer.Write( mCount );
-            writer.Write( mCommand );
-            WriteContent( writer );
+            writer.Write(mImmediate);
+            writer.Write(mCount);
+            writer.Write(mCommand);
+            WriteContent(writer);
         }
     }
 }

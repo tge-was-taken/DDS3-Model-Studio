@@ -8,34 +8,34 @@ namespace DDS3ModelLibrary.Models
         public ushort B;
         public ushort C;
 
-        public Triangle( ushort[] indices )
+        public Triangle(ushort[] indices)
         {
-            if ( indices.Length != 3 )
-                throw new ArgumentException( "Invalid number of indices for a triangle" );
+            if (indices.Length != 3)
+                throw new ArgumentException("Invalid number of indices for a triangle");
 
             A = indices[0];
             B = indices[1];
             C = indices[2];
         }
 
-        public Triangle( ushort a, ushort b, ushort c )
+        public Triangle(ushort a, ushort b, ushort c)
         {
             A = a;
             B = b;
             C = c;
         }
 
-        public bool Contains( ushort index )
+        public bool Contains(ushort index)
         {
             return A == index || B == index || C == index;
         }
 
-        public override bool Equals( object obj )
+        public override bool Equals(object obj)
         {
-            return obj is Triangle triangle && Equals( triangle );
+            return obj is Triangle triangle && Equals(triangle);
         }
 
-        public bool Equals( Triangle other )
+        public bool Equals(Triangle other)
         {
             return A == other.A && B == other.B && C == other.C;
         }

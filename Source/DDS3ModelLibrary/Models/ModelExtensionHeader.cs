@@ -12,16 +12,16 @@ namespace DDS3ModelLibrary.Models
 
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
-            Identifier = ( ModelExtensionIdentifier )reader.ReadInt32();
-            Size       = reader.ReadInt32();
+            Identifier = (ModelExtensionIdentifier)reader.ReadInt32();
+            Size = reader.ReadInt32();
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.Write( ( int ) Identifier );
-            writer.Write( Size );
+            writer.Write((int)Identifier);
+            writer.Write(Size);
         }
     }
 }

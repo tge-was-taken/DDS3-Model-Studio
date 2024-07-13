@@ -11,9 +11,9 @@ namespace DDS3ModelStudio.GUI.TreeView
         {
             get
             {
-                if ( !DesignMode )
+                if (!DesignMode)
                 {
-                    return Nodes.Count > 0 ? ( DataTreeNode )Nodes[0] : null;
+                    return Nodes.Count > 0 ? (DataTreeNode)Nodes[0] : null;
                 }
                 else
                 {
@@ -22,69 +22,69 @@ namespace DDS3ModelStudio.GUI.TreeView
             }
             set
             {
-                if ( Nodes.Count > 0 )
+                if (Nodes.Count > 0)
                     Nodes[0] = value;
-                else if ( value != null )
-                    Nodes.Add( value );
+                else if (value != null)
+                    Nodes.Add(value);
 
-                if ( value != null )
-                    SubscribeToEvents( value );
+                if (value != null)
+                    SubscribeToEvents(value);
             }
         }
 
-        protected override void OnBeforeSelect( TreeViewCancelEventArgs e )
+        protected override void OnBeforeSelect(TreeViewCancelEventArgs e)
         {
-            var node = ( DataTreeNode )e.Node;
-            node.OnBeforeSelect( e );
-            base.OnBeforeSelect( e );
+            var node = (DataTreeNode)e.Node;
+            node.OnBeforeSelect(e);
+            base.OnBeforeSelect(e);
         }
 
-        protected override void OnBeforeExpand( TreeViewCancelEventArgs e )
+        protected override void OnBeforeExpand(TreeViewCancelEventArgs e)
         {
-            var node = ( DataTreeNode ) e.Node;
-            node.OnBeforeExpand( e );
-            base.OnBeforeExpand( e );
+            var node = (DataTreeNode)e.Node;
+            node.OnBeforeExpand(e);
+            base.OnBeforeExpand(e);
         }
 
-        protected override void OnNodeMouseClick( TreeNodeMouseClickEventArgs e )
+        protected override void OnNodeMouseClick(TreeNodeMouseClickEventArgs e)
         {
-            if ( e.Button == MouseButtons.Right )
+            if (e.Button == MouseButtons.Right)
                 SelectedNode = e.Node;
         }
 
-        private void SubscribeToEvents( DataTreeNode value )
+        private void SubscribeToEvents(DataTreeNode value)
         {
-            value.NodeAdded   += HandleNodeAdded;
+            value.NodeAdded += HandleNodeAdded;
             value.RemovedNode += HandleNodeRemoved;
-            value.NodeMoved   += HandleNodeMoved;
+            value.NodeMoved += HandleNodeMoved;
             value.DataChanged += HandleDataChanged;
         }
 
-        private void UnsubscribeToEvents( DataTreeNode value )
+        private void UnsubscribeToEvents(DataTreeNode value)
         {
-            value.NodeAdded   -= HandleNodeAdded;
+            value.NodeAdded -= HandleNodeAdded;
             value.RemovedNode -= HandleNodeRemoved;
-            value.NodeMoved   -= HandleNodeMoved;
+            value.NodeMoved -= HandleNodeMoved;
             value.DataChanged -= HandleDataChanged;
         }
 
-        private void HandleDataChanged( object sender, DataTreeNode e )
+        private void HandleDataChanged(object sender, DataTreeNode e)
         {
-            NodeUpdated?.Invoke( this, new TreeViewEventArgs( e ) );
+            NodeUpdated?.Invoke(this, new TreeViewEventArgs(e));
         }
 
-        private void HandleNodeMoved( object sender, (DataTreeNode Node, int OldIndex, int NewIndex, DataTreeNode MovedNode) e )
+        private void HandleNodeMoved(object sender, (DataTreeNode Node, int OldIndex, int NewIndex, DataTreeNode MovedNode) e)
         {
         }
 
-        private void HandleNodeRemoved( object sender, (DataTreeNode Node, DataTreeNode RemovedNode) e )
+        private void HandleNodeRemoved(object sender, (DataTreeNode Node, DataTreeNode RemovedNode) e)
         {
-            UnsubscribeToEvents( e.RemovedNode );
+            UnsubscribeToEvents(e.RemovedNode);
         }
 
-        private void HandleNodeAdded( object sender, (DataTreeNode Node, DataTreeNode AddedNode) e )
+        private void HandleNodeAdded(object sender, (DataTreeNode Node, DataTreeNode AddedNode) e)
         {
-            SubscribeToEvents( e.AddedNode );
+            SubscribeToEvents(e.AddedNode);
         }
 
     }

@@ -15,7 +15,7 @@ namespace DDS3ModelLibrary.Models.Field
         public int Field18 { get; set; }
         public int Field1C { get; set; }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
             Field00 = reader.ReadInt32();
             Field04 = reader.ReadInt32();
@@ -27,16 +27,16 @@ namespace DDS3ModelLibrary.Models.Field
             Field1C = reader.ReadInt32();
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.Write( Field00 );
-            writer.Write( Field04 );
-            writer.Write( Field08 );
-            writer.Write( Field0C );
-            writer.Write( Field10 );
-            writer.Write( Field14 );
-            writer.Write( Field18 );
-            writer.Write( Field1C );
+            writer.Write(Field00);
+            writer.Write(Field04);
+            writer.Write(Field08);
+            writer.Write(Field0C);
+            writer.Write(Field10);
+            writer.Write(Field14);
+            writer.Write(Field18);
+            writer.Write(Field1C);
         }
     }
 }

@@ -1,5 +1,5 @@
-﻿using System.Numerics;
-using DDS3ModelLibrary.IO.Common;
+﻿using DDS3ModelLibrary.IO.Common;
+using System.Numerics;
 
 namespace DDS3ModelLibrary.Models
 {
@@ -15,27 +15,27 @@ namespace DDS3ModelLibrary.Models
         {
         }
 
-        public MeshType5BlendShape( Vector3[] positions, Vector3[] normals )
+        public MeshType5BlendShape(Vector3[] positions, Vector3[] normals)
         {
             Positions = positions;
             Normals = normals;
         }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
-            var vertexCount = ( short )context;
-            Positions = reader.ReadVector3Array( vertexCount );
-            reader.Align( 16 );
-            Normals = reader.ReadVector3Array( vertexCount );
-            reader.Align( 16 );
+            var vertexCount = (short)context;
+            Positions = reader.ReadVector3Array(vertexCount);
+            reader.Align(16);
+            Normals = reader.ReadVector3Array(vertexCount);
+            reader.Align(16);
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.Write( Positions );
-            writer.Align( 16 );
-            writer.Write( Normals );
-            writer.Align( 16 );
+            writer.Write(Positions);
+            writer.Align(16);
+            writer.Write(Normals);
+            writer.Align(16);
         }
     }
 }

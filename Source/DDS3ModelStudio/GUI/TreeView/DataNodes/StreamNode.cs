@@ -1,5 +1,5 @@
-﻿using System.IO;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
+using System.IO;
 
 namespace DDS3ModelStudio.GUI.TreeView.DataNodes
 {
@@ -10,7 +10,7 @@ namespace DDS3ModelStudio.GUI.TreeView.DataNodes
         public override DataNodeAction SupportedActions => DataNodeAction.Delete | DataNodeAction.Export | DataNodeAction.Move |
                                                            DataNodeAction.Rename | DataNodeAction.Replace;
 
-        public StreamNode( [NotNull] string name, [NotNull] Stream data ) : base( name, data )
+        public StreamNode([NotNull] string name, [NotNull] Stream data) : base(name, data)
         {
         }
     }

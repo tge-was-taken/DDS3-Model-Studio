@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using DDS3ModelLibrary.IO.Common;
+using System.Collections.Generic;
 using System.Diagnostics;
-using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary.Models
 {
@@ -15,20 +15,20 @@ namespace DDS3ModelLibrary.Models
         // IBinarySerializable implementation
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
             Id = reader.ReadInt32();
             var size = reader.ReadInt32();
-            Trace.Assert( ( size % sizeof( short ) ) == 0, "ModelPackEffectInfo data size is not even" );
-            Fields = reader.ReadInt16List( ( size - HEADER_SIZE ) / sizeof( short ) );
+            Trace.Assert((size % sizeof(short)) == 0, "ModelPackEffectInfo data size is not even");
+            Fields = reader.ReadInt16List((size - HEADER_SIZE) / sizeof(short));
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            var size = HEADER_SIZE + Fields.Count * sizeof( short );
-            writer.Write( Id );
-            writer.Write( size );
-            writer.Write( Fields );
+            var size = HEADER_SIZE + Fields.Count * sizeof(short);
+            writer.Write(Id);
+            writer.Write(size);
+            writer.Write(Fields);
         }
     }
 }

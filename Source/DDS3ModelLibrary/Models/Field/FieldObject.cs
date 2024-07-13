@@ -5,7 +5,7 @@ namespace DDS3ModelLibrary.Models.Field
 {
     public class FieldObject : IBinarySerializable
     {
-        private static readonly Resource.IOContext sResourceIOContext = new Resource.IOContext( true );
+        private static readonly Resource.IOContext sResourceIOContext = new Resource.IOContext(true);
 
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
@@ -32,37 +32,37 @@ namespace DDS3ModelLibrary.Models.Field
             Field14 = new FieldObjectField14Data();
         }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
-            Id        = reader.ReadInt32();
-            var resourceType = ( FieldObjectResourceType ) reader.ReadInt32();
-            Name      = reader.ReadStringOffset();
-            Field0C   = reader.ReadInt32();
+            Id = reader.ReadInt32();
+            var resourceType = (FieldObjectResourceType)reader.ReadInt32();
+            Name = reader.ReadStringOffset();
+            Field0C = reader.ReadInt32();
             Transform = reader.ReadObjectOffset<FieldObjectTransform>();
-            Field14   = reader.ReadObjectOffset<FieldObjectField14Data>();
-            Field18   = reader.ReadInt32();
-            Field1C   = reader.ReadInt32();
+            Field14 = reader.ReadObjectOffset<FieldObjectField14Data>();
+            Field18 = reader.ReadInt32();
+            Field1C = reader.ReadInt32();
 
-            switch ( resourceType )
+            switch (resourceType)
             {
                 case FieldObjectResourceType.Model:
-                    Resource = reader.ReadObjectOffset<Model>( sResourceIOContext );
+                    Resource = reader.ReadObjectOffset<Model>(sResourceIOContext);
                     break;
 
                 case FieldObjectResourceType.Type3:
-                    Resource = reader.ReadObjectOffset<FieldObjectResourceType3>( sResourceIOContext );
+                    Resource = reader.ReadObjectOffset<FieldObjectResourceType3>(sResourceIOContext);
                     break;
 
                 case FieldObjectResourceType.TextureListFileName:
-                    Resource = reader.ReadObjectOffset<FieldTextureListFileName>( sResourceIOContext );
+                    Resource = reader.ReadObjectOffset<FieldTextureListFileName>(sResourceIOContext);
                     break;
 
                 case FieldObjectResourceType.Effect:
-                    Resource = reader.ReadObjectOffset<FieldEffect>( sResourceIOContext );
+                    Resource = reader.ReadObjectOffset<FieldEffect>(sResourceIOContext);
                     break;
 
                 case FieldObjectResourceType.Light:
-                    Resource = reader.ReadObjectOffset<FieldLight>( sResourceIOContext );
+                    Resource = reader.ReadObjectOffset<FieldLight>(sResourceIOContext);
                     break;
 
                 default:
@@ -71,17 +71,17 @@ namespace DDS3ModelLibrary.Models.Field
             }
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.Write( Id );
-            writer.Write( ( int ) ResourceType );
-            writer.ScheduleWriteStringOffsetAligned( Name, 16 );
-            writer.Write( Field0C );
-            writer.ScheduleWriteObjectOffsetAligned( Transform, 16 );
-            writer.ScheduleWriteObjectOffsetAligned( Field14, 16 );
-            writer.Write( Field18 );
-            writer.Write( Field1C );
-            writer.ScheduleWriteObjectOffsetAligned( Resource, 16, sResourceIOContext );
+            writer.Write(Id);
+            writer.Write((int)ResourceType);
+            writer.ScheduleWriteStringOffsetAligned(Name, 16);
+            writer.Write(Field0C);
+            writer.ScheduleWriteObjectOffsetAligned(Transform, 16);
+            writer.ScheduleWriteObjectOffsetAligned(Field14, 16);
+            writer.Write(Field18);
+            writer.Write(Field1C);
+            writer.ScheduleWriteObjectOffsetAligned(Resource, 16, sResourceIOContext);
         }
     }
 }

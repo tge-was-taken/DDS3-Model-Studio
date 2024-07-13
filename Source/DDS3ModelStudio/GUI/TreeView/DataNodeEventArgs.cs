@@ -6,7 +6,7 @@ namespace DDS3ModelStudio.GUI.TreeView
     {
         public DataNode Node { get; }
 
-        public DataNodeEventArgs( DataNode node )
+        public DataNodeEventArgs(DataNode node)
         {
             Node = node;
         }
@@ -16,7 +16,7 @@ namespace DDS3ModelStudio.GUI.TreeView
     {
         public T Value { get; }
 
-        public DataNodeEventArgs( DataNode node, T value ) : base( node )
+        public DataNodeEventArgs(DataNode node, T value) : base(node)
         {
             Value = value;
         }
@@ -28,7 +28,7 @@ namespace DDS3ModelStudio.GUI.TreeView
 
         public T NewValue { get; }
 
-        public DataNodePropertyChangedEventArgs( DataNode node, T oldValue, T newValue ) : base( node )
+        public DataNodePropertyChangedEventArgs(DataNode node, T oldValue, T newValue) : base(node)
         {
             OldValue = oldValue;
             NewValue = newValue;
@@ -43,7 +43,7 @@ namespace DDS3ModelStudio.GUI.TreeView
 
         public DataNode MovedNode { get; }
 
-        public DataNodeMovedEventArgs( DataNode node, int oldIndex, int newIndex, DataNode movedNode ) : base( node )
+        public DataNodeMovedEventArgs(DataNode node, int oldIndex, int newIndex, DataNode movedNode) : base(node)
         {
             OldIndex = oldIndex;
             NewIndex = newIndex;

@@ -1,19 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using DDS3ModelLibrary.IO;
+﻿using DDS3ModelLibrary.IO;
 using DDS3ModelLibrary.IO.Common;
 using DDS3ModelLibrary.IO.Internal;
 using DDS3ModelLibrary.Models;
 using DDS3ModelLibrary.Motions.Internal;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
 
 namespace DDS3ModelLibrary.Motions
 {
     public class MotionPack : Resource
     {
         public override ResourceDescriptor ResourceDescriptor { get; } =
-            new ResourceDescriptor( ResourceFileType.MotionPack, ResourceIdentifier.MotionPack );
+            new ResourceDescriptor(ResourceFileType.MotionPack, ResourceIdentifier.MotionPack);
 
         // caching
         private List<MotionControllerDefinition> mControllerDefinitions;
@@ -30,12 +30,12 @@ namespace DDS3ModelLibrary.Motions
             Motions = new List<Motion>();
         }
 
-        internal override void ReadContent( EndianBinaryReader reader, IOContext context )
+        internal override void ReadContent(EndianBinaryReader reader, IOContext context)
         {
-            var nodes = ( List<Node> )context.Context;
+            var nodes = (List<Node>)context.Context;
 
             // -- header --
-            reader.SeekCurrent( 8 );
+            reader.SeekCurrent(8);
             Group = reader.ReadInt16();
             PlayGroup = reader.ReadInt16();
             FirstMotion = reader.ReadInt16();
@@ -48,33 +48,33 @@ namespace DDS3ModelLibrary.Motions
             var motionTableOffset = reader.ReadInt32();
 
             // -- controllers definitions --
-            mControllerDefinitions = reader.ReadObjects<MotionControllerDefinition>( controllerCount );
+            mControllerDefinitions = reader.ReadObjects<MotionControllerDefinition>(controllerCount);
 
             // -- motions --
-            reader.ReadAtOffset( motionTableOffset, () =>
+            reader.ReadAtOffset(motionTableOffset, () =>
             {
-                mMotionDefinitions = reader.ReadObjectOffsets<MotionDefinition>( motionCount, mControllerDefinitions );
-                foreach ( var motionDef in mMotionDefinitions )
+                mMotionDefinitions = reader.ReadObjectOffsets<MotionDefinition>(motionCount, mControllerDefinitions);
+                foreach (var motionDef in mMotionDefinitions)
                 {
-                    var motion = motionDef != null ? new Motion( motionDef, mControllerDefinitions ) : null;
+                    var motion = motionDef != null ? new Motion(motionDef, mControllerDefinitions) : null;
 
-                    if ( motion != null && nodes != null && motion.Controllers.All( x => x.NodeIndex < nodes.Count ) )
+                    if (motion != null && nodes != null && motion.Controllers.All(x => x.NodeIndex < nodes.Count))
                     {
                         // Assign node names
-                        foreach ( var controller in motion.Controllers )
+                        foreach (var controller in motion.Controllers)
                             controller.NodeName = nodes[controller.NodeIndex].Name;
                     }
 
-                    Motions.Add( motion );
+                    Motions.Add(motion);
                 }
-            } );
+            });
 
             // TODO: proper caching
             mControllerDefinitions = null;
             mMotionDefinitions = null;
         }
 
-        internal override void WriteContent( EndianBinaryWriter writer, IOContext context )
+        internal override void WriteContent(EndianBinaryWriter writer, IOContext context)
         {
             writer.OffsetPositions.Clear();
 
@@ -82,51 +82,51 @@ namespace DDS3ModelLibrary.Motions
 
             // -- header --
             // Write relocation table last (lowest priority)
-            writer.PushBaseOffset( start + 0x10 );
-            writer.ScheduleWriteOffsetAligned( -1, 16, () =>
+            writer.PushBaseOffset(start + 0x10);
+            writer.ScheduleWriteOffsetAligned(-1, 16, () =>
             {
                 // Encode & write relocation table
                 var encodedRelocationTable =
-                    RelocationTableEncoding.Encode( writer.OffsetPositions.Select( x => ( int )x ).ToList(), ( int )writer.BaseOffset );
-                writer.WriteBytes( encodedRelocationTable );
+                    RelocationTableEncoding.Encode(writer.OffsetPositions.Select(x => (int)x).ToList(), (int)writer.BaseOffset);
+                writer.WriteBytes(encodedRelocationTable);
 
                 var end = writer.Position;
-                writer.SeekBegin( start + 4 );
-                writer.WriteInt32( encodedRelocationTable.Length );
-                writer.SeekBegin( end );
-            } );
+                writer.SeekBegin(start + 4);
+                writer.WriteInt32(encodedRelocationTable.Length);
+                writer.SeekBegin(end);
+            });
 
-            writer.WriteInt32( 0 );
-            writer.WriteInt16( Group );
-            writer.WriteInt16( PlayGroup );
-            writer.WriteInt16( FirstMotion );
-            writer.WriteInt16( Flags );
+            writer.WriteInt32(0);
+            writer.WriteInt16(Group);
+            writer.WriteInt16(PlayGroup);
+            writer.WriteInt16(FirstMotion);
+            writer.WriteInt16(Flags);
 
             // -- motion data header --
-            if ( mControllerDefinitions == null )
+            if (mControllerDefinitions == null)
             {
-                mControllerDefinitions = Motions.Where( x => x != null )
-                                                .SelectMany( x => x.Controllers )
-                                                .Select( x => x.GetDefinition() )
+                mControllerDefinitions = Motions.Where(x => x != null)
+                                                .SelectMany(x => x.Controllers)
+                                                .Select(x => x.GetDefinition())
                                                 .Distinct()
                                                 //.OrderBy( x => x.NodeIndex )
                                                 .ToList();
             }
 
-            if ( mMotionDefinitions == null )
+            if (mMotionDefinitions == null)
             {
                 mMotionDefinitions = BuildMotionDefinitions();
             }
 
-            writer.WriteInt16( ( short )Motions.Count );
-            writer.WriteInt16( ( short )mControllerDefinitions.Count );
-            writer.ScheduleWriteOffsetAligned( 16, () =>
+            writer.WriteInt16((short)Motions.Count);
+            writer.WriteInt16((short)mControllerDefinitions.Count);
+            writer.ScheduleWriteOffsetAligned(16, () =>
             {
-                writer.ScheduleWriteObjectOffsetsAligned( mMotionDefinitions, 4 );
+                writer.ScheduleWriteObjectOffsetsAligned(mMotionDefinitions, 4);
             });
 
             // -- controller definitions --
-            writer.WriteObjects( mControllerDefinitions );
+            writer.WriteObjects(mControllerDefinitions);
 
             // write all the things
             writer.PerformScheduledWrites();
@@ -138,17 +138,17 @@ namespace DDS3ModelLibrary.Motions
             var motionDefs = new List<MotionDefinition>();
             var motionDefCache = new Dictionary<Motion, MotionDefinition>();
 
-            foreach ( var motion in Motions )
+            foreach (var motion in Motions)
             {
-                if ( motion == null )
+                if (motion == null)
                 {
-                    motionDefs.Add( null );
+                    motionDefs.Add(null);
                     continue;
                 }
 
-                if ( motionDefCache.TryGetValue( motion, out var motionDef ) )
+                if (motionDefCache.TryGetValue(motion, out var motionDef))
                 {
-                    motionDefs.Add( motionDef );
+                    motionDefs.Add(motionDef);
                     continue;
                 }
 
@@ -157,23 +157,23 @@ namespace DDS3ModelLibrary.Motions
                     Duration = motion.Duration,
                 };
 
-                foreach ( var controllerDef in mControllerDefinitions )
+                foreach (var controllerDef in mControllerDefinitions)
                 {
-                    var controller = motion.Controllers.FirstOrDefault( x => x.GetDefinitionHash() == controllerDef.GetHashCode() );
+                    var controller = motion.Controllers.FirstOrDefault(x => x.GetDefinitionHash() == controllerDef.GetHashCode());
 
-                    if ( controller != null )
+                    if (controller != null)
                     {
-                        motionDef.Tracks.Add( new KeyframeTrack( controller.Keys ) );
+                        motionDef.Tracks.Add(new KeyframeTrack(controller.Keys));
                         continue;
                     }
 
                     // Need to add dummy values
                     var keyframes = new List<IKey>();
 
-                    void AddPlaceholderKeyframe( short time )
+                    void AddPlaceholderKeyframe(short time)
                     {
                         IKey key;
-                        switch ( controllerDef.Type )
+                        switch (controllerDef.Type)
                         {
                             case ControllerType.Position:
                                 key = new Vector3Key();
@@ -197,14 +197,14 @@ namespace DDS3ModelLibrary.Motions
                         }
 
                         key.Time = time;
-                        keyframes.Add( key );
+                        keyframes.Add(key);
                     }
 
-                    AddPlaceholderKeyframe( 0 );
-                    motionDef.Tracks.Add( new KeyframeTrack( keyframes ) );
+                    AddPlaceholderKeyframe(0);
+                    motionDef.Tracks.Add(new KeyframeTrack(keyframes));
                 }
 
-                motionDefs.Add( motionDef );
+                motionDefs.Add(motionDef);
                 motionDefCache[motion] = motionDef;
             }
 

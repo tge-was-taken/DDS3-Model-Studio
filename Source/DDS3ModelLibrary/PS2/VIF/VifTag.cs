@@ -9,21 +9,21 @@ namespace DDS3ModelLibrary.PS2.VIF
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
         public ushort Immediate;
-        public byte   Count;
-        public byte   Command;
+        public byte Count;
+        public byte Command;
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
             Immediate = reader.ReadUInt16();
-            Count     = reader.ReadByte();
-            Command   = reader.ReadByte();
+            Count = reader.ReadByte();
+            Command = reader.ReadByte();
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.Write( Immediate );
-            writer.Write( Count );
-            writer.Write( ( byte )Command );
+            writer.Write(Immediate);
+            writer.Write(Count);
+            writer.Write((byte)Command);
         }
     }
 }

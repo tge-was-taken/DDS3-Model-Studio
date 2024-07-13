@@ -10,13 +10,13 @@ namespace DDS3ModelLibrary.Models.Processing
 
         public Dictionary<string, List<string>> Properties { get; }
 
-        public List<string> this[ string key ]
+        public List<string> this[string key]
         {
             get
             {
-                return !Properties.TryGetValue( key, out var value ) ? new List<string>() : value;
+                return !Properties.TryGetValue(key, out var value) ? new List<string>() : value;
             }
-            set => Properties[ key ] = value;
+            set => Properties[key] = value;
         }
 
         public TagName()
@@ -29,9 +29,9 @@ namespace DDS3ModelLibrary.Models.Processing
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public static TagName Parse( string input )
+        public static TagName Parse(string input)
         {
-            return sParser.Parse( input );
+            return sParser.Parse(input);
         }
     }
 }

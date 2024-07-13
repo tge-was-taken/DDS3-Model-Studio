@@ -14,47 +14,47 @@ namespace DDS3ModelLibrary.Models.Processing
             ParsingPropertyDone
         }
 
-        private static readonly Regex sRegex = new Regex( @"(@?[^@^\()^,]+)", RegexOptions.Compiled );
+        private static readonly Regex sRegex = new Regex(@"(@?[^@^\()^,]+)", RegexOptions.Compiled);
 
-        public TagName Parse( string input )
+        public TagName Parse(string input)
         {
-            var matches = sRegex.Matches( input );
-            var state   = State.ParsingName;
+            var matches = sRegex.Matches(input);
+            var state = State.ParsingName;
 
             var tagName = new TagName();
             string propertyName = null;
             List<string> propertyArguments = null;
 
-            foreach ( Match match in matches )
+            foreach (Match match in matches)
             {
-                switch ( state )
+                switch (state)
                 {
                     case State.ParsingName:
-                        if ( match.Value.StartsWith( "@" ) )
+                        if (match.Value.StartsWith("@"))
                         {
                             goto case State.ParsingPropertyName;
                         }
                         else
                         {
-                            if ( tagName.Name == null )
+                            if (tagName.Name == null)
                                 tagName.Name = match.Value;
                             else
-                                throw new TagNameParseException( "Expected property name" );
+                                throw new TagNameParseException("Expected property name");
                         }
 
                         break;
 
                     case State.ParsingPropertyName:
-                        propertyName = match.Value.Substring( 1 );
+                        propertyName = match.Value.Substring(1);
                         propertyArguments = new List<string>();
                         state = State.ParsingPropertyArguments;
                         break;
 
                     case State.ParsingPropertyArguments:
-                        if ( match.Value.StartsWith( "@" ) )
+                        if (match.Value.StartsWith("@"))
                             goto case State.ParsingPropertyDone;
 
-                        propertyArguments.Add( match.Value );
+                        propertyArguments.Add(match.Value);
                         break;
 
                     case State.ParsingPropertyDone:
@@ -64,7 +64,7 @@ namespace DDS3ModelLibrary.Models.Processing
                 }
             }
 
-            if ( state == State.ParsingPropertyArguments )
+            if (state == State.ParsingPropertyArguments)
             {
                 tagName[propertyName] = propertyArguments;
             }
