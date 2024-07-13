@@ -5,9 +5,10 @@ namespace DDS3ModelLibrary.IO.Internal
     public static class RelocationTableEncoding
     {
         private const byte ADDRESS_SIZE = sizeof(int);
+        private const byte SEQ_LOOP = 0xF8;
         private const byte SEQ_BASE = 0x07;
         private const byte SEQ_BASE_NUM_LOOP = 2;
-        private const byte SEQ_FLAG_ODD = 1 << 3;
+        private const byte SEQ_MAX_NUM_LOOP = 33;
 
         public static int[] Decode(byte[] relocationTable, int addressBaseOffset)
         {
@@ -24,18 +25,11 @@ namespace DDS3ModelLibrary.IO.Internal
                     // Check if the value indicates a sequence run of addresses
                     if ((reloc & SEQ_BASE) == SEQ_BASE)
                     {
-                        // Get the base loop multiplier
-                        int baseLoopMult = (reloc & 0xF0) >> 4;
+                        // Get the encoded loop number
+                        int loop = (reloc & SEQ_LOOP) >> 3;
 
                         // Get the number of loops, base loop number is 2
-                        int numLoop = SEQ_BASE_NUM_LOOP + (baseLoopMult * SEQ_BASE_NUM_LOOP);
-
-                        // Check if the number of loops is odd
-                        if ((reloc & SEQ_FLAG_ODD) == SEQ_FLAG_ODD)
-                        {
-                            // If so then add an extra loop cycle.
-                            numLoop += 1;
-                        }
+                        int numLoop = SEQ_BASE_NUM_LOOP + loop;
 
                         for (int j = 0; j < numLoop; j++)
                         {
@@ -75,7 +69,7 @@ namespace DDS3ModelLibrary.IO.Internal
 
             for (int addressLocationIndex = 0; addressLocationIndex < addressLocations.Count; addressLocationIndex++)
             {
-                int seqIdx = sequences.FindIndex(item => item.ListStartIndex == addressLocationIndex);
+                int seqIdx = sequences.FindIndex(item => item.AddressLocationListStartIndex == addressLocationIndex);
                 int reloc = (addressLocations[addressLocationIndex] - prevRelocSum) - addressBaseOffset;
 
                 // Check if a matching sequence was found
@@ -93,23 +87,30 @@ namespace DDS3ModelLibrary.IO.Internal
                     EncodeAddress(reloc, relocationTable, ref prevRelocSum);
 
                     // Subtract one because the first entry is used to locate to the start of the sequence
-                    int numberOfAddressesInSequence = sequences[seqIdx].Length - 1;
+                    int numberOfAddressesInSequence = sequences[seqIdx].SequenceAddressCount - 1;
 
-                    int baseLoopMult = (numberOfAddressesInSequence - SEQ_BASE_NUM_LOOP) / SEQ_BASE_NUM_LOOP;
-                    bool isOdd = (numberOfAddressesInSequence % 2) == 1;
-
-                    reloc = SEQ_BASE;
-                    reloc |= baseLoopMult << 4;
-
-                    if (isOdd)
+                    // Loop until we have added the full sequence
+                    while (numberOfAddressesInSequence != 0)
                     {
-                        reloc |= SEQ_FLAG_ODD;
+                        int numberOfAddressesToAdd = numberOfAddressesInSequence;
+                        if (numberOfAddressesToAdd > SEQ_MAX_NUM_LOOP)
+                        {
+                            numberOfAddressesToAdd = SEQ_MAX_NUM_LOOP;
+                        }
+
+                        // Get the loop number to encode, base loop number is 2
+                        int loop = numberOfAddressesToAdd - SEQ_BASE_NUM_LOOP;
+
+                        reloc = (loop << 3) | SEQ_BASE;
+
+                        relocationTable.Add((byte)reloc);
+
+                        addressLocationIndex += numberOfAddressesToAdd;
+                        prevRelocSum += numberOfAddressesToAdd * ADDRESS_SIZE;
+
+                        // Decrease the number of addresses remaining
+                        numberOfAddressesInSequence -= numberOfAddressesToAdd;
                     }
-
-                    relocationTable.Add((byte)reloc);
-
-                    addressLocationIndex += numberOfAddressesInSequence;
-                    prevRelocSum += numberOfAddressesInSequence * ADDRESS_SIZE;
                 }
             }
 
@@ -158,7 +159,7 @@ namespace DDS3ModelLibrary.IO.Internal
 
         private static List<AddressSequence> DetectAddressSequenceRuns(IList<int> addressLocations)
         {
-            var sequences = new List<AddressSequence>();
+            List<AddressSequence> sequences = new List<AddressSequence>();
 
             for (int addressIndex = 0; addressIndex < addressLocations.Count; addressIndex++)
             {
@@ -171,10 +172,10 @@ namespace DDS3ModelLibrary.IO.Internal
                 if (addressLocations[addressIndex + 1] - addressLocations[addressIndex] == ADDRESS_SIZE)
                 {
                     // We have found a sequence of at least 2 addresses
-                    var seq = new AddressSequence
+                    AddressSequence seq = new AddressSequence
                     {
-                        ListStartIndex = addressIndex++,
-                        Length = 2
+                        AddressLocationListStartIndex = addressIndex++,
+                        SequenceAddressCount = 2
                     };
 
                     while (addressIndex + 1 < addressLocations.Count)
@@ -182,19 +183,18 @@ namespace DDS3ModelLibrary.IO.Internal
                         if (addressLocations[addressIndex + 1] - addressLocations[addressIndex] == ADDRESS_SIZE)
                         {
                             // We have found another sequence to add.
-                            seq.Length++;
+                            seq.SequenceAddressCount++;
                             addressIndex++;
                         }
                         else
                         {
                             // The consecutive sequence ends.
-                            --addressIndex;
                             break;
                         }
                     }
 
                     // Check if there are more than 2 addresses in a sequence.
-                    if (seq.Length > 2)
+                    if (seq.SequenceAddressCount > 2)
                     {
                         // Add the sequence to the list of sequences.
                         sequences.Add(seq);
@@ -207,8 +207,8 @@ namespace DDS3ModelLibrary.IO.Internal
 
         private struct AddressSequence
         {
-            public int ListStartIndex;
-            public int Length;
+            public int AddressLocationListStartIndex;
+            public int SequenceAddressCount;
         }
     }
 }
