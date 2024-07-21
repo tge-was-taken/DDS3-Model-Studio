@@ -1,7 +1,7 @@
-﻿using System.Collections;
+﻿using DDS3ModelLibrary.IO.Common;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary.Models
 {
@@ -18,19 +18,19 @@ namespace DDS3ModelLibrary.Models
             mList = new List<Mesh>();
         }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
             var meshCount = reader.ReadInt16();
             Field02 = reader.ReadInt16();
 
-            for ( int i = 0; i < meshCount; i++ )
+            for (int i = 0; i < meshCount; i++)
             {
-                reader.ReadOffset( () =>
+                reader.ReadOffset(() =>
                 {
-                    var  meshType = ( MeshType )reader.ReadInt32();
-                    Mesh mesh     = null;
+                    var meshType = (MeshType)reader.ReadInt32();
+                    Mesh mesh = null;
 
-                    switch ( meshType )
+                    switch (meshType)
                     {
                         case MeshType.Type1:
                             mesh = reader.ReadObject<MeshType1>();
@@ -54,27 +54,27 @@ namespace DDS3ModelLibrary.Models
                             break;
 
                         default:
-                            throw new InvalidDataException( $"Unknown mesh type: {meshType}" );
+                            throw new InvalidDataException($"Unknown mesh type: {meshType}");
                     }
 
-                    if ( mesh != null )
-                        Add( mesh );
-                } );
+                    if (mesh != null)
+                        Add(mesh);
+                });
             }
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.Write( ( short )Count );
-            writer.Write( Field02 );
+            writer.Write((short)Count);
+            writer.Write(Field02);
 
-            foreach ( var mesh in this )
+            foreach (var mesh in this)
             {
-                writer.ScheduleWriteOffsetAligned( 16, () =>
+                writer.ScheduleWriteOffsetAligned(16, () =>
                 {
-                    writer.Write( ( int )mesh.Type );
-                    writer.WriteObject( mesh );
-                } );
+                    writer.Write((int)mesh.Type);
+                    writer.WriteObject(mesh);
+                });
             }
         }
 
@@ -83,11 +83,11 @@ namespace DDS3ModelLibrary.Models
 
         public int Count => mList.Count;
 
-        public bool IsReadOnly => ( ( IList<Mesh> )mList ).IsReadOnly;
+        public bool IsReadOnly => ((IList<Mesh>)mList).IsReadOnly;
 
-        public void Add( Mesh item )
+        public void Add(Mesh item)
         {
-            mList.Add( item );
+            mList.Add(item);
         }
 
         public void Clear()
@@ -95,51 +95,51 @@ namespace DDS3ModelLibrary.Models
             mList.Clear();
         }
 
-        public bool Contains( Mesh item )
+        public bool Contains(Mesh item)
         {
-            return mList.Contains( item );
+            return mList.Contains(item);
         }
 
-        public void CopyTo( Mesh[] array, int arrayIndex )
+        public void CopyTo(Mesh[] array, int arrayIndex)
         {
-            mList.CopyTo( array, arrayIndex );
+            mList.CopyTo(array, arrayIndex);
         }
 
         public IEnumerator<Mesh> GetEnumerator()
         {
-            return ( ( IList<Mesh> )mList ).GetEnumerator();
+            return ((IList<Mesh>)mList).GetEnumerator();
         }
 
-        public int IndexOf( Mesh item )
+        public int IndexOf(Mesh item)
         {
-            return mList.IndexOf( item );
+            return mList.IndexOf(item);
         }
 
-        public void Insert( int index, Mesh item )
+        public void Insert(int index, Mesh item)
         {
-            mList.Insert( index, item );
+            mList.Insert(index, item);
         }
 
-        public bool Remove( Mesh item )
+        public bool Remove(Mesh item)
         {
-            return mList.Remove( item );
+            return mList.Remove(item);
         }
 
-        public void RemoveAt( int index )
+        public void RemoveAt(int index)
         {
-            mList.RemoveAt( index );
+            mList.RemoveAt(index);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return ( ( IList<Mesh> )mList ).GetEnumerator();
+            return ((IList<Mesh>)mList).GetEnumerator();
         }
 
-        public void AddRange( IEnumerable<Mesh> list )
+        public void AddRange(IEnumerable<Mesh> list)
         {
-            foreach ( var mesh in list )
+            foreach (var mesh in list)
             {
-                Add( mesh );
+                Add(mesh);
             }
         }
 

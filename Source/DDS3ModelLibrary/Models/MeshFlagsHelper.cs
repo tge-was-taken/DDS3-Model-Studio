@@ -2,14 +2,14 @@
 {
     public static class MeshFlagsHelper
     {
-        public static MeshFlags Update( MeshFlags flag, object conditionObj, MeshFlags conditionFlag )
+        public static MeshFlags Update(MeshFlags flag, object conditionObj, MeshFlags conditionFlag)
         {
-            return Update( flag, conditionObj != null, conditionFlag );
+            return Update(flag, conditionObj != null, conditionFlag);
         }
 
-        public static MeshFlags Update( MeshFlags flag, bool condition, MeshFlags conditionFlag )
+        public static MeshFlags Update(MeshFlags flag, bool condition, MeshFlags conditionFlag)
         {
-            if ( condition )
+            if (condition)
                 flag |= conditionFlag;
             else
                 flag &= ~conditionFlag;

@@ -14,12 +14,12 @@ namespace DDS3ModelLibrary.Models
 
         public abstract short TriangleCount { get; }
 
-        protected abstract void Read( EndianBinaryReader reader );
+        protected abstract void Read(EndianBinaryReader reader);
 
-        protected abstract void Write( EndianBinaryWriter writer );
+        protected abstract void Write(EndianBinaryWriter writer);
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context ) => Read( reader );
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context) => Read(reader);
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context ) => Write( writer );
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context) => Write(writer);
     }
 }

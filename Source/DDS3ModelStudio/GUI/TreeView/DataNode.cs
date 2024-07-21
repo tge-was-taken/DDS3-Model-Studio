@@ -1,24 +1,23 @@
-﻿using System;
+﻿using JetBrains.Annotations;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
-using JetBrains.Annotations;
 
 namespace DDS3ModelStudio.GUI.TreeView
 {
-    public delegate void DataNodeExportHandler( string filePath );
+    public delegate void DataNodeExportHandler(string filePath);
 
     /// <summary>
     /// The handler used
     /// </summary>
     /// <param name="filePath"></param>
-    public delegate void DataNodeImportHandler( string filePath );
+    public delegate void DataNodeImportHandler(string filePath);
 
     /// <summary>
     /// The handler used to perform additional processing required to synchronize the data object with the view model.
@@ -32,17 +31,17 @@ namespace DDS3ModelStudio.GUI.TreeView
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    public delegate T DataNodeReplaceHandler<out T>( string filePath );
+    public delegate T DataNodeReplaceHandler<out T>(string filePath);
 
     [Flags]
     public enum DataNodeAction
     {
-        Export  = 1 << 0,
+        Export = 1 << 0,
         Replace = 1 << 1,
-        Add     = 1 << 2,
-        Move    = 1 << 3,
-        Rename  = 1 << 4,
-        Delete  = 1 << 5,
+        Add = 1 << 2,
+        Move = 1 << 3,
+        Rename = 1 << 4,
+        Delete = 1 << 5,
     }
 
     /// <summary>
@@ -73,12 +72,12 @@ namespace DDS3ModelStudio.GUI.TreeView
 
         // -- Public properties --
         [NotNull]
-        [ Browsable( false ) ]
+        [Browsable(false)]
         public object Data
         {
             get
             {
-                if ( !Synced && !IsSyncing )
+                if (!Synced && !IsSyncing)
                 {
                     // Sync data with view model
                     SyncData();
@@ -88,8 +87,8 @@ namespace DDS3ModelStudio.GUI.TreeView
             }
             set
             {
-                if ( value == null )
-                    throw new ArgumentNullException( nameof( value ) );
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
 
                 mData = value;
                 NotifyPropertyChanged();
@@ -107,20 +106,20 @@ namespace DDS3ModelStudio.GUI.TreeView
             get => mSynced;
             set
             {
-                if ( value != mSynced )
+                if (value != mSynced)
                 {
                     mSynced = value;
                     NotifyPropertyChanged();
-                    Log( $"Synced = {value}" );
+                    Log($"Synced = {value}");
 
-                    if ( !mSynced && Parent != null )
+                    if (!mSynced && Parent != null)
                     {
                         // If a parent's child gets desynchronized, then the parent itself will be too.
                         Parent.Synced = false;
                     }
-                    else if ( mSynced )
+                    else if (mSynced)
                     {
-                        Debug.Assert( IsSyncing, "Synced should not be manually set to true outside of the sync process" );
+                        Debug.Assert(IsSyncing, "Synced should not be manually set to true outside of the sync process");
                     }
                 }
             }
@@ -134,7 +133,7 @@ namespace DDS3ModelStudio.GUI.TreeView
             get => mHasUnsavedChanges;
             private set
             {
-                if ( mHasUnsavedChanges != value )
+                if (mHasUnsavedChanges != value)
                 {
                     mHasUnsavedChanges = value;
                     NotifyPropertyChanged();
@@ -157,7 +156,7 @@ namespace DDS3ModelStudio.GUI.TreeView
 #endif
         public abstract DataNodeAction SupportedActions { get; }
 
-        [ Browsable( false ) ]
+        [Browsable(false)]
         public DataNode Parent
         {
             get => mParent;
@@ -170,7 +169,7 @@ namespace DDS3ModelStudio.GUI.TreeView
 
         public IReadOnlyList<DataNode> Nodes => mNodes;
 
-        [Browsable( false )]
+        [Browsable(false)]
         public ContextMenuStrip ContextMenuStrip { get; private set; }
 
         [NotNull]
@@ -179,14 +178,14 @@ namespace DDS3ModelStudio.GUI.TreeView
             get => mName;
             set
             {
-                if ( value == null )
-                    throw new ArgumentNullException( nameof( value ) );
+                if (value == null)
+                    throw new ArgumentNullException(nameof(value));
 
-                if ( value != mName )
+                if (value != mName)
                 {
                     var oldName = mName;
                     mName = value;
-                    OnRenamed( oldName, mName );
+                    OnRenamed(oldName, mName);
                     NotifyPropertyChanged();
                 }
             }
@@ -201,12 +200,12 @@ namespace DDS3ModelStudio.GUI.TreeView
         public event EventHandler<DataNodeEventArgs<object>> DataReplaced;
         public event EventHandler<DataNodeEventArgs<DataNode>> ParentChanged;
         public event EventHandler<DataNodeEventArgs> BeforeViewInitialized;
-        public event EventHandler<DataNodeEventArgs> AfterViewInitialized; 
+        public event EventHandler<DataNodeEventArgs> AfterViewInitialized;
 
         // -- Callbacks --
         public Action StartRename { get; set; }
 
-        protected DataNode( [NotNull] string name, [NotNull] object data )
+        protected DataNode([NotNull] string name, [NotNull] object data)
         {
             // Basic init
             mName = name;
@@ -215,41 +214,41 @@ namespace DDS3ModelStudio.GUI.TreeView
             mCustomHandlers = new List<(string[] MenuPathParts, ToolStripMenuItem Item)>();
             mExportHandlers = new Dictionary<Type, DataNodeExportHandler>();
             mSynced = true;
-            Log( "Created" );
+            Log("Created");
         }
 
         // -- Public methods --
-        public virtual T AddNode<T>( [NotNull] T node ) where T : DataNode
+        public virtual T AddNode<T>([NotNull] T node) where T : DataNode
         {
-            if ( node == null )
-                throw new ArgumentNullException( nameof( node ) );
+            if (node == null)
+                throw new ArgumentNullException(nameof(node));
 
-            Log( $"Add child: {node.Name}" );
+            Log($"Add child: {node.Name}");
 
             // Disown if necessary
-            node.Parent?.RemoveNode( node );
+            node.Parent?.RemoveNode(node);
             node.Parent = this;
-            mNodes.Add( node );
-            OnNodeAdded( node );
+            mNodes.Add(node);
+            OnNodeAdded(node);
             return node;
         }
 
-        public virtual void RemoveNode( [NotNull] DataNode node )
+        public virtual void RemoveNode([NotNull] DataNode node)
         {
-            if ( node == null )
-                throw new ArgumentNullException( nameof( node ) );
+            if (node == null)
+                throw new ArgumentNullException(nameof(node));
 
-            Log( $"Remove child: {node.Name}" );
+            Log($"Remove child: {node.Name}");
 
             // Disown
-            mNodes.Remove( node );
+            mNodes.Remove(node);
             node.Parent = null;
-            OnNodeRemoved( node );
+            OnNodeRemoved(node);
         }
 
         public virtual void ClearNodes()
         {
-            Log( "Clearing nodes" );
+            Log("Clearing nodes");
             mNodes.Clear();
             Synced = false;
         }
@@ -258,35 +257,35 @@ namespace DDS3ModelStudio.GUI.TreeView
 
         public virtual void Remove()
         {
-            Parent?.RemoveNode( this );
+            Parent?.RemoveNode(this);
         }
 
         public virtual void MoveDown()
         {
-            if ( Parent == null )
+            if (Parent == null)
                 return;
 
-            var index = Parent.mNodes.IndexOf( this );
-            if ( index == Parent.mNodes.Count - 1 )
+            var index = Parent.mNodes.IndexOf(this);
+            if (index == Parent.mNodes.Count - 1)
                 return;
 
-            Parent.mNodes.RemoveAt( index );
-            Parent.mNodes.Insert( index + 1, this );
-            Parent.OnNodeMoved( index, index + 1, this );
+            Parent.mNodes.RemoveAt(index);
+            Parent.mNodes.Insert(index + 1, this);
+            Parent.OnNodeMoved(index, index + 1, this);
         }
 
         public virtual void MoveUp()
         {
-            if ( Parent == null )
+            if (Parent == null)
                 return;
 
-            var index = Parent.mNodes.IndexOf( this );
-            if ( index == 0 )
+            var index = Parent.mNodes.IndexOf(this);
+            if (index == 0)
                 return;
 
-            Parent.mNodes.RemoveAt( index );
-            Parent.mNodes.Insert( index - 1, this );
-            Parent.OnNodeMoved( index, index - 1, this );
+            Parent.mNodes.RemoveAt(index);
+            Parent.mNodes.Insert(index - 1, this);
+            Parent.OnNodeMoved(index, index - 1, this);
         }
 
         //
@@ -299,24 +298,24 @@ namespace DDS3ModelStudio.GUI.TreeView
         /// <returns>The path the file was exported to.</returns>
         public virtual string Export()
         {
-            if ( mExportHandlers.Count == 0 )
+            if (mExportHandlers.Count == 0)
                 return null;
 
-            using ( var dialog = new SaveFileDialog() )
+            using (var dialog = new SaveFileDialog())
             {
                 dialog.AutoUpgradeEnabled = true;
-                dialog.CheckPathExists    = true;
-                dialog.FileName           = Name;
+                dialog.CheckPathExists = true;
+                dialog.FileName = Name;
                 //dialog.Filter             = ModuleFilterGenerator.GenerateFilter( FormatModuleUsageFlags.Export, mExportHandlers.Keys.ToArray() );
-                dialog.OverwritePrompt    = true;
-                dialog.Title              = "Select a file to export to.";
-                dialog.ValidateNames      = true;
-                dialog.AddExtension       = true;
+                dialog.OverwritePrompt = true;
+                dialog.Title = "Select a file to export to.";
+                dialog.ValidateNames = true;
+                dialog.AddExtension = true;
 
-                if ( dialog.ShowDialog() != DialogResult.OK )
+                if (dialog.ShowDialog() != DialogResult.OK)
                     return null;
 
-                Export( dialog.FileName );
+                Export(dialog.FileName);
                 return dialog.FileName;
             }
         }
@@ -325,9 +324,9 @@ namespace DDS3ModelStudio.GUI.TreeView
         /// Exports the data to the specified file path. The type of data to export is inferred from the file path.
         /// </summary>
         /// <param name="filePath">Path to the file to export to.</param>
-        public virtual void Export( string filePath )
+        public virtual void Export(string filePath)
         {
-            if ( mExportHandlers.Count == 0 )
+            if (mExportHandlers.Count == 0)
                 return;
 
             //var type         = GetTypeFromPath( filePath, mExportHandlers.Keys );
@@ -341,10 +340,10 @@ namespace DDS3ModelStudio.GUI.TreeView
         // -- Protected methods
         public void Initialize()
         {
-            if ( IsInitialized )
+            if (IsInitialized)
                 return;
 
-            Log( "Initializing" );
+            Log("Initializing");
 
             // initialize the derived view model
             OnInitialize();
@@ -364,22 +363,22 @@ namespace DDS3ModelStudio.GUI.TreeView
         /// <summary>
         /// Populates the view -- which is the current node's child nodes and/or any other properties
         /// </summary>
-        protected internal void InitializeView( bool force = false )
+        protected internal void InitializeView(bool force = false)
         {
             // Don't initialize the view if it is already initialized, or if the view is still in sync with the data unless forced
-            if ( IsInitializingView || ( !force && Synced && IsViewInitialized ) )
+            if (IsInitializingView || (!force && Synced && IsViewInitialized))
                 return;
 
             OnBeforeInitializeView();
 
             IsInitializingView = true;
-            Log( "Initializing view" );
+            Log("Initializing view");
 
             // rebuild for initializing view, if necessary
-            if ( !Synced )
+            if (!Synced)
                 SyncData();
 
-            if ( DisplayHint.HasFlag( DataNodeDisplayHint.Branch ) )
+            if (DisplayHint.HasFlag(DataNodeDisplayHint.Branch))
             {
                 // let the derived view model populate the view
                 OnInitializeView();
@@ -396,7 +395,7 @@ namespace DDS3ModelStudio.GUI.TreeView
         /// </summary>
         protected virtual void OnBeforeInitializeView()
         {
-            InvokeEvent( BeforeViewInitialized );
+            InvokeEvent(BeforeViewInitialized);
         }
 
         /// <summary>
@@ -409,7 +408,7 @@ namespace DDS3ModelStudio.GUI.TreeView
         /// </summary>
         protected virtual void OnAfterInitializeView()
         {
-            InvokeEvent( AfterViewInitialized );
+            InvokeEvent(AfterViewInitialized);
         }
 
         /// <summary>
@@ -421,26 +420,26 @@ namespace DDS3ModelStudio.GUI.TreeView
         /// <typeparam name="T"></typeparam>
         /// <param name="propertyName"></param>
         /// <returns></returns>
-        protected T GetDataProperty<T>( [ CallerMemberName ] string propertyName = default )
+        protected T GetDataProperty<T>([CallerMemberName] string propertyName = default)
         {
-            if ( propertyName == null )
-                throw new ArgumentNullException( nameof( propertyName ) );
+            if (propertyName == null)
+                throw new ArgumentNullException(nameof(propertyName));
 
-            var prop = DataType.GetProperty( propertyName, typeof( T ) );
-            if ( prop == null )
+            var prop = DataType.GetProperty(propertyName, typeof(T));
+            if (prop == null)
             {
                 var field = DataType
                             .GetFields()
-                            .Where( x => x.Name == propertyName )
-                            .FirstOrDefault( x => x.FieldType == typeof( T ) );
+                            .Where(x => x.Name == propertyName)
+                            .FirstOrDefault(x => x.FieldType == typeof(T));
 
-                if ( field == null )
-                    throw new MissingMemberException( DataType.Name, propertyName );
+                if (field == null)
+                    throw new MissingMemberException(DataType.Name, propertyName);
 
-                return ( T )field.GetValue( Data );
+                return (T)field.GetValue(Data);
             }
 
-            return ( T )prop.GetValue( Data );
+            return (T)prop.GetValue(Data);
         }
 
         /// <summary>
@@ -453,28 +452,28 @@ namespace DDS3ModelStudio.GUI.TreeView
         /// <param name="value"></param>
         /// <param name="propertyName"></param>
         /// <returns></returns>
-        protected void SetDataProperty<T>( T value, [CallerMemberName] string propertyName = default )
+        protected void SetDataProperty<T>(T value, [CallerMemberName] string propertyName = default)
         {
-            if ( propertyName == null )
-                throw new ArgumentNullException( nameof( propertyName ) );
+            if (propertyName == null)
+                throw new ArgumentNullException(nameof(propertyName));
 
-            var propertyType = typeof( T );
+            var propertyType = typeof(T);
 
-            var property = DataType.GetProperty( propertyName, propertyType );
-            if ( property == null )
-                throw new MissingMemberException( DataType.Name, nameof( property ) );
+            var property = DataType.GetProperty(propertyName, propertyType);
+            if (property == null)
+                throw new MissingMemberException(DataType.Name, nameof(property));
 
-            if ( propertyType.IsValueType )
+            if (propertyType.IsValueType)
             {
                 // Value is the same, so no need to update it.
-                if ( Equals( property.GetValue( Data, null ), value ) )
+                if (Equals(property.GetValue(Data, null), value))
                     return;
             }
 
-            Log( $"Setting {propertyName} to {value}" );
-            property.SetValue( Data, value );
+            Log($"Setting {propertyName} to {value}");
+            property.SetValue(Data, value);
 
-            if ( property.GetCustomAttribute<RequireSyncAttribute>() != null )
+            if (property.GetCustomAttribute<RequireSyncAttribute>() != null)
             {
                 // This property requires to data object to be resynchronized
                 // Example: the data presented in the view model isn't representative of the underlying data in the data object
@@ -483,63 +482,63 @@ namespace DDS3ModelStudio.GUI.TreeView
                 Synced = false;
             }
 
-            if ( Parent != null )
+            if (Parent != null)
             {
                 // Child was modified, so parent is no longer synchronized
                 Parent.Synced = false;
             }
 
             // ReSharper disable once ExplicitCallerInfoArgument
-            NotifyPropertyChanged( propertyName );
+            NotifyPropertyChanged(propertyName);
         }
 
-        protected void RegisterExportHandler<T>( DataNodeExportHandler handler )
-            => mExportHandlers[typeof( T )] = handler;
+        protected void RegisterExportHandler<T>(DataNodeExportHandler handler)
+            => mExportHandlers[typeof(T)] = handler;
 
-        protected void RegisterCustomHandler( string menuPath, Action action, Keys shortcutKeys = Keys.None )
+        protected void RegisterCustomHandler(string menuPath, Action action, Keys shortcutKeys = Keys.None)
         {
-            var menuPathParts = menuPath.Split( '/' );
-            var itemName = menuPathParts[ menuPathParts.Length - 1 ];
-            Array.Resize( ref menuPathParts, menuPathParts.Length - 1 );
-            mCustomHandlers.Add( ( menuPathParts, CreateToolstripMenuItem( itemName, action, shortcutKeys ) ) );
+            var menuPathParts = menuPath.Split('/');
+            var itemName = menuPathParts[menuPathParts.Length - 1];
+            Array.Resize(ref menuPathParts, menuPathParts.Length - 1);
+            mCustomHandlers.Add((menuPathParts, CreateToolstripMenuItem(itemName, action, shortcutKeys)));
         }
 
-        private ToolStripMenuItem CreateToolstripMenuItem( string name, Action action, Keys shortcutKeys )
-            => new ToolStripMenuItem( name, null, CreateContextMenuStripEventHandler( action ), shortcutKeys ) { Name = name };
+        private ToolStripMenuItem CreateToolstripMenuItem(string name, Action action, Keys shortcutKeys)
+            => new ToolStripMenuItem(name, null, CreateContextMenuStripEventHandler(action), shortcutKeys) { Name = name };
 
         // -- Protected event handlers --
-        protected virtual void OnRenamed( [ NotNull ] string oldName, [ NotNull ] string newName )
+        protected virtual void OnRenamed([NotNull] string oldName, [NotNull] string newName)
         {
             Synced = false;
-            InvokeEvent( Renamed, oldName, newName );
+            InvokeEvent(Renamed, oldName, newName);
         }
 
-        protected virtual void OnNodeAdded( [ NotNull ] DataNode node )
+        protected virtual void OnNodeAdded([NotNull] DataNode node)
         {
-            if ( !IsInitializingView )
+            if (!IsInitializingView)
                 Synced = false;
 
-            InvokeEvent( NodeAdded, node );
+            InvokeEvent(NodeAdded, node);
         }
 
-        protected virtual void OnNodeRemoved( [ NotNull ] DataNode node )
+        protected virtual void OnNodeRemoved([NotNull] DataNode node)
         {
             Synced = false;
-            InvokeEvent( NodeRemoved, node );
+            InvokeEvent(NodeRemoved, node);
         }
 
-        protected virtual void OnParentChanged( DataNode parent )
+        protected virtual void OnParentChanged(DataNode parent)
         {
-            if ( parent != null )
+            if (parent != null)
                 parent.Synced = false;
 
-            InvokeEvent( ParentChanged, parent );
+            InvokeEvent(ParentChanged, parent);
         }
 
-        protected virtual void OnNodeMoved( int oldIndex, int nodeIndex, DataNode movedNode )
+        protected virtual void OnNodeMoved(int oldIndex, int nodeIndex, DataNode movedNode)
         {
             Synced = false;
-            NodeMoved?.Invoke( this, new DataNodeMovedEventArgs( this, oldIndex, nodeIndex, movedNode ) );
+            NodeMoved?.Invoke(this, new DataNodeMovedEventArgs(this, oldIndex, nodeIndex, movedNode));
         }
 
         /// <summary>
@@ -550,13 +549,13 @@ namespace DDS3ModelStudio.GUI.TreeView
         protected abstract object SyncDataCore();
 
 
-        [Conditional( "DEBUG" )]
-        protected void Log( string message ) => Debug.WriteLine( $"DataNode<{DataType.Name}> '{Name}': {message}" );
+        [Conditional("DEBUG")]
+        protected void Log(string message) => Debug.WriteLine($"DataNode<{DataType.Name}> '{Name}': {message}");
 
         // -- Private methods
         private void SyncData()
         {
-            Log( "Syncing" );
+            Log("Syncing");
             IsSyncing = true;
             Data = SyncDataCore();
             Synced = true;
@@ -571,21 +570,21 @@ namespace DDS3ModelStudio.GUI.TreeView
             ContextMenuStrip = new ContextMenuStrip();
 
             var addSeperator = false;
-            foreach ( var handler in mCustomHandlers.Where( x => x.MenuPathParts.Length == 0 ) )
+            foreach (var handler in mCustomHandlers.Where(x => x.MenuPathParts.Length == 0))
             {
-                ContextMenuStrip.Items.Add( handler.Item );
+                ContextMenuStrip.Items.Add(handler.Item);
                 addSeperator = true;
             }
 
-            if ( addSeperator )
-                ContextMenuStrip.Items.Add( new ToolStripSeparator() );
+            if (addSeperator)
+                ContextMenuStrip.Items.Add(new ToolStripSeparator());
 
-            if ( SupportedActions.HasFlag( DataNodeAction.Export ) )
+            if (SupportedActions.HasFlag(DataNodeAction.Export))
             {
-                ContextMenuStrip.Items.Add( new ToolStripMenuItem( "&Export", null, CreateContextMenuStripEventHandler( () => Export() ), Keys.Control | Keys.E )
+                ContextMenuStrip.Items.Add(new ToolStripMenuItem("&Export", null, CreateContextMenuStripEventHandler(() => Export()), Keys.Control | Keys.E)
                 {
                     Name = "Export"
-                } );
+                });
             }
 
             //if ( SupportedActions.HasFlag( DataNodeAction.Replace ) )
@@ -609,89 +608,89 @@ namespace DDS3ModelStudio.GUI.TreeView
             //        ContextMenuStrip.Items.Add( new ToolStripSeparator() );
             //}
 
-            if ( SupportedActions.HasFlag( DataNodeAction.Move ) )
+            if (SupportedActions.HasFlag(DataNodeAction.Move))
             {
-                ContextMenuStrip.Items.Add( new ToolStripMenuItem( "Move &Up", null, CreateContextMenuStripEventHandler( MoveUp ), Keys.Control | Keys.Up )
+                ContextMenuStrip.Items.Add(new ToolStripMenuItem("Move &Up", null, CreateContextMenuStripEventHandler(MoveUp), Keys.Control | Keys.Up)
                 {
                     Name = "Move Up"
-                } );
-                ContextMenuStrip.Items.Add( new ToolStripMenuItem( "Move &Down", null, CreateContextMenuStripEventHandler( MoveDown ), Keys.Control | Keys.Down )
+                });
+                ContextMenuStrip.Items.Add(new ToolStripMenuItem("Move &Down", null, CreateContextMenuStripEventHandler(MoveDown), Keys.Control | Keys.Down)
                 {
                     Name = "Move Down"
-                } );
+                });
             }
 
-            if ( SupportedActions.HasFlag( DataNodeAction.Rename ) )
+            if (SupportedActions.HasFlag(DataNodeAction.Rename))
             {
-                ContextMenuStrip.Items.Add( new ToolStripMenuItem( "Re&name", null, CreateContextMenuStripEventHandler( StartRename ), Keys.Control | Keys.N )
+                ContextMenuStrip.Items.Add(new ToolStripMenuItem("Re&name", null, CreateContextMenuStripEventHandler(StartRename), Keys.Control | Keys.N)
                 {
                     Name = "Rename"
-                } );
+                });
             }
 
-            foreach ( (string[] menuPathParts, ToolStripMenuItem item) in mCustomHandlers.Where( x => x.MenuPathParts.Length > 0 ) )
+            foreach ((string[] menuPathParts, ToolStripMenuItem item) in mCustomHandlers.Where(x => x.MenuPathParts.Length > 0))
             {
                 // Add custom handlers with a menu path
                 ToolStripMenuItem parentMenuItem = null;
 
-                foreach ( string menu in menuPathParts )
+                foreach (string menu in menuPathParts)
                 {
-                    var menuItem = ( ToolStripMenuItem )( parentMenuItem == null ? ContextMenuStrip.Items.Find( menu, false ).FirstOrDefault()
-                                                                                  : parentMenuItem.DropDownItems.Find( menu, false ).FirstOrDefault() );
+                    var menuItem = (ToolStripMenuItem)(parentMenuItem == null ? ContextMenuStrip.Items.Find(menu, false).FirstOrDefault()
+                                                                                  : parentMenuItem.DropDownItems.Find(menu, false).FirstOrDefault());
 
                     var isNewMenuItem = false;
-                    if ( menuItem == null )
+                    if (menuItem == null)
                     {
                         isNewMenuItem = true;
-                        menuItem = new ToolStripMenuItem( menu ) { Name = menu };
+                        menuItem = new ToolStripMenuItem(menu) { Name = menu };
                     }
 
-                    if ( isNewMenuItem )
+                    if (isNewMenuItem)
                     {
-                        if ( parentMenuItem == null )
-                            ContextMenuStrip.Items.Add( menuItem );
+                        if (parentMenuItem == null)
+                            ContextMenuStrip.Items.Add(menuItem);
                         else
-                            parentMenuItem.DropDownItems.Add( menuItem );
+                            parentMenuItem.DropDownItems.Add(menuItem);
                     }
 
                     parentMenuItem = menuItem;
                 }
 
-                if ( parentMenuItem == null )
-                    ContextMenuStrip.Items.Add( item );
+                if (parentMenuItem == null)
+                    ContextMenuStrip.Items.Add(item);
                 else
-                    parentMenuItem.DropDownItems.Add( item );
+                    parentMenuItem.DropDownItems.Add(item);
             }
 
-            if ( SupportedActions.HasFlag( DataNodeAction.Delete ) )
+            if (SupportedActions.HasFlag(DataNodeAction.Delete))
             {
-                ContextMenuStrip.Items.Add( new ToolStripMenuItem( "&Delete", null, CreateContextMenuStripEventHandler( Remove ), Keys.Control | Keys.Delete )
+                ContextMenuStrip.Items.Add(new ToolStripMenuItem("&Delete", null, CreateContextMenuStripEventHandler(Remove), Keys.Control | Keys.Delete)
                 {
                     Name = "Delete"
-                } );
+                });
             }
         }
 
-        private void NotifyPropertyChanged( [CallerMemberName] string propertyName = null )
+        private void NotifyPropertyChanged([CallerMemberName] string propertyName = null)
         {
-            if ( IsInitialized && !IsInitializingView )
+            if (IsInitialized && !IsInitializingView)
                 HasUnsavedChanges = true;
 
-            PropertyChanged?.Invoke( this, new PropertyChangedEventArgs( propertyName ) );
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        private void InvokeEvent( EventHandler<DataNodeEventArgs> eventHandler ) =>
-            eventHandler?.Invoke( this, new DataNodeEventArgs( this ) );
+        private void InvokeEvent(EventHandler<DataNodeEventArgs> eventHandler) =>
+            eventHandler?.Invoke(this, new DataNodeEventArgs(this));
 
-        private void InvokeEvent<T>( EventHandler<DataNodeEventArgs<T>> eventHandler, T value ) =>
-            eventHandler?.Invoke( this, new DataNodeEventArgs<T>( this, value ) );
+        private void InvokeEvent<T>(EventHandler<DataNodeEventArgs<T>> eventHandler, T value) =>
+            eventHandler?.Invoke(this, new DataNodeEventArgs<T>(this, value));
 
-        private void InvokeEvent<T>( EventHandler<DataNodePropertyChangedEventArgs<T>> eventHandler, T oldValue, T newValue ) =>
-            eventHandler?.Invoke( this, new DataNodePropertyChangedEventArgs<T>( this, oldValue, newValue ) );
+        private void InvokeEvent<T>(EventHandler<DataNodePropertyChangedEventArgs<T>> eventHandler, T oldValue, T newValue) =>
+            eventHandler?.Invoke(this, new DataNodePropertyChangedEventArgs<T>(this, oldValue, newValue));
 
-        private EventHandler CreateContextMenuStripEventHandler( Action action )
+        private EventHandler CreateContextMenuStripEventHandler(Action action)
         {
-            return ( s, e ) =>
+            return (s, e) =>
             {
                 // Annoyingly, the context menu strip stays visible when a dialog is opened while a 
                 // drop down menu is visible. That's why we explicitly hide it here.
@@ -773,36 +772,36 @@ namespace DDS3ModelStudio.GUI.TreeView
         private DataNodeSyncHandler<T> mSyncHandler;
         private readonly Dictionary<Type, DataNodeReplaceHandler<T>> mReplaceHandlers;
 
-        [Browsable( false )]
+        [Browsable(false)]
         public new T Data
         {
-            get => ( T )base.Data;
+            get => (T)base.Data;
             set => base.Data = value;
         }
 
 #if !DEBUG
         [ Browsable( false ) ]
 #endif
-        public override Type DataType => typeof( T );
+        public override Type DataType => typeof(T);
 
-        protected DataNode( [NotNull] string name, [NotNull] T data ) : base( name, data )
+        protected DataNode([NotNull] string name, [NotNull] T data) : base(name, data)
         {
             mReplaceHandlers = new Dictionary<Type, DataNodeReplaceHandler<T>>();
         }
 
-        protected void RegisterSyncHandler( DataNodeSyncHandler<T> handler )
+        protected void RegisterSyncHandler(DataNodeSyncHandler<T> handler)
             => mSyncHandler = handler;
 
-        protected void RegisterReplaceHandler<TReplacement>( DataNodeReplaceHandler<T> handler )
-            => mReplaceHandlers[typeof( TReplacement )] = handler;
+        protected void RegisterReplaceHandler<TReplacement>(DataNodeReplaceHandler<T> handler)
+            => mReplaceHandlers[typeof(TReplacement)] = handler;
 
         protected override object SyncDataCore()
         {
-            if ( mSyncHandler == null )
+            if (mSyncHandler == null)
             {
                 // Sync was required but no handler exists
                 // Likely a bug
-                Log( "Sync was required but no sync handler is registered" );
+                Log("Sync was required but no sync handler is registered");
                 return Data;
             }
 

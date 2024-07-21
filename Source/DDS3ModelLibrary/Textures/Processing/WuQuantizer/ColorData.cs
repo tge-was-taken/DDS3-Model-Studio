@@ -14,17 +14,17 @@ namespace DDS3ModelLibrary.Textures.Processing.WuQuantizer
             MomentsBlue = new long[dataGranularity, dataGranularity, dataGranularity, dataGranularity];
             Moments = new float[dataGranularity, dataGranularity, dataGranularity, dataGranularity];
 
-            pixelsCount = bitmapWidth*bitmapHeight;
+            pixelsCount = bitmapWidth * bitmapHeight;
             pixels = new Pixel[pixelsCount];
             quantizedPixels = new int[pixelsCount];
         }
 
-        public long[, , ,] Weights { get; private set; }
-        public long[, , ,] MomentsAlpha { get; private set; }
-        public long[, , ,] MomentsRed { get; private set; }
-        public long[, , ,] MomentsGreen { get; private set; }
-        public long[, , ,] MomentsBlue { get; private set; }
-        public float[, , ,] Moments { get; private set; }
+        public long[,,,] Weights { get; private set; }
+        public long[,,,] MomentsAlpha { get; private set; }
+        public long[,,,] MomentsRed { get; private set; }
+        public long[,,,] MomentsGreen { get; private set; }
+        public long[,,,] MomentsBlue { get; private set; }
+        public float[,,,] Moments { get; private set; }
 
         public IList<int> QuantizedPixels { get { return quantizedPixels; } }
         public IList<Pixel> Pixels { get { return pixels; } }

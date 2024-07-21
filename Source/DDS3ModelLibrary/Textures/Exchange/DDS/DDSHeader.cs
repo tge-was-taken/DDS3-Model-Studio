@@ -1,6 +1,6 @@
-﻿using System.IO;
+﻿using DDS3ModelLibrary.IO.Common;
+using System.IO;
 using System.Text;
-using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary.Textures.Exchange.DDS
 {
@@ -38,97 +38,97 @@ namespace DDS3ModelLibrary.Textures.Exchange.DDS
 
         public DDSHeader()
         {
-            Size  = 0x7C;
+            Size = 0x7C;
             Flags = DDSHeaderFlags.Caps | DDSHeaderFlags.Height | DDSHeaderFlags.Width | DDSHeaderFlags.PixelFormat;
-            Caps  = DDSHeaderCaps.Texture;
+            Caps = DDSHeaderCaps.Texture;
         }
 
-        public DDSHeader( int width, int height, DDSPixelFormatFourCC format ) : this()
+        public DDSHeader(int width, int height, DDSPixelFormatFourCC format) : this()
         {
-            Height             =  height;
-            Width              =  width;
-            PitchOrLinearSize  = DDSFormatDetails.CalculatePitchOrLinearSize( width, height, format, out var additionalFlags );
-            Flags              |= additionalFlags;
-            PixelFormat.FourCC =  format;
+            Height = height;
+            Width = width;
+            PitchOrLinearSize = DDSFormatDetails.CalculatePitchOrLinearSize(width, height, format, out var additionalFlags);
+            Flags |= additionalFlags;
+            PixelFormat.FourCC = format;
         }
 
-        public DDSHeader( byte[] data ) : this( new MemoryStream( data ), false ) { }
+        public DDSHeader(byte[] data) : this(new MemoryStream(data), false) { }
 
-        public DDSHeader( Stream stream, bool leaveOpen = true )
+        public DDSHeader(Stream stream, bool leaveOpen = true)
         {
-            using ( var reader = new EndianBinaryReader( stream, Encoding.Default, leaveOpen, Endianness.Little ) )
-                Read( reader );
+            using (var reader = new EndianBinaryReader(stream, Encoding.Default, leaveOpen, Endianness.Little))
+                Read(reader);
         }
 
-        public DDSHeader( string file ) : this( File.OpenRead( file ), false ) { }
+        public DDSHeader(string file) : this(File.OpenRead(file), false) { }
 
-        public void Save( string file )
+        public void Save(string file)
         {
-            Save( File.OpenWrite( file ), false );
+            Save(File.OpenWrite(file), false);
         }
 
-        public void Save( Stream stream, bool leaveOpen = true )
+        public void Save(Stream stream, bool leaveOpen = true)
         {
-            using ( var writer = new EndianBinaryWriter( stream, Encoding.Default, leaveOpen, Endianness.Little ) )
-                Write( writer );
+            using (var writer = new EndianBinaryWriter(stream, Encoding.Default, leaveOpen, Endianness.Little))
+                Write(writer);
         }
 
         public MemoryStream Save()
         {
             var stream = new MemoryStream();
-            Save( stream );
+            Save(stream);
             return stream;
         }
 
-        internal void Read( BinaryReader reader )
+        internal void Read(BinaryReader reader)
         {
             var magic = reader.ReadInt32();
-            if ( magic != MAGIC )
-                throw new InvalidDataException( "Header magic value did not match the expected value" );
+            if (magic != MAGIC)
+                throw new InvalidDataException("Header magic value did not match the expected value");
 
-            Size              = reader.ReadInt32();
-            Flags             = ( DDSHeaderFlags )reader.ReadInt32();
-            Height            = reader.ReadInt32();
-            Width             = reader.ReadInt32();
+            Size = reader.ReadInt32();
+            Flags = (DDSHeaderFlags)reader.ReadInt32();
+            Height = reader.ReadInt32();
+            Width = reader.ReadInt32();
             PitchOrLinearSize = reader.ReadInt32();
-            Depth             = reader.ReadInt32();
-            MipMapCount       = reader.ReadInt32();
+            Depth = reader.ReadInt32();
+            MipMapCount = reader.ReadInt32();
 
-            for ( var i = 0; i < Reserved.Length; i++ )
+            for (var i = 0; i < Reserved.Length; i++)
             {
                 Reserved[i] = reader.ReadInt32();
             }
 
-            PixelFormat.Read( reader );
-            Caps      = ( DDSHeaderCaps )reader.ReadInt32();
-            Caps2     = reader.ReadInt32();
-            Caps3     = reader.ReadInt32();
-            Caps4     = reader.ReadInt32();
+            PixelFormat.Read(reader);
+            Caps = (DDSHeaderCaps)reader.ReadInt32();
+            Caps2 = reader.ReadInt32();
+            Caps3 = reader.ReadInt32();
+            Caps4 = reader.ReadInt32();
             Reserved2 = reader.ReadInt32();
         }
 
-        internal void Write( BinaryWriter writer )
+        internal void Write(BinaryWriter writer)
         {
-            writer.Write( MAGIC );
-            writer.Write( Size );
-            writer.Write( ( int )Flags );
-            writer.Write( Height );
-            writer.Write( Width );
-            writer.Write( PitchOrLinearSize );
-            writer.Write( Depth );
-            writer.Write( MipMapCount );
+            writer.Write(MAGIC);
+            writer.Write(Size);
+            writer.Write((int)Flags);
+            writer.Write(Height);
+            writer.Write(Width);
+            writer.Write(PitchOrLinearSize);
+            writer.Write(Depth);
+            writer.Write(MipMapCount);
 
-            for ( var i = 0; i < Reserved.Length; i++ )
+            for (var i = 0; i < Reserved.Length; i++)
             {
-                writer.Write( Reserved[i] );
+                writer.Write(Reserved[i]);
             }
 
-            PixelFormat.Write( writer );
-            writer.Write( ( int )Caps );
-            writer.Write( Caps2 );
-            writer.Write( Caps3 );
-            writer.Write( Caps4 );
-            writer.Write( Reserved2 );
+            PixelFormat.Write(writer);
+            writer.Write((int)Caps);
+            writer.Write(Caps2);
+            writer.Write(Caps3);
+            writer.Write(Caps4);
+            writer.Write(Reserved2);
         }
     }
 }

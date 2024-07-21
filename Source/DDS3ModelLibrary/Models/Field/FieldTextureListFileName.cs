@@ -14,27 +14,27 @@ namespace DDS3ModelLibrary.Models.Field
         {
         }
 
-        public FieldTextureListFileName( string fileName )
+        public FieldTextureListFileName(string fileName)
         {
             FileName = fileName;
         }
 
-        public static implicit operator FieldTextureListFileName( string fileName ) => new FieldTextureListFileName( fileName );
-        public static implicit operator string( FieldTextureListFileName fileName ) => fileName.FileName;
+        public static implicit operator FieldTextureListFileName(string fileName) => new FieldTextureListFileName(fileName);
+        public static implicit operator string(FieldTextureListFileName fileName) => fileName.FileName;
 
         public override string ToString()
         {
             return FileName;
         }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
-            FileName = reader.ReadString( StringBinaryFormat.NullTerminated );
+            FileName = reader.ReadString(StringBinaryFormat.NullTerminated);
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.Write( FileName, StringBinaryFormat.NullTerminated );
+            writer.Write(FileName, StringBinaryFormat.NullTerminated);
         }
     }
 }

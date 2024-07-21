@@ -11,6 +11,6 @@ namespace DDS3ModelLibrary.Textures.Processing.WuQuantizer
         }
 
         public IList<Lookup> Lookups { get; private set; }
-        public int[, , ,] Tags { get; private set; }
+        public int[,,,] Tags { get; private set; }
     }
 }

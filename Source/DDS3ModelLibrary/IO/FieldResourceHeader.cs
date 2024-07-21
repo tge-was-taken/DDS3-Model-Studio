@@ -14,22 +14,22 @@ namespace DDS3ModelLibrary.IO
         public uint RelocationTableOffset { get; set; }
         public uint RelocationTableSize { get; set; }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
-            FileType = ( ResourceFileType )reader.ReadInt32();
-            Identifier = ( ResourceIdentifier )reader.ReadUInt32();
+            FileType = (ResourceFileType)reader.ReadInt32();
+            Identifier = (ResourceIdentifier)reader.ReadUInt32();
             DataSize = reader.ReadUInt32();
             RelocationTableOffset = reader.ReadUInt32();
             RelocationTableSize = reader.ReadUInt32();
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.Write( ( int )FileType );
-            writer.Write( ( uint )Identifier );
-            writer.Write( DataSize );
-            writer.Write( RelocationTableOffset );
-            writer.Write( RelocationTableSize );
+            writer.Write((int)FileType);
+            writer.Write((uint)Identifier);
+            writer.Write(DataSize);
+            writer.Write(RelocationTableOffset);
+            writer.Write(RelocationTableSize);
         }
     }
 }

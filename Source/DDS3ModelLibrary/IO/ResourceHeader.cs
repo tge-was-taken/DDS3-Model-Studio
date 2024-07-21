@@ -15,24 +15,24 @@ namespace DDS3ModelLibrary.IO
         public ResourceIdentifier Identifier { get; set; }
         public uint MemorySize { get; set; }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
-            FileType = ( ResourceFileType )reader.ReadByte();
+            FileType = (ResourceFileType)reader.ReadByte();
             IsCompressed = reader.ReadBoolean();
             UserId = reader.ReadUInt16();
             FileSize = reader.ReadUInt32();
-            Identifier = ( ResourceIdentifier ) reader.ReadUInt32();
+            Identifier = (ResourceIdentifier)reader.ReadUInt32();
             MemorySize = reader.ReadUInt32();
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.Write( ( byte ) FileType );
-            writer.Write( IsCompressed );
-            writer.Write( UserId );
-            writer.Write( FileSize );
-            writer.Write( ( uint ) Identifier );
-            writer.Write( MemorySize );
+            writer.Write((byte)FileType);
+            writer.Write(IsCompressed);
+            writer.Write(UserId);
+            writer.Write(FileSize);
+            writer.Write((uint)Identifier);
+            writer.Write(MemorySize);
         }
     }
 }

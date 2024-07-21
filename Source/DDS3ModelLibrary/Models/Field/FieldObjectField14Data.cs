@@ -16,7 +16,7 @@ namespace DDS3ModelLibrary.Models.Field
             Field04 = new Field04Data();
         }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
             Field00 = reader.ReadInt32();
             Field04 = reader.ReadObjectOffset<Field04Data>();
@@ -24,12 +24,12 @@ namespace DDS3ModelLibrary.Models.Field
             Field0C = reader.ReadInt32();
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.Write( Field00 );
-            writer.ScheduleWriteObjectOffsetAligned( Field04, 16 );
-            writer.Write( Field08 );
-            writer.Write( Field0C );
+            writer.Write(Field00);
+            writer.ScheduleWriteObjectOffsetAligned(Field04, 16);
+            writer.Write(Field08);
+            writer.Write(Field0C);
         }
 
         public class Field04Data : IBinarySerializable
@@ -46,7 +46,7 @@ namespace DDS3ModelLibrary.Models.Field
                 Field00 = 0x3130;
             }
 
-            void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+            void IBinarySerializable.Read(EndianBinaryReader reader, object context)
             {
                 Field00 = reader.ReadInt32();
                 Field04 = reader.ReadInt32();
@@ -54,12 +54,12 @@ namespace DDS3ModelLibrary.Models.Field
                 Field0C = reader.ReadInt32();
             }
 
-            void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+            void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
             {
-                writer.Write( Field00 );
-                writer.Write( Field04 );
-                writer.Write( Field08 );
-                writer.Write( Field0C );
+                writer.Write(Field00);
+                writer.Write(Field04);
+                writer.Write(Field08);
+                writer.Write(Field0C);
             }
         }
     }

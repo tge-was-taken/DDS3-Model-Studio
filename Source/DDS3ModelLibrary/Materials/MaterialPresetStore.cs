@@ -1,8 +1,8 @@
-﻿using System;
+﻿using DDS3ModelLibrary.Data;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using DDS3ModelLibrary.Data;
-using Newtonsoft.Json;
 
 namespace DDS3ModelLibrary.Materials
 {
@@ -19,12 +19,12 @@ namespace DDS3ModelLibrary.Materials
         private static void LoadIndex()
         {
             sValidPresetIds = new HashSet<int>();
-            var hashToIdJsonPath = GetPath( "index.json" );
-            if ( File.Exists( hashToIdJsonPath ) )
+            var hashToIdJsonPath = GetPath("index.json");
+            if (File.Exists(hashToIdJsonPath))
             {
-                sMaterialHashToId = JsonConvert.DeserializeObject<Dictionary<int, int>>( File.ReadAllText( hashToIdJsonPath ) );
-                foreach ( int value in sMaterialHashToId.Values )
-                    sValidPresetIds.Add( value );
+                sMaterialHashToId = JsonConvert.DeserializeObject<Dictionary<int, int>>(File.ReadAllText(hashToIdJsonPath));
+                foreach (int value in sMaterialHashToId.Values)
+                    sValidPresetIds.Add(value);
             }
             else
             {
@@ -32,39 +32,39 @@ namespace DDS3ModelLibrary.Materials
             }
         }
 
-        private static string GetPath( string path ) => ResourceStore.GetPath( "material_presets\\" + path );
+        private static string GetPath(string path) => ResourceStore.GetPath("material_presets\\" + path);
 
-        public static bool IsPreset( Material material ) => sMaterialHashToId.ContainsKey( material.GetPresetHashCode() );
+        public static bool IsPreset(Material material) => sMaterialHashToId.ContainsKey(material.GetPresetHashCode());
 
-        public static int GetPresetId( Material material ) => sMaterialHashToId[ material.GetPresetHashCode() ];
+        public static int GetPresetId(Material material) => sMaterialHashToId[material.GetPresetHashCode()];
 
-        public static bool TryGetPresetId( Material material, out int presetId )
+        public static bool TryGetPresetId(Material material, out int presetId)
         {
-            return sMaterialHashToId.TryGetValue( material.GetPresetHashCode(), out presetId );
+            return sMaterialHashToId.TryGetValue(material.GetPresetHashCode(), out presetId);
         }
 
-        public static bool IsValidPresetId( int id ) => sValidPresetIds.Contains( id );
+        public static bool IsValidPresetId(int id) => sValidPresetIds.Contains(id);
 
-        public static Material GetPreset( int id, bool hasTexture, bool hasOverlay )
+        public static Material GetPreset(int id, bool hasTexture, bool hasOverlay)
         {
-            var path = GetMaterialPresetPath( id, hasTexture, hasOverlay );
-            if ( !File.Exists( path ) )
-                throw new ArgumentOutOfRangeException( nameof( id ), $"Material preset {id} does not exist" );
+            var path = GetMaterialPresetPath(id, hasTexture, hasOverlay);
+            if (!File.Exists(path))
+                throw new ArgumentOutOfRangeException(nameof(id), $"Material preset {id} does not exist");
 
-            var json = File.ReadAllText( path );
-            return JsonConvert.DeserializeObject<Material>( json );
+            var json = File.ReadAllText(path);
+            return JsonConvert.DeserializeObject<Material>(json);
         }
 
-        private static string GetMaterialPresetPath( int id, bool hasTexture, bool hasOverlay )
+        private static string GetMaterialPresetPath(int id, bool hasTexture, bool hasOverlay)
         {
             var name = id.ToString();
-            if ( hasTexture )
+            if (hasTexture)
                 name += "_d";
 
-            if ( hasOverlay )
+            if (hasOverlay)
                 name += "_o";
 
-            return GetPath( name + ".json" );
+            return GetPath(name + ".json");
         }
     }
 }

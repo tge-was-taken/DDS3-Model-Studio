@@ -8,18 +8,18 @@ namespace DDS3ModelLibrary.Models
 
         public abstract ModelExtensionIdentifier Identifier { get; }
 
-        protected abstract void Read( EndianBinaryReader reader, ModelExtensionHeader header );
+        protected abstract void Read(EndianBinaryReader reader, ModelExtensionHeader header);
 
-        protected abstract void Write( EndianBinaryWriter writer, object context );
+        protected abstract void Write(EndianBinaryWriter writer, object context);
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
-            Read( reader, ( ModelExtensionHeader ) context );
+            Read(reader, (ModelExtensionHeader)context);
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            Write( writer, context );
+            Write(writer, context);
         }
     }
 }

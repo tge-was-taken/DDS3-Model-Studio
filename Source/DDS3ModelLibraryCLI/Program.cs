@@ -1,125 +1,173 @@
-﻿using System;
+﻿using AtlusFileSystemLibrary;
+using AtlusFileSystemLibrary.FileSystems.LB;
+using DDS3ModelLibrary.Models;
+using DDS3ModelLibrary.Models.Conversion;
+using DDS3ModelLibrary.Models.Field;
+using DDS3ModelLibrary.Motions;
+using DDS3ModelLibrary.Textures;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
-using AtlusFileSystemLibrary;
-using AtlusFileSystemLibrary.FileSystems.LB;
-using DDS3ModelLibrary.Models;
-using DDS3ModelLibrary.Models.Conversion;
-using DDS3ModelLibrary.Models.Field;
-using DDS3ModelLibrary.Motions.Conversion;
-using DDS3ModelLibrary.Textures;
-using Newtonsoft.Json;
 
 namespace DDS3ModelLibraryCLI
 {
     internal class Program
     {
-        private static void Main( string[] args )
+        private static void MatchingTests()
         {
-            {
-                File.Delete( "test.fbx" );
-                var modelPack = new ModelPack( @"D:\dumps\smt3_ntsc\DDS3\model\field\player_a.PB" );
-                //var modelPack = new ModelPack( @"D:\dumps\smt3_ntsc\DDS3\model\devil\on\0x126_on.PB");
-                FbxModelExporter.Instance.Export( modelPack.Models[0] , "test.fbx" , modelPack.TexturePack );
-                return;
+            // Matches
+            //var tb = new TexturePack(@"F:\Projects\Nocturne\Dump\DDS3\model\field\_test\player_a.TB");
+            //tb.Save("player_a_new.TB");
 
-                //AssimpModelExporter.Instance.Export( modelPack.Models[ 0 ], "player_a.dae", modelPack.TexturePack );
-                //for ( var i = 0; i < modelPack.MotionPacks[ 0 ].Motions.Count; i++ )
-                //{
-                //    var motion = modelPack.MotionPacks[ 0 ].Motions[ i ];
-                //    if ( motion == null )
-                //        continue;
+            // Matches
+            //var mb = new Model(@"F:\Projects\Nocturne\Dump\DDS3\model\field\_test\player_a.MB");
+            //mb.Save("player_a_new.MB");
 
-                //    AssimpMotionExporter.Instance.Export( modelPack.Models[ 0 ], motion, $"player_a_motion_{i:D2}.dae" );
-                //}
+            var ab = new MotionPack(@"F:\Projects\Nocturne\Dump\DDS3\model\field\_test\player_a_0.AB");
+            ab.Save("player_a_0_new.AB");
+        }
 
-                var newMotion =
-                    AssimpMotionImporter.Instance.Import( @"D:\Users\smart\Desktop\nocturne_player_a_fortnite.fbx",
-                                                          new AssimpMotionImporter.Config
-                                                          {
-                                                              NodeIndexResolver = n => modelPack.Models[0].Nodes.FindIndex( x => x.Name == n )
-                                                          } );
-                for ( int i = 0; i < modelPack.MotionPacks[0].Motions.Count; i++ )
-                {
-                    modelPack.MotionPacks[0].Motions[i] = newMotion;
-                }
+        private static void Main(string[] args)
+        {
+            MatchingTests();
 
-                modelPack.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_a.PB" );
-            }
+            //var resourcePath = @"..\..\..\..\..\Resources";;
 
-            {
-                var lb = new LBFileSystem();
-                lb.Load( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\fld\f\f037\_f037_027.LB" );
+            //var model = new ModelPack(@"F:\Projects\Nocturne\Dump\DDS3\model\field\player_a.PB");
+            ////FbxModelExporter.Instance.Export(model.Models[0], "player_a.fbx", new FbxModelExporterConfig()
+            ////{
+            ////    MergeMeshes = true,
+            ////}, model.TexturePack);
+            //AssimpModelExporter.Instance.Export(model.Models[0], "player_a.dae", new AssimpModelExporter.Config()
+            //{
 
-                var f1Handle = lb.GetHandle( "F1" );
+            //}, model.TexturePack);
+            ////model.Replace("player_A.fbx");
+            //model.Replace("player_A_new.fbx");
+            //model.Save(@"F:\Projects\Nocturne\Hostfs\dds3data\model\field\player_a.PB");
 
-                FieldScene f1;
-                using ( var stream = lb.OpenFile( f1Handle ) )
-                    f1 = new FieldScene( stream, true );
+            //var fieldModel2 = new FieldScene(@"D:\Software\Games\PS2\Shin Megami Tensei - Digital Devil Saga (USA)\DDS3\fld\f\f010\f010_002\02_00.F1");
 
-                foreach ( var obj in f1.Objects )
-                {
-                    switch ( obj.ResourceType )
-                    {
-                        case FieldObjectResourceType.Model:
-                            {
-                                var model = ( Model ) obj.Resource;
-                                foreach ( var material in model.Materials )
-                                {
-                                    if ( material.TextureId.HasValue )
-                                        material.TextureId = 0;
+            //var fieldModel = new FieldScene(@"F:\Projects\Nocturne\Hostfs\dds3data\fld\f\f015\f015_006.LB_unpacked\02_00.F1");
+            //fieldModel.Objects.RemoveAll(x => x.ResourceType == FieldObjectResourceType.Model);
+            //foreach (var item in fieldModel2.Objects.Where(x =>x.ResourceType == FieldObjectResourceType.Model))
+            //{
+            //    fieldModel.Objects.Add(
+            //        new FieldObject() 
+            //        { 
+            //            Id = fieldModel.Objects.Max(x => x.Id) + 1, 
+            //            Name = item.Name,
+            //            Transform = item.Transform, 
+            //            Resource = item.Resource
+            //        });
+            //}
+            //fieldModel.Save(@"F:\Projects\Nocturne\Hostfs\dds3data\fld\f\f015\f015_006.LB_unpacked\02_00.F1");
 
-                                    material.Color1 = material.Color2 = material.Color3 = material.Color4 = material.Color5 = null;
-                                    material.Float1 = null;
-                                    material.FloatArray1 = material.FloatArray2 = material.FloatArray3 = null;
-                                }
+            #region Old stuff
+            //{
+            //    File.Delete( "test.fbx" );
+            //    var modelPack = new ModelPack( @"D:\dumps\smt3_ntsc\DDS3\model\field\player_a.PB" );
+            //    //var modelPack = new ModelPack( @"D:\dumps\smt3_ntsc\DDS3\model\devil\on\0x126_on.PB");
+            //    FbxModelExporter.Instance.Export( modelPack.Models[0] , "test.fbx" , modelPack.TexturePack );
+            //    return;
 
-                                foreach ( var node in model.Nodes )
-                                {
-                                    if ( node.Geometry == null )
-                                        continue;
+            //    //AssimpModelExporter.Instance.Export( modelPack.Models[ 0 ], "player_a.dae", modelPack.TexturePack );
+            //    //for ( var i = 0; i < modelPack.MotionPacks[ 0 ].Motions.Count; i++ )
+            //    //{
+            //    //    var motion = modelPack.MotionPacks[ 0 ].Motions[ i ];
+            //    //    if ( motion == null )
+            //    //        continue;
 
-                                    foreach ( var _mesh in node.Geometry.Meshes )
-                                    {
-                                        if ( _mesh is MeshType1 mesh )
-                                        {
-                                            foreach ( var batch in mesh.Batches )
-                                            {
-                                                batch.Flags &= ~MeshFlags.Normal;
-                                                batch.Flags &= ~MeshFlags.Color;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            break;
-                        case FieldObjectResourceType.Type3:
-                            break;
-                        case FieldObjectResourceType.TextureListFileName:
-                            break;
-                        case FieldObjectResourceType.Effect:
-                            break;
-                        case FieldObjectResourceType.Light:
-                            break;
-                    }
-                }
-                ExportObj( f1 );
+            //    //    AssimpMotionExporter.Instance.Export( modelPack.Models[ 0 ], motion, $"player_a_motion_{i:D2}.dae" );
+            //    //}
 
-                lb.AddFile( f1Handle, f1.Save(), true, ConflictPolicy.Replace );
+            //    var newMotion =
+            //        AssimpMotionImporter.Instance.Import( @"D:\Users\smart\Desktop\nocturne_player_a_fortnite.fbx",
+            //                                              new AssimpMotionImporter.Config
+            //                                              {
+            //                                                  NodeIndexResolver = n => modelPack.Models[0].Nodes.FindIndex( x => x.Name == n )
+            //                                              } );
+            //    for ( int i = 0; i < modelPack.MotionPacks[0].Motions.Count; i++ )
+            //    {
+            //        modelPack.MotionPacks[0].Motions[i] = newMotion;
+            //    }
 
-                var tbHandle = lb.GetHandle( "TBN" );
-                var texturePack = new TexturePack();
-                texturePack.Textures.Add( new Texture( new Bitmap( @"D:\Modding\Tools\magenta.png" ) ) );
-                lb.AddFile( tbHandle, texturePack.Save(), true, ConflictPolicy.Replace );
+            //    modelPack.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_a.PB" );
+            //}
 
-                lb.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\fld\f\f037\f037_027.LB" );
-            }
+            //{
+            //    var lb = new LBFileSystem();
+            //    lb.Load( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\fld\f\f037\_f037_027.LB" );
+
+            //    var f1Handle = lb.GetHandle( "F1" );
+
+            //    FieldScene f1;
+            //    using ( var stream = lb.OpenFile( f1Handle ) )
+            //        f1 = new FieldScene( stream, true );
+
+            //    foreach ( var obj in f1.Objects )
+            //    {
+            //        switch ( obj.ResourceType )
+            //        {
+            //            case FieldObjectResourceType.Model:
+            //                {
+            //                    var model = ( Model ) obj.Resource;
+            //                    foreach ( var material in model.Materials )
+            //                    {
+            //                        if ( material.TextureId.HasValue )
+            //                            material.TextureId = 0;
+
+            //                        material.Color1 = material.Color2 = material.Color3 = material.Color4 = material.Color5 = null;
+            //                        material.Float1 = null;
+            //                        material.FloatArray1 = material.FloatArray2 = material.FloatArray3 = null;
+            //                    }
+
+            //                    foreach ( var node in model.Nodes )
+            //                    {
+            //                        if ( node.Geometry == null )
+            //                            continue;
+
+            //                        foreach ( var _mesh in node.Geometry.Meshes )
+            //                        {
+            //                            if ( _mesh is MeshType1 mesh )
+            //                            {
+            //                                foreach ( var batch in mesh.Batches )
+            //                                {
+            //                                    batch.Flags &= ~MeshFlags.Normal;
+            //                                    batch.Flags &= ~MeshFlags.Color;
+            //                                }
+            //                            }
+            //                        }
+            //                    }
+            //                }
+            //                break;
+            //            case FieldObjectResourceType.Type3:
+            //                break;
+            //            case FieldObjectResourceType.TextureListFileName:
+            //                break;
+            //            case FieldObjectResourceType.Effect:
+            //                break;
+            //            case FieldObjectResourceType.Light:
+            //                break;
+            //        }
+            //    }
+            //    ExportObj( f1 );
+
+            //    lb.AddFile( f1Handle, f1.Save(), true, ConflictPolicy.Replace );
+
+            //    var tbHandle = lb.GetHandle( "TBN" );
+            //    var texturePack = new TexturePack();
+            //    texturePack.Textures.Add( new Texture( new Bitmap( @"D:\Modding\Tools\magenta.png" ) ) );
+            //    lb.AddFile( tbHandle, texturePack.Save(), true, ConflictPolicy.Replace );
+
+            //    lb.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\fld\f\f037\f037_027.LB" );
+            //}
 
             //OpenAndSaveModelPackTest();
             //ReplaceF1Test();
@@ -360,113 +408,114 @@ namespace DDS3ModelLibraryCLI
             //modelPack.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_a.PB" );
             ////ReplaceModelTest();
             //OpenAndSaveModelPackBatchTest();
+            #endregion
         }
 
         private static void ReplaceF1Test()
         {
             var modelPack = new ModelPack();
             var model = new Model();
-            model.Nodes.Add( new Node { Name = "model" } );
-            modelPack.Models.Add( model );
-            modelPack.Replace( "f1test.fbx" );
+            model.Nodes.Add(new Node { Name = "model" });
+            modelPack.Models.Add(model);
+            modelPack.Replace("f1test.fbx");
 
             var lb = new LBFileSystem();
-            lb.Load( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\fld\f\f037\_f037_027.LB" );
+            lb.Load(@"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\fld\f\f037\_f037_027.LB");
 
-            var f1Handle = lb.GetHandle( "F1" );
+            var f1Handle = lb.GetHandle("F1");
 
             FieldScene f1;
-            using ( var stream = lb.OpenFile( f1Handle ) )
-                f1 = new FieldScene( stream, true );
+            using (var stream = lb.OpenFile(f1Handle))
+                f1 = new FieldScene(stream, true);
 
-            f1.Objects.RemoveAll( x => x.ResourceType == FieldObjectResourceType.Model );
+            f1.Objects.RemoveAll(x => x.ResourceType == FieldObjectResourceType.Model);
             f1.Objects.Clear();
-            f1.Objects.Add( new FieldObject() { Id = 0, Name = "model", Transform = new FieldObjectTransform(), Resource = modelPack.Models[0] } );
-            ExportObj( f1 );
+            f1.Objects.Add(new FieldObject() { Id = 0, Name = "model", Transform = new FieldObjectTransform(), Resource = modelPack.Models[0] });
+            ExportObj(f1);
 
-            lb.AddFile( f1Handle, f1.Save(), true, ConflictPolicy.Replace );
+            lb.AddFile(f1Handle, f1.Save(), true, ConflictPolicy.Replace);
 
-            if ( modelPack.TexturePack != null )
+            if (modelPack.TexturePack != null)
             {
-                var tbHandle = lb.GetHandle( "TBN" );
-                lb.AddFile( tbHandle, modelPack.TexturePack.Save(), true, ConflictPolicy.Replace );
+                var tbHandle = lb.GetHandle("TBN");
+                lb.AddFile(tbHandle, modelPack.TexturePack.Save(), true, ConflictPolicy.Replace);
             }
 
-            lb.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\fld\f\f037\f037_027.LB" );
+            lb.Save(@"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\fld\f\f037\f037_027.LB");
         }
 
-        private static void WriteMesh( StreamWriter streamWriter, Model model, Node node1, Mesh _mesh, int meshIndex1, bool isMesh2, ref int _vertexBaseIndex, FieldObject fieldObj = null )
+        private static void WriteMesh(StreamWriter streamWriter, Model model, Node node1, Mesh _mesh, int meshIndex1, bool isMesh2, ref int _vertexBaseIndex, FieldObject fieldObj = null)
         {
             var vertexBaseIndex = _vertexBaseIndex;
-            void WritePositions( StreamWriter writer, Vector3[] positions )
+            void WritePositions(StreamWriter writer, Vector3[] positions)
             {
-                for ( var i = 0; i < positions.Length; i++ )
+                for (var i = 0; i < positions.Length; i++)
                 {
-                    var position = positions[ i ];
-                    if ( fieldObj?.Transform != null )
-                        position = Vector3.Transform( position, fieldObj.Transform.Matrix );
+                    var position = positions[i];
+                    if (fieldObj?.Transform != null)
+                        position = Vector3.Transform(position, fieldObj.Transform.Matrix);
 
-                    writer.WriteLine( $"v {position.X} {position.Y} {position.Z}" );
+                    writer.WriteLine($"v {position.X} {position.Y} {position.Z}");
                 }
             }
 
-            void WriteNormals( StreamWriter writer, Vector3[] normals )
+            void WriteNormals(StreamWriter writer, Vector3[] normals)
             {
-                for ( var i = 0; i < normals.Length; i++ )
+                for (var i = 0; i < normals.Length; i++)
                 {
-                    var normal = normals[ i ];
-                    if ( fieldObj?.Transform != null )
-                        normal = Vector3.TransformNormal( normal, fieldObj.Transform.Matrix );
+                    var normal = normals[i];
+                    if (fieldObj?.Transform != null)
+                        normal = Vector3.TransformNormal(normal, fieldObj.Transform.Matrix);
 
-                    writer.WriteLine( $"vn {normal.X} {normal.Y} {normal.Z}" );
+                    writer.WriteLine($"vn {normal.X} {normal.Y} {normal.Z}");
                 }
             }
 
-            void WriteTexCoords( StreamWriter writer, Vector2[] texCoords )
+            void WriteTexCoords(StreamWriter writer, Vector2[] texCoords)
             {
-                foreach ( var texCoord in texCoords )
-                    writer.WriteLine( $"vt {texCoord.X} {texCoord.Y}" );
+                foreach (var texCoord in texCoords)
+                    writer.WriteLine($"vt {texCoord.X} {texCoord.Y}");
             }
 
-            void WriteTriangles( StreamWriter writer, Node node, int meshIndex, Triangle[] triangles, MeshType meshType,
-                                 int shapeIndex = 0 )
+            void WriteTriangles(StreamWriter writer, Node node, int meshIndex, Triangle[] triangles, MeshType meshType,
+                                 int shapeIndex = 0)
             {
-                writer.WriteLine( $"o {fieldObj?.Name ?? ""}_node_{node.Name}_mesh{( isMesh2 ? "2" : "" )}_{meshIndex}_{meshType}_{shapeIndex}" );
-                foreach ( var triangle in triangles )
+                writer.WriteLine($"o {fieldObj?.Name ?? ""}_node_{node.Name}_mesh{(isMesh2 ? "2" : "")}_{meshIndex}_{meshType}_{shapeIndex}");
+                foreach (var triangle in triangles)
                 {
-                    writer.WriteLine( "f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}", vertexBaseIndex + triangle.A + 1,
-                                      vertexBaseIndex + triangle.B + 1, vertexBaseIndex + triangle.C + 1 );
+                    writer.WriteLine("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}", vertexBaseIndex + triangle.A + 1,
+                                      vertexBaseIndex + triangle.B + 1, vertexBaseIndex + triangle.C + 1);
                 }
             }
 
             {
-                switch ( _mesh.Type )
+                switch (_mesh.Type)
                 {
                     case MeshType.Type1:
                         {
-                            var mesh = ( MeshType1 )_mesh;
-                            foreach ( var batch in mesh.Batches )
+                            var mesh = (MeshType1)_mesh;
+                            foreach (var batch in mesh.Batches)
                             {
-                                (Vector3[] positions, Vector3[] normals) = batch.Transform( node1.WorldTransform );
-                                WritePositions( streamWriter, positions );
+                                (Vector3[] positions, Vector3[] normals) = batch.Transform(node1.WorldTransform);
+                                WritePositions(streamWriter, positions);
 
-                                WriteNormals( streamWriter, batch.Normals != null ? normals : new Vector3[positions.Length] );
-                                WriteTexCoords( streamWriter, batch.TexCoords ?? new Vector2[positions.Length] );
-                                WriteTriangles( streamWriter, node1, meshIndex1, batch.Triangles, MeshType.Type1 );
+                                WriteNormals(streamWriter, batch.Normals != null ? normals : new Vector3[positions.Length]);
+                                WriteTexCoords(streamWriter, batch.TexCoords ?? new Vector2[positions.Length]);
+                                WriteTriangles(streamWriter, node1, meshIndex1, batch.Triangles, MeshType.Type1);
                                 vertexBaseIndex += batch.VertexCount;
                             }
                         }
                         break;
                     case MeshType.Type2:
                         {
-                            var mesh = ( MeshType2 )_mesh;
-                            foreach ( var batch in mesh.Batches )
+                            var mesh = (MeshType2)_mesh;
+                            foreach (var batch in mesh.Batches)
                             {
-                                (Vector3[] positions, Vector3[] normals, _) = batch.Transform( model.Nodes );
-                                WritePositions( streamWriter, positions );
-                                WriteNormals( streamWriter, normals );
-                                WriteTexCoords( streamWriter, batch.TexCoords ?? new Vector2[positions.Length] );
-                                WriteTriangles( streamWriter, node1, meshIndex1, batch.Triangles, MeshType.Type2 );
+                                (Vector3[] positions, Vector3[] normals, _) = batch.Transform(model.Nodes);
+                                WritePositions(streamWriter, positions);
+                                WriteNormals(streamWriter, normals);
+                                WriteTexCoords(streamWriter, batch.TexCoords ?? new Vector2[positions.Length]);
+                                WriteTriangles(streamWriter, node1, meshIndex1, batch.Triangles, MeshType.Type2);
                                 vertexBaseIndex += batch.VertexCount;
                             }
                         }
@@ -475,58 +524,58 @@ namespace DDS3ModelLibraryCLI
                         break;
                     case MeshType.Type4:
                         {
-                            var mesh = ( MeshType4 )_mesh;
-                            (Vector3[] positions, Vector3[] normals) = mesh.Transform( node1.WorldTransform );
-                            WritePositions( streamWriter, positions );
-                            WriteNormals( streamWriter, normals );
-                            WriteTexCoords( streamWriter, new Vector2[positions.Length] );
-                            WriteTriangles( streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type4 );
+                            var mesh = (MeshType4)_mesh;
+                            (Vector3[] positions, Vector3[] normals) = mesh.Transform(node1.WorldTransform);
+                            WritePositions(streamWriter, positions);
+                            WriteNormals(streamWriter, normals);
+                            WriteTexCoords(streamWriter, new Vector2[positions.Length]);
+                            WriteTriangles(streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type4);
                             vertexBaseIndex += mesh.VertexCount;
                         }
                         break;
                     case MeshType.Type5:
                         {
-                            var mesh = ( MeshType5 )_mesh;
-                            var shapes = mesh.Transform( node1.WorldTransform );
-                            for ( var i = 0; i < shapes.Length; i++ )
+                            var mesh = (MeshType5)_mesh;
+                            var shapes = mesh.Transform(node1.WorldTransform);
+                            for (var i = 0; i < shapes.Length; i++)
                             {
                                 var shape = shapes[i];
-                                WritePositions( streamWriter, shape.Positions );
-                                WriteNormals( streamWriter, shape.Normals );
-                                WriteTexCoords( streamWriter, mesh.TexCoords );
-                                WriteTriangles( streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type5, i );
+                                WritePositions(streamWriter, shape.Positions);
+                                WriteNormals(streamWriter, shape.Normals);
+                                WriteTexCoords(streamWriter, mesh.TexCoords);
+                                WriteTriangles(streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type5, i);
                                 vertexBaseIndex += shape.Positions.Length;
                             }
                         }
                         break;
                     case MeshType.Type7:
                         {
-                            var mesh = ( MeshType7 )_mesh;
-                            foreach ( var batch in mesh.Batches )
+                            var mesh = (MeshType7)_mesh;
+                            foreach (var batch in mesh.Batches)
                             {
-                                (Vector3[] positions, Vector3[] normals, _) = batch.Transform( model.Nodes );
+                                (Vector3[] positions, Vector3[] normals, _) = batch.Transform(model.Nodes);
 
-                                WritePositions( streamWriter, positions );
-                                WriteNormals( streamWriter, normals );
-                                WriteTexCoords( streamWriter, batch.TexCoords );
+                                WritePositions(streamWriter, positions);
+                                WriteNormals(streamWriter, normals);
+                                WriteTexCoords(streamWriter, batch.TexCoords);
                             }
 
-                            WriteTriangles( streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type7 );
+                            WriteTriangles(streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type7);
                             vertexBaseIndex += _mesh.VertexCount;
                         }
                         break;
                     case MeshType.Type8:
                         {
-                            var mesh = ( MeshType8 )_mesh;
-                            foreach ( var batch in mesh.Batches )
+                            var mesh = (MeshType8)_mesh;
+                            foreach (var batch in mesh.Batches)
                             {
-                                (Vector3[] positions, Vector3[] normals) = batch.Transform( node1.WorldTransform );
-                                WritePositions( streamWriter, positions );
-                                WriteNormals( streamWriter, normals );
-                                WriteTexCoords( streamWriter, batch.TexCoords );
+                                (Vector3[] positions, Vector3[] normals) = batch.Transform(node1.WorldTransform);
+                                WritePositions(streamWriter, positions);
+                                WriteNormals(streamWriter, normals);
+                                WriteTexCoords(streamWriter, batch.TexCoords);
                             }
 
-                            WriteTriangles( streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type8 );
+                            WriteTriangles(streamWriter, node1, meshIndex1, mesh.Triangles, MeshType.Type8);
                             vertexBaseIndex += _mesh.VertexCount;
                         }
                         break;
@@ -536,36 +585,47 @@ namespace DDS3ModelLibraryCLI
             _vertexBaseIndex = vertexBaseIndex;
         }
 
-        public static void ExportObj( ModelPack modelPack, string fileName = "test.obj" )
+        public static void ExportObj(ModelPack modelPack, string fileName = "test.obj")
         {
             var vertexBaseIndex = 0;
 
-            using ( var writer = File.CreateText( fileName ) )
+            using (var writer = File.CreateText(fileName))
             {
-                foreach ( var model in modelPack.Models )
+                foreach (var model in modelPack.Models)
                 {
-                    foreach ( var node in model.Nodes )
+                    foreach (var node in model.Nodes)
                     {
-                        if ( node.Geometry == null )
+                        if (node.Geometry == null)
                             continue;
 
-                        if ( node.Geometry.Meshes != null )
+                        if (node.Geometry.MeshLists[0] != null)
                         {
-                            for ( var meshIndex = 0; meshIndex < node.Geometry.Meshes.Count; meshIndex++ )
+                            for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[0].Count; meshIndex++)
                             {
-                                var mesh = node.Geometry.Meshes[meshIndex];
-                                writer.WriteLine( $"// node '{node.Name}' mesh ({mesh.Type}) #{meshIndex}" );
-                                WriteMesh( writer, model, node, mesh, meshIndex, false, ref vertexBaseIndex );
+                                var mesh = node.Geometry.MeshLists[0][meshIndex];
+                                writer.WriteLine($"// node '{node.Name}' mesh ({mesh.Type}) #{meshIndex}");
+                                WriteMesh(writer, model, node, mesh, meshIndex, false, ref vertexBaseIndex);
                             }
                         }
 
-                        if ( node.Geometry.TranslucentMeshes != null )
+                        if (node.Geometry.MeshLists[1] != null)
                         {
-                            for ( var meshIndex = 0; meshIndex < node.Geometry.TranslucentMeshes.Count; meshIndex++ )
+                            for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[1].Count; meshIndex++)
                             {
-                                var mesh = node.Geometry.TranslucentMeshes[meshIndex];
-                                writer.WriteLine( $"// node '{node.Name}' mesh(XLU) ({mesh.Type}) #{meshIndex}" );
-                                WriteMesh( writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex );
+                                var mesh = node.Geometry.MeshLists[1][meshIndex];
+                                writer.WriteLine($"// node '{node.Name}' mesh(2) ({mesh.Type}) #{meshIndex}");
+                                WriteMesh(writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex);
+                            }
+                        }
+
+
+                        if (node.Geometry.MeshLists[2] != null)
+                        {
+                            for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[3].Count; meshIndex++)
+                            {
+                                var mesh = node.Geometry.MeshLists[3][meshIndex];
+                                writer.WriteLine($"// node '{node.Name}' mesh(3) ({mesh.Type}) #{meshIndex}");
+                                WriteMesh(writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex);
                             }
                         }
                     }
@@ -573,78 +633,99 @@ namespace DDS3ModelLibraryCLI
             }
         }
 
-        public static void ExportObj( Model model )
+        public static void ExportObj(Model model)
         {
             var vertexBaseIndex = 0;
 
-            using ( var writer = File.CreateText( "test.obj" ) )
+            using (var writer = File.CreateText("test.obj"))
             {
-                foreach ( var node in model.Nodes )
+                foreach (var node in model.Nodes)
                 {
-                    if ( node.Geometry == null )
+                    if (node.Geometry == null)
                         continue;
 
-                    if ( node.Geometry.Meshes != null )
+                    if (node.Geometry.MeshLists[0] != null)
                     {
-                        for ( var meshIndex = 0; meshIndex < node.Geometry.Meshes.Count; meshIndex++ )
+                        for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[0].Count; meshIndex++)
                         {
-                            var mesh = node.Geometry.Meshes[meshIndex];
-                            writer.WriteLine( $"// node '{node.Name}' mesh ({mesh.Type}) #{meshIndex}" );
-                            WriteMesh( writer, model, node, mesh, meshIndex, false, ref vertexBaseIndex );
+                            var mesh = node.Geometry.MeshLists[0][meshIndex];
+                            writer.WriteLine($"// node '{node.Name}' mesh ({mesh.Type}) #{meshIndex}");
+                            WriteMesh(writer, model, node, mesh, meshIndex, false, ref vertexBaseIndex);
                         }
                     }
 
-                    if ( node.Geometry.TranslucentMeshes != null )
+                    if (node.Geometry.MeshLists[1] != null)
                     {
-                        for ( var meshIndex = 0; meshIndex < node.Geometry.TranslucentMeshes.Count; meshIndex++ )
+                        for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[0].Count; meshIndex++)
                         {
-                            var mesh = node.Geometry.TranslucentMeshes[meshIndex];
-                            writer.WriteLine( $"// node '{node.Name}' mesh(XLU) ({mesh.Type}) #{meshIndex}" );
-                            WriteMesh( writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex );
+                            var mesh = node.Geometry.MeshLists[1][meshIndex];
+                            writer.WriteLine($"// node '{node.Name}' mesh(2) ({mesh.Type}) #{meshIndex}");
+                            WriteMesh(writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex);
+                        }
+                    }
+
+
+                    if (node.Geometry.MeshLists[2] != null)
+                    {
+                        for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[2].Count; meshIndex++)
+                        {
+                            var mesh = node.Geometry.MeshLists[2][meshIndex];
+                            writer.WriteLine($"// node '{node.Name}' mesh(3) ({mesh.Type}) #{meshIndex}");
+                            WriteMesh(writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex);
                         }
                     }
                 }
             }
         }
 
-        public static void ExportObj( FieldScene field, string fileName = "test.obj" )
+        public static void ExportObj(FieldScene field, string fileName = "test.obj")
         {
             var vertexBaseIndex = 0;
-            Directory.CreateDirectory( "obj" );
+            Directory.CreateDirectory("obj");
 
-            using ( var writer = File.CreateText( Path.Combine( "obj\\", fileName ) ) )
+            using (var writer = File.CreateText(Path.Combine("obj\\", fileName)))
             {
-                foreach ( var obj in field.Objects )
+                foreach (var obj in field.Objects)
                 {
-                    if ( obj.ResourceType != FieldObjectResourceType.Model || obj.Resource == null )
+                    if (obj.ResourceType != FieldObjectResourceType.Model || obj.Resource == null)
                     {
                         continue;
                     }
 
-                    var model = ( Model )obj.Resource;
-                    writer.WriteLine( $"// field model '{obj.Name}'" );
-                    foreach ( var node in model.Nodes )
+                    var model = (Model)obj.Resource;
+                    writer.WriteLine($"// field model '{obj.Name}'");
+                    foreach (var node in model.Nodes)
                     {
-                        if ( node.Geometry == null )
+                        if (node.Geometry == null)
                             continue;
 
-                        if ( node.Geometry.Meshes != null )
+                        if (node.Geometry.MeshLists[0] != null)
                         {
-                            for ( var meshIndex = 0; meshIndex < node.Geometry.Meshes.Count; meshIndex++ )
+                            for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[0].Count; meshIndex++)
                             {
-                                var mesh = node.Geometry.Meshes[meshIndex];
-                                writer.WriteLine( $"// node '{node.Name}' mesh ({mesh.Type}) #{meshIndex}" );
-                                WriteMesh( writer, model, node, mesh, meshIndex, false, ref vertexBaseIndex, obj );
+                                var mesh = node.Geometry.MeshLists[0][meshIndex];
+                                writer.WriteLine($"// node '{node.Name}' mesh ({mesh.Type}) #{meshIndex}");
+                                WriteMesh(writer, model, node, mesh, meshIndex, false, ref vertexBaseIndex, obj);
                             }
                         }
 
-                        if ( node.Geometry.TranslucentMeshes != null )
+                        if (node.Geometry.MeshLists[1] != null)
                         {
-                            for ( var meshIndex = 0; meshIndex < node.Geometry.TranslucentMeshes.Count; meshIndex++ )
+                            for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[1].Count; meshIndex++)
                             {
-                                var mesh = node.Geometry.TranslucentMeshes[meshIndex];
-                                writer.WriteLine( $"// node '{node.Name}' mesh(XLU) ({mesh.Type}) #{meshIndex}" );
-                                WriteMesh( writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex, obj );
+                                var mesh = node.Geometry.MeshLists[1][meshIndex];
+                                writer.WriteLine($"// node '{node.Name}' mesh(2) ({mesh.Type}) #{meshIndex}");
+                                WriteMesh(writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex, obj);
+                            }
+                        }
+
+                        if (node.Geometry.MeshLists[2] != null)
+                        {
+                            for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[2].Count; meshIndex++)
+                            {
+                                var mesh = node.Geometry.MeshLists[2][meshIndex];
+                                writer.WriteLine($"// node '{node.Name}' mesh(3) ({mesh.Type}) #{meshIndex}");
+                                WriteMesh(writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex, obj);
                             }
                         }
                     }
@@ -654,123 +735,123 @@ namespace DDS3ModelLibraryCLI
 
         private static void OpenAndSaveModelPackTest()
         {
-            var modelPack = new ModelPack( @"..\..\..\..\Resources\player_a.PB" );
-            modelPack.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_a.PB" );
+            var modelPack = new ModelPack(@"..\..\..\..\Resources\player_a.PB");
+            modelPack.Save(@"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_a.PB");
         }
 
-        private static string GetChecksum( string file )
+        private static string GetChecksum(string file)
         {
-            using ( FileStream stream = File.OpenRead( file ) )
+            using (FileStream stream = File.OpenRead(file))
             {
-                return GetChecksum( stream );
+                return GetChecksum(stream);
             }
         }
 
-        private static string GetChecksum( Stream stream )
+        private static string GetChecksum(Stream stream)
         {
-            var    sha      = new SHA256Managed();
-            byte[] checksum = sha.ComputeHash( stream );
-            return BitConverter.ToString( checksum ).Replace( "-", String.Empty );
+            var sha = new SHA256Managed();
+            byte[] checksum = sha.ComputeHash(stream);
+            return BitConverter.ToString(checksum).Replace("-", String.Empty);
         }
 
-        private static void FindUniqueFiles( string outDirectory, string searchDirectory, string extension )
+        private static void FindUniqueFiles(string outDirectory, string searchDirectory, string extension)
         {
-            Directory.CreateDirectory( outDirectory );
+            Directory.CreateDirectory(outDirectory);
 
             var checksums = new HashSet<string>();
-            var paths     = Directory.EnumerateFiles( searchDirectory, "*" + extension, SearchOption.AllDirectories ).ToList();
-            var done      = 0;
-            Parallel.ForEach( paths, new ParallelOptions() { MaxDegreeOfParallelism = 8 }, ( path ) =>
+            var paths = Directory.EnumerateFiles(searchDirectory, "*" + extension, SearchOption.AllDirectories).ToList();
+            var done = 0;
+            Parallel.ForEach(paths, new ParallelOptions() { MaxDegreeOfParallelism = 8 }, (path) =>
             {
-                Console.WriteLine( $"{done}/{paths.Count} {path}" );
+                Console.WriteLine($"{done}/{paths.Count} {path}");
 
-                var checksum = GetChecksum( path );
+                var checksum = GetChecksum(path);
 
-                lock ( checksums )
+                lock (checksums)
                 {
-                    if ( !checksums.Contains( checksum ) )
+                    if (!checksums.Contains(checksum))
                     {
-                        File.Copy( path, Path.Combine( outDirectory, Path.GetFileNameWithoutExtension( path ) + "_" + checksum + extension ), true );
-                        checksums.Add( checksum );
+                        File.Copy(path, Path.Combine(outDirectory, Path.GetFileNameWithoutExtension(path) + "_" + checksum + extension), true);
+                        checksums.Add(checksum);
                     }
                 }
 
                 ++done;
-            } );
+            });
         }
 
         private static void OpenAndSaveModelPackBatchTest()
         {
-            if ( !Directory.Exists( "unique_models" ) )
-                FindUniqueFiles( "unique_models", @"D:\Modding\DDS3", ".PB" );
+            if (!Directory.Exists("unique_models"))
+                FindUniqueFiles("unique_models", @"D:\Modding\DDS3", ".PB");
 
-            if ( !Directory.Exists( "unique_lb" ) )
+            if (!Directory.Exists("unique_lb"))
             {
-                FindUniqueFiles( "unique_lb", @"D:\Modding\DDS3", ".LB" );
+                FindUniqueFiles("unique_lb", @"D:\Modding\DDS3", ".LB");
             }
 
-            if ( !Directory.Exists( "unique_lb_extracted" ) )
+            if (!Directory.Exists("unique_lb_extracted"))
             {
-                Directory.CreateDirectory( "unique_lb_extracted" );
+                Directory.CreateDirectory("unique_lb_extracted");
                 var checksums = new HashSet<string>();
-                Parallel.ForEach( Directory.EnumerateFiles( "unique_lb" ), ( path ) =>
+                Parallel.ForEach(Directory.EnumerateFiles("unique_lb"), (path) =>
                 {
-                    var fileName = Path.GetFileNameWithoutExtension( path );
+                    var fileName = Path.GetFileNameWithoutExtension(path);
                     var outPath = $"unique_lb_extracted\\";
-                    Directory.CreateDirectory( outPath );
+                    Directory.CreateDirectory(outPath);
 
-                    using ( var lb = new AtlusFileSystemLibrary.FileSystems.LB.LBFileSystem() )
+                    using (var lb = new AtlusFileSystemLibrary.FileSystems.LB.LBFileSystem())
                     {
-                        lb.Load( path );
+                        lb.Load(path);
 
-                        foreach ( var file in lb.EnumerateFiles() )
+                        foreach (var file in lb.EnumerateFiles())
                         {
-                            var info = lb.GetInfo( file );
-                            using ( var stream = lb.OpenFile( file ) )
+                            var info = lb.GetInfo(file);
+                            using (var stream = lb.OpenFile(file))
                             {
-                                var checksum = GetChecksum( stream );
+                                var checksum = GetChecksum(stream);
                                 stream.Position = 0;
                                 var extract = false;
 
-                                lock ( checksums )
+                                lock (checksums)
                                 {
-                                    if ( !checksums.Contains( checksum ) )
+                                    if (!checksums.Contains(checksum))
                                     {
-                                        checksums.Add( checksum );
+                                        checksums.Add(checksum);
                                         extract = true;
                                     }
                                 }
 
-                                if ( extract )
+                                if (extract)
                                 {
-                                    var nameParts = Path.GetFileNameWithoutExtension( path ).Split( new[] { '_' } );
-                                    Array.Resize( ref nameParts, nameParts.Length - 1 );
+                                    var nameParts = Path.GetFileNameWithoutExtension(path).Split(new[] { '_' });
+                                    Array.Resize(ref nameParts, nameParts.Length - 1);
 
-                                    using ( var fileStream =
-                                        File.Create( Path.Combine( outPath, string.Concat( nameParts ) + "_" + file + "_" + checksum + "." + info.Extension )
-                                                   ) )
+                                    using (var fileStream =
+                                        File.Create(Path.Combine(outPath, string.Concat(nameParts) + "_" + file + "_" + checksum + "." + info.Extension)
+                                                   ))
                                     {
-                                        Console.WriteLine( $"Extracting: {fileName} #{file} ({info.UserId:D2}, {info.Extension})" );
-                                        stream.CopyTo( fileStream );
+                                        Console.WriteLine($"Extracting: {fileName} #{file} ({info.UserId:D2}, {info.Extension})");
+                                        stream.CopyTo(fileStream);
                                     }
                                 }
                             }
                         }
                     }
-                } );
+                });
             }
 
             var uniqueValues = new HashSet<MeshFlags>();
             var frequencyMap = new ConcurrentDictionary<MeshFlags, int>();
 
-            var paths = Directory.EnumerateFiles( "unique_models", "*.PB", SearchOption.AllDirectories ).ToList();
+            var paths = Directory.EnumerateFiles("unique_models", "*.PB", SearchOption.AllDirectories).ToList();
             var done = 0;
             //foreach ( var path in paths )
-            Parallel.ForEach( paths, new ParallelOptions() { MaxDegreeOfParallelism = 16 }, ( path ) =>
+            Parallel.ForEach(paths, new ParallelOptions() { MaxDegreeOfParallelism = 16 }, (path) =>
             {
-                Console.WriteLine( Path.GetFileName( path ) );
-                var modelPack = new ModelPack( path );
-                new ModelPack( modelPack.Save() );
+                Console.WriteLine(Path.GetFileName(path));
+                var modelPack = new ModelPack(path);
+                new ModelPack(modelPack.Save());
                 //modelPack.Save( path + ".out" );
                 //new ModelPack( path + ".out" );
                 //ExportObj( modelPack, Path.GetFileNameWithoutExtension( path ) + ".obj" );
@@ -825,61 +906,61 @@ namespace DDS3ModelLibraryCLI
 
         private static void OpenAndSaveFieldSceneBatchTest()
         {
-            if ( !Directory.Exists( "unique_f1" ) )
-                FindUniqueFiles( "unique_f1", @"D:\Modding\DDS3", ".F1" );
+            if (!Directory.Exists("unique_f1"))
+                FindUniqueFiles("unique_f1", @"D:\Modding\DDS3", ".F1");
 
-            if ( !Directory.Exists( "unique_lb" ) )
-                FindUniqueFiles( "unique_lb", @"D:\Modding\DDS3", ".LB" );
+            if (!Directory.Exists("unique_lb"))
+                FindUniqueFiles("unique_lb", @"D:\Modding\DDS3", ".LB");
 
-            if ( !Directory.Exists( "unique_lb_extracted" ) )
+            if (!Directory.Exists("unique_lb_extracted"))
             {
-                Directory.CreateDirectory( "unique_lb_extracted" );
+                Directory.CreateDirectory("unique_lb_extracted");
                 var checksums = new HashSet<string>();
-                Parallel.ForEach( Directory.EnumerateFiles( "unique_lb" ), ( path ) =>
+                Parallel.ForEach(Directory.EnumerateFiles("unique_lb"), (path) =>
                 {
-                    var fileName = Path.GetFileNameWithoutExtension( path );
+                    var fileName = Path.GetFileNameWithoutExtension(path);
                     var outPath = $"unique_lb_extracted\\";
-                    Directory.CreateDirectory( outPath );
+                    Directory.CreateDirectory(outPath);
 
-                    using ( var lb = new AtlusFileSystemLibrary.FileSystems.LB.LBFileSystem() )
+                    using (var lb = new AtlusFileSystemLibrary.FileSystems.LB.LBFileSystem())
                     {
-                        lb.Load( path );
+                        lb.Load(path);
 
-                        foreach ( var file in lb.EnumerateFiles() )
+                        foreach (var file in lb.EnumerateFiles())
                         {
-                            var info = lb.GetInfo( file );
-                            using ( var stream = lb.OpenFile( file ) )
+                            var info = lb.GetInfo(file);
+                            using (var stream = lb.OpenFile(file))
                             {
-                                var checksum = GetChecksum( stream );
+                                var checksum = GetChecksum(stream);
                                 stream.Position = 0;
                                 var extract = false;
 
-                                lock ( checksums )
+                                lock (checksums)
                                 {
-                                    if ( !checksums.Contains( checksum ) )
+                                    if (!checksums.Contains(checksum))
                                     {
-                                        checksums.Add( checksum );
+                                        checksums.Add(checksum);
                                         extract = true;
                                     }
                                 }
 
-                                if ( extract )
+                                if (extract)
                                 {
-                                    var nameParts = Path.GetFileNameWithoutExtension( path ).Split( new[] { '_' } );
-                                    Array.Resize( ref nameParts, nameParts.Length - 1 );
+                                    var nameParts = Path.GetFileNameWithoutExtension(path).Split(new[] { '_' });
+                                    Array.Resize(ref nameParts, nameParts.Length - 1);
 
-                                    using ( var fileStream =
-                                        File.Create( Path.Combine( outPath, string.Concat( nameParts ) + "_" + file + "_" + checksum + "." + info.Extension )
-                                                   ) )
+                                    using (var fileStream =
+                                        File.Create(Path.Combine(outPath, string.Concat(nameParts) + "_" + file + "_" + checksum + "." + info.Extension)
+                                                   ))
                                     {
-                                        Console.WriteLine( $"Extracting: {fileName} #{file} ({info.UserId:D2}, {info.Extension})" );
-                                        stream.CopyTo( fileStream );
+                                        Console.WriteLine($"Extracting: {fileName} #{file} ({info.UserId:D2}, {info.Extension})");
+                                        stream.CopyTo(fileStream);
                                     }
                                 }
                             }
                         }
                     }
-                } );
+                });
             }
 
             //FindUniqueFiles( "unique_f1", "unique_lb_extracted", ".F1" );
@@ -888,71 +969,71 @@ namespace DDS3ModelLibraryCLI
             var uniqueValues = new HashSet<MeshFlags>();
             var frequencyMap = new ConcurrentDictionary<MeshFlags, int>();
 
-            var paths = Directory.EnumerateFiles( "unique_f1", "*.F1", SearchOption.AllDirectories ).ToList();
+            var paths = Directory.EnumerateFiles("unique_f1", "*.F1", SearchOption.AllDirectories).ToList();
             var done = 0;
-            Parallel.ForEach( paths, new ParallelOptions() { MaxDegreeOfParallelism = 16 }, ( path ) =>
+            Parallel.ForEach(paths, new ParallelOptions() { MaxDegreeOfParallelism = 16 }, (path) =>
             {
-                if ( path != "unique_f1\\f500_001_9E6A1BA4D63DD8AA05144CEF3768A380EEAFD2E6D620C24CE85DC173533B5992.F1" )
+                if (path != "unique_f1\\f500_001_9E6A1BA4D63DD8AA05144CEF3768A380EEAFD2E6D620C24CE85DC173533B5992.F1")
                 {
-                    Console.WriteLine( Path.GetFileName( path ) );
-                    var field = new FieldScene( path );
+                    Console.WriteLine(Path.GetFileName(path));
+                    var field = new FieldScene(path);
                     //ExportObj( field, Path.GetFileNameWithoutExtension( path ) + ".obj" );
-                    new FieldScene( field.Save() );
+                    new FieldScene(field.Save());
                     //field.Save( path + ".out" );
                     //new FieldScene( path + ".out" );
                     //File.Delete( path + ".out" );
                 }
-            } );
+            });
 
-            foreach ( var kvp in frequencyMap.OrderBy( x => x.Value ) )
+            foreach (var kvp in frequencyMap.OrderBy(x => x.Value))
             {
-                Console.WriteLine( kvp.Value + " " + kvp.Key );
+                Console.WriteLine(kvp.Value + " " + kvp.Key);
             }
         }
 
         private static void GenerateMaterialPresets()
         {
-            var paths = Directory.EnumerateFiles( "unique_models", "*.PB", SearchOption.AllDirectories ).ToList();
-            Directory.CreateDirectory( "material_presets" );
+            var paths = Directory.EnumerateFiles("unique_models", "*.PB", SearchOption.AllDirectories).ToList();
+            Directory.CreateDirectory("material_presets");
 
             var materialCache = new Dictionary<int, (int Id, bool IsTextured, bool HasOverlay)>();
             var done = 0;
-            Parallel.ForEach( paths, new ParallelOptions() { MaxDegreeOfParallelism = 8 }, ( path ) =>
+            Parallel.ForEach(paths, new ParallelOptions() { MaxDegreeOfParallelism = 8 }, (path) =>
             {
-                Console.WriteLine( Path.GetFileName( path ) );
-                var modelPack = new ModelPack( path );
-                foreach ( var model in modelPack.Models )
+                Console.WriteLine(Path.GetFileName(path));
+                var modelPack = new ModelPack(path);
+                foreach (var model in modelPack.Models)
                 {
-                    foreach ( var material in model.Materials )
+                    foreach (var material in model.Materials)
                     {
                         var materialHash = material.GetPresetHashCode();
                         var isTextured = material.TextureId.HasValue;
                         var hasOverlay = material.OverlayTextureIds != null;
 
-                        lock ( materialCache )
+                        lock (materialCache)
                         {
-                            var inCache = materialCache.ContainsKey( materialHash );
-                            if ( !inCache || materialCache[materialHash].IsTextured != isTextured || materialCache[materialHash].HasOverlay != hasOverlay )
+                            var inCache = materialCache.ContainsKey(materialHash);
+                            if (!inCache || materialCache[materialHash].IsTextured != isTextured || materialCache[materialHash].HasOverlay != hasOverlay)
                             {
                                 var id = materialCache.Count;
-                                if ( inCache )
+                                if (inCache)
                                 {
                                     id = materialCache[materialHash].Id;
                                 }
 
-                                var json = JsonConvert.SerializeObject( material, Formatting.Indented );
+                                var json = JsonConvert.SerializeObject(material, Formatting.Indented);
                                 var name = id.ToString();
 
-                                if ( isTextured )
+                                if (isTextured)
                                     name += "_d";
 
-                                if ( hasOverlay )
+                                if (hasOverlay)
                                     name += "_o";
 
-                                File.WriteAllText( $"material_presets\\{name}.json",
-                                                   json );
+                                File.WriteAllText($"material_presets\\{name}.json",
+                                                   json);
 
-                                if ( !inCache )
+                                if (!inCache)
                                 {
                                     materialCache[materialHash] = (materialCache.Count, isTextured, hasOverlay);
                                 }
@@ -960,22 +1041,22 @@ namespace DDS3ModelLibraryCLI
                         }
                     }
                 }
-            } );
+            });
 
             var materialIdLookup = new Dictionary<int, int>();
-            foreach ( var tuple in materialCache )
+            foreach (var tuple in materialCache)
             {
                 materialIdLookup[tuple.Key] = tuple.Value.Id;
             }
 
-            File.WriteAllText( "material_presets\\index.json", JsonConvert.SerializeObject( materialIdLookup, Formatting.Indented ) );
+            File.WriteAllText("material_presets\\index.json", JsonConvert.SerializeObject(materialIdLookup, Formatting.Indented));
         }
 
         private static void ReplaceModelTest()
         {
-            var modelPack = new ModelPack( @"..\..\..\..\Resources\player_a.PB" );
-            modelPack.Replace( "player_a_test.fbx" );
-            modelPack.Save( @"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_a.PB" );
+            var modelPack = new ModelPack(@"..\..\..\..\Resources\player_a.PB");
+            modelPack.Replace("player_a_test.fbx");
+            modelPack.Save(@"D:\Modding\DDS3\Nocturne\_HostRoot\dds3data\model\field\player_a.PB");
         }
     }
 }

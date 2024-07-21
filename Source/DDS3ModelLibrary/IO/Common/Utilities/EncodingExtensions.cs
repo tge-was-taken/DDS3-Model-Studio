@@ -9,9 +9,9 @@ namespace DDS3ModelLibrary.IO.Common.Utilities
         /// </summary>
         /// <param name="encoding"></param>
         /// <returns></returns>
-        public static int GetMinByteCount( this Encoding encoding )
+        public static int GetMinByteCount(this Encoding encoding)
         {
-            return encoding.IsSingleByte ? 1 : encoding.GetByteCount( "\0" );
+            return encoding.IsSingleByte ? 1 : encoding.GetByteCount("\0");
         }
     }
 }

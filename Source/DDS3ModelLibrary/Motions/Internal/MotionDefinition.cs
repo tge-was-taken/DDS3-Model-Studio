@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using DDS3ModelLibrary.IO.Common;
+﻿using DDS3ModelLibrary.IO.Common;
+using System.Collections.Generic;
 
 namespace DDS3ModelLibrary.Motions.Internal
 {
@@ -7,7 +7,7 @@ namespace DDS3ModelLibrary.Motions.Internal
     {
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        public int Duration { get; set; }
+        public int Duration { get; set; } 
 
         public List<KeyframeTrack> Tracks { get; }
 
@@ -16,19 +16,19 @@ namespace DDS3ModelLibrary.Motions.Internal
             Tracks = new List<KeyframeTrack>();
         }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
-            var controllerDefs = ( List<MotionControllerDefinition> )context;
+            var controllerDefs = (List<MotionControllerDefinition>)context;
 
             Duration = reader.ReadInt32();
-            foreach ( var controllerDef in controllerDefs )
-                Tracks.Add( reader.ReadObject<KeyframeTrack>( controllerDef.Type ) );
+            foreach (var controllerDef in controllerDefs)
+                Tracks.Add(reader.ReadObject<KeyframeTrack>(controllerDef.Type));
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.WriteInt32( Duration );
-            writer.WriteObjects( Tracks );
+            writer.WriteInt32(Duration);
+            writer.WriteObjects(Tracks);
         }
     }
 }

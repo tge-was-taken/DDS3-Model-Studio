@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using DDS3ModelStudio.GUI.Forms;
+using System;
 using System.Windows.Forms;
-using DDS3ModelStudio.GUI.Forms;
 
 namespace DDS3ModelStudio
 {
@@ -16,8 +13,8 @@ namespace DDS3ModelStudio
         static void Main()
         {
             Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault( false );
-            Application.Run( new MainForm() );
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new MainForm());
         }
     }
 }

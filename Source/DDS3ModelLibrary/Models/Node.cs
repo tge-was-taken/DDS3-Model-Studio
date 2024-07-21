@@ -1,20 +1,21 @@
-﻿using System;
+﻿using DDS3ModelLibrary.IO.Common;
+using DDS3ModelLibrary.Models.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
-using DDS3ModelLibrary.IO.Common;
-using DDS3ModelLibrary.Models.Utilities;
 
 namespace DDS3ModelLibrary.Models
 {
+    // sdfModelNode_t
     public class Node : IBinarySerializable
     {
         // For debugging only, only valid when read from a file.
         private int mIndex;
         private int mParentIndex;
 
-        private Vector3   mPosition;
-        private Vector3   mRotation;
-        private Vector3   mScale;
+        private Vector3 mPosition;
+        private Vector3 mRotation;
+        private Vector3 mScale;
         private Matrix4x4 mLocalTransform;
         private Matrix4x4 mWorldTransform;
         private Node mParent;
@@ -37,7 +38,7 @@ namespace DDS3ModelLibrary.Models
             get => mParent;
             set
             {
-                if ( mParent != value )
+                if (mParent != value)
                 {
                     mParent = value;
                     mWorldTransformDirty = true;
@@ -49,14 +50,14 @@ namespace DDS3ModelLibrary.Models
         {
             get
             {
-                if ( mPRSDirty )
+                if (mPRSDirty)
                     UpdatePRS();
 
                 return mRotation;
             }
             set
             {
-                if ( mRotation != value )
+                if (mRotation != value)
                 {
                     mRotation = value;
                     mLocalTransformDirty = true;
@@ -68,14 +69,14 @@ namespace DDS3ModelLibrary.Models
         {
             get
             {
-                if ( mPRSDirty )
+                if (mPRSDirty)
                     UpdatePRS();
 
                 return mPosition;
             }
             set
             {
-                if ( mPosition != value )
+                if (mPosition != value)
                 {
                     mPosition = value;
                     mLocalTransformDirty = true;
@@ -87,14 +88,14 @@ namespace DDS3ModelLibrary.Models
         {
             get
             {
-                if ( mPRSDirty )
+                if (mPRSDirty)
                     UpdatePRS();
 
                 return mScale;
             }
             set
             {
-                if ( mScale != value )
+                if (mScale != value)
                 {
                     mScale = value;
                     mLocalTransformDirty = true;
@@ -133,14 +134,14 @@ namespace DDS3ModelLibrary.Models
         {
             get
             {
-                if ( mLocalTransformDirty )
+                if (mLocalTransformDirty)
                     UpdateLocalTransform();
 
                 return mLocalTransform;
             }
             set
             {
-                if ( mLocalTransform != value )
+                if (mLocalTransform != value)
                 {
                     mLocalTransform = value;
                     mPRSDirty = mWorldTransformDirty = true;
@@ -155,7 +156,7 @@ namespace DDS3ModelLibrary.Models
         {
             get
             {
-                if ( mWorldTransformDirty || Parent?.WorldTransform != mParentWorldTransform )
+                if (mWorldTransformDirty || Parent?.WorldTransform != mParentWorldTransform)
                     UpdateWorldTransform();
 
                 return mWorldTransform;
@@ -164,33 +165,33 @@ namespace DDS3ModelLibrary.Models
 
         public Node()
         {
-            Field00     = 1;
-            Field04     = 0;
-            Parent      = null;
-            mRotation    = Vector3.Zero;
-            mPosition    = Vector3.Zero;
-            mScale       = Vector3.One;
+            Field00 = 1;
+            Field04 = 0;
+            Parent = null;
+            mRotation = Vector3.Zero;
+            mPosition = Vector3.Zero;
+            mScale = Vector3.One;
             BoundingBox = null;
-            Geometry    = null;
-            Field48     = 0;
+            Geometry = null;
+            Field48 = 0;
             mLocalTransform = mWorldTransform = mParentWorldTransform = Matrix4x4.Identity;
         }
 
         private void UpdateLocalTransform()
         {
-            mLocalTransform = Matrix4x4.CreateRotationX( Rotation.X ) * Matrix4x4.CreateRotationY( Rotation.Y ) *
-                      Matrix4x4.CreateRotationZ( Rotation.Z );
+            mLocalTransform = Matrix4x4.CreateRotationX(Rotation.X) * Matrix4x4.CreateRotationY(Rotation.Y) *
+                      Matrix4x4.CreateRotationZ(Rotation.Z);
 
-            mLocalTransform *= Matrix4x4.CreateScale( Scale );
-            mLocalTransform.Translation =  Position;
+            mLocalTransform *= Matrix4x4.CreateScale(Scale);
+            mLocalTransform.Translation = Position;
             mLocalTransformDirty = false;
         }
 
         private void UpdateWorldTransform()
         {
             mWorldTransform = Transform;
-            if ( Parent != null )
-                mWorldTransform *= ( mParentWorldTransform = Parent.WorldTransform );
+            if (Parent != null)
+                mWorldTransform *= (mParentWorldTransform = Parent.WorldTransform);
             else
                 mParentWorldTransform = Matrix4x4.Identity;
 
@@ -199,10 +200,10 @@ namespace DDS3ModelLibrary.Models
 
         private void UpdatePRS()
         {
-            Matrix4x4.Decompose( mLocalTransform, out var scale, out var rotation, out var translation );
+            Matrix4x4.Decompose(mLocalTransform, out var scale, out var rotation, out var translation);
             mPosition = translation;
             mRotation = rotation.ToEulerAngles();
-            mScale    = scale;
+            mScale = scale;
             mPRSDirty = false;
         }
 
@@ -211,63 +212,63 @@ namespace DDS3ModelLibrary.Models
             return Name;
         }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
-            var nodes = context as List<Node> ?? throw new InvalidOperationException( "Expected context argument to be the node list" );
+            var nodes = context as List<Node> ?? throw new InvalidOperationException("Expected context argument to be the node list");
             Field00 = reader.ReadInt32();
-            Field04 = reader.ReadInt32Expects( 0, "Node Field04 isnt 0" );
+            Field04 = reader.ReadInt32Expects(0, "Node Field04 isnt 0");
             mIndex = reader.ReadInt32();
 
             mParentIndex = reader.ReadInt32();
-            if ( mParentIndex != -1 )
-                Parent = nodes[ mParentIndex ];
+            if (mParentIndex != -1)
+                Parent = nodes[mParentIndex];
 
             Rotation = reader.ReadVector3();
-            reader.ReadSingleExpects( 0f, "Node Rotation W isnt 0" );
+            reader.ReadSingleExpects(0f, "Node Rotation W isnt 0");
             Position = reader.ReadVector3();
-            reader.ReadSingleExpects( 1f, "Node Position W isnt 1" );
+            reader.ReadSingleExpects(1f, "Node Position W isnt 1");
             Scale = reader.ReadVector3();
-            reader.ReadSingleExpects( 0f, "Node Scale W isnt 0" );
+            reader.ReadSingleExpects(0f, "Node Scale W isnt 0");
 
             BoundingBox = reader.ReadObjectOffset<BoundingBox>();
             var geometryOffset = reader.ReadInt32();
 
-            if ( geometryOffset != 0 )
+            if (geometryOffset != 0)
             {
-                if ( BoundingBox != null )
-                    Geometry = reader.ReadObjectAtOffset<Geometry>( geometryOffset );
+                if (BoundingBox != null)
+                    Geometry = reader.ReadObjectAtOffset<Geometry>(geometryOffset);
                 else
-                    DeprecatedMeshList = reader.ReadObjectAtOffset<MeshList>( geometryOffset );
+                    DeprecatedMeshList = reader.ReadObjectAtOffset<MeshList>(geometryOffset);
             }
 
-            Field48 = reader.ReadInt32Expects( 0, "Node Field48 isnt 0" );
+            Field48 = reader.ReadInt32Expects(0, "Node Field48 isnt 0");
             DeprecatedMeshList2 = reader.ReadObjectOffset<MeshList>();
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            ( int index, List<Node> nodes ) = ( (int, List<Node>) ) context;
-            writer.Write( Field00 );
-            writer.Write( Field04 );
-            writer.Write( index );
-            writer.Write( Parent == null ? -1 : nodes.IndexOf( Parent ) );
-            writer.Write( Rotation );
-            writer.Write( 0f );
-            writer.Write( Position );
-            writer.Write( 1f );
-            writer.Write( Scale );
-            writer.Write( 0f );
-            writer.ScheduleWriteObjectOffsetAligned( BoundingBox, 16 );
+            (int index, List<Node> nodes) = ((int, List<Node>))context;
+            writer.Write(Field00);
+            writer.Write(Field04);
+            writer.Write(index);
+            writer.Write(Parent == null ? -1 : nodes.IndexOf(Parent));
+            writer.Write(Rotation);
+            writer.Write(0f);
+            writer.Write(Position);
+            writer.Write(1f);
+            writer.Write(Scale);
+            writer.Write(0f);
+            writer.ScheduleWriteObjectOffsetAligned(BoundingBox, 16);
 
-            if ( Geometry != null )
-                writer.ScheduleWriteObjectOffsetAligned( Geometry, 16 );
-            else if ( DeprecatedMeshList != null )
-                writer.ScheduleWriteObjectOffsetAligned( DeprecatedMeshList, 16 );
+            if (Geometry != null)
+                writer.ScheduleWriteObjectOffsetAligned(Geometry, 8);
+            else if (DeprecatedMeshList != null)
+                writer.ScheduleWriteObjectOffsetAligned(DeprecatedMeshList, 16);
             else
-                writer.Write( 0 );
+                writer.Write(0);
 
-            writer.Write( Field48 );
-            writer.ScheduleWriteObjectOffsetAligned( DeprecatedMeshList2, 16 );
+            writer.Write(Field48);
+            writer.ScheduleWriteObjectOffsetAligned(DeprecatedMeshList2, 16);
         }
     }
 }

@@ -56,7 +56,7 @@ namespace DDS3ModelLibrary.Textures.Processing.WuQuantizer
                         var deltaGreen = pixel.Green - lookup.Green;
                         var deltaBlue = pixel.Blue - lookup.Blue;
 
-                        int distance = deltaAlpha*deltaAlpha + deltaRed*deltaRed + deltaGreen*deltaGreen + deltaBlue*deltaBlue;
+                        int distance = deltaAlpha * deltaAlpha + deltaRed * deltaRed + deltaGreen * deltaGreen + deltaBlue * deltaBlue;
 
                         if (distance >= bestDistance)
                             continue;

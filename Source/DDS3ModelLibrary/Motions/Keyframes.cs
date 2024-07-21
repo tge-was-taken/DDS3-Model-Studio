@@ -1,6 +1,5 @@
-﻿using System;
+﻿using DDS3ModelLibrary.IO.Common;
 using System.Numerics;
-using DDS3ModelLibrary.IO.Common;
 
 namespace DDS3ModelLibrary.Motions
 {
@@ -22,14 +21,14 @@ namespace DDS3ModelLibrary.Motions
         // -- IBinarySerializable --
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
             Value = reader.ReadUInt32();
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.WriteUInt32( Value );
+            writer.WriteUInt32(Value);
         }
     }
 
@@ -46,16 +45,16 @@ namespace DDS3ModelLibrary.Motions
         // -- IBinarySerializable --
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
             ShapeIndex = reader.ReadInt32();
             BlendAmount = reader.ReadSingle();
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.WriteInt32( ShapeIndex );
-            writer.WriteSingle( BlendAmount );
+            writer.WriteInt32(ShapeIndex);
+            writer.WriteSingle(BlendAmount);
         }
     }
 
@@ -70,14 +69,14 @@ namespace DDS3ModelLibrary.Motions
         // -- IBinarySerializable --
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
             Value = reader.ReadVector3();
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.WriteVector3( Value );
+            writer.WriteVector3(Value);
         }
     }
 
@@ -92,14 +91,14 @@ namespace DDS3ModelLibrary.Motions
         // -- IBinarySerializable --
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
-            Values = reader.ReadSingleArray( 5 );
+            Values = reader.ReadSingleArray(5);
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.WriteSingles( Values );
+            writer.WriteSingles(Values);
         }
     }
 
@@ -123,12 +122,12 @@ namespace DDS3ModelLibrary.Motions
         {
             get
             {
-                if ( !mChanged && !mDecoded )
+                if (!mChanged && !mDecoded)
                 {
-                    mRotation = new Quaternion( mRotationX / FIXED_POINT_12,
+                    mRotation = new Quaternion(mRotationX / FIXED_POINT_12,
                                                 mRotationY / FIXED_POINT_12,
                                                 mRotationZ / FIXED_POINT_12,
-                                                mRotationW / FIXED_POINT_12 );
+                                                mRotationW / FIXED_POINT_12);
 
                     mDecoded = true;
                 }
@@ -146,7 +145,7 @@ namespace DDS3ModelLibrary.Motions
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
             mRotationX = reader.ReadInt16();
             mRotationY = reader.ReadInt16();
@@ -154,22 +153,22 @@ namespace DDS3ModelLibrary.Motions
             mRotationW = reader.ReadInt16();
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            if ( mChanged )
+            if (mChanged)
             {
-                mRotationX = ( short )( Value.X * FIXED_POINT_12 );
-                mRotationY = ( short ) ( Value.Y * FIXED_POINT_12 );
-                mRotationZ = ( short ) ( Value.Z * FIXED_POINT_12 );
-                mRotationW = ( short ) ( Value.W * FIXED_POINT_12 );
+                mRotationX = (short)(Value.X * FIXED_POINT_12);
+                mRotationY = (short)(Value.Y * FIXED_POINT_12);
+                mRotationZ = (short)(Value.Z * FIXED_POINT_12);
+                mRotationW = (short)(Value.W * FIXED_POINT_12);
                 mChanged = false;
                 mDecoded = true;
             }
 
-            writer.Write( mRotationX );
-            writer.Write( mRotationY );
-            writer.Write( mRotationZ );
-            writer.Write( mRotationW );
+            writer.Write(mRotationX);
+            writer.Write(mRotationY);
+            writer.Write(mRotationZ);
+            writer.Write(mRotationW);
         }
     }
 
@@ -185,14 +184,14 @@ namespace DDS3ModelLibrary.Motions
         // -- IBinarySerializable --
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
             Value = reader.ReadByte();
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.WriteByte( Value );
+            writer.WriteByte(Value);
         }
     }
 
@@ -207,14 +206,14 @@ namespace DDS3ModelLibrary.Motions
         // -- IBinarySerializable --
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
             Value = reader.ReadSingle();
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.WriteSingle( Value );
+            writer.WriteSingle(Value);
         }
     }
 }

@@ -4,9 +4,9 @@ namespace DDS3ModelLibrary.Textures.Exchange.DDS
 {
     public static class DDSFormatDetails
     {
-        public static bool IsBlockCompressed( DDSPixelFormatFourCC format )
+        public static bool IsBlockCompressed(DDSPixelFormatFourCC format)
         {
-            switch ( format )
+            switch (format)
             {
                 case DDSPixelFormatFourCC.DXT1:
                 case DDSPixelFormatFourCC.DXT2:
@@ -21,9 +21,9 @@ namespace DDS3ModelLibrary.Textures.Exchange.DDS
             }
         }
 
-        public static int GetBlockSize( DDSPixelFormatFourCC format )
+        public static int GetBlockSize(DDSPixelFormatFourCC format)
         {
-            switch ( format )
+            switch (format)
             {
                 case DDSPixelFormatFourCC.DXT1:
                 case DDSPixelFormatFourCC.ATI1:
@@ -40,9 +40,9 @@ namespace DDS3ModelLibrary.Textures.Exchange.DDS
             return 0;
         }
 
-        public static int GetBitsPerPixel( DDSPixelFormatFourCC format )
+        public static int GetBitsPerPixel(DDSPixelFormatFourCC format)
         {
-            switch ( format )
+            switch (format)
             {
                 case DDSPixelFormatFourCC.DXT1:
                 case DDSPixelFormatFourCC.ATI1:
@@ -156,41 +156,41 @@ namespace DDS3ModelLibrary.Textures.Exchange.DDS
             return 0;
         }
 
-        public static int CalculatePitchOrLinearSize( int width, int height, DDSPixelFormatFourCC format, out DDSHeaderFlags additionalFlags )
+        public static int CalculatePitchOrLinearSize(int width, int height, DDSPixelFormatFourCC format, out DDSHeaderFlags additionalFlags)
         {
-            if ( IsBlockCompressed( format ))
+            if (IsBlockCompressed(format))
             {
                 additionalFlags = DDSHeaderFlags.LinearSize;
-                return CalculateLinearSize( width, height, format );
+                return CalculateLinearSize(width, height, format);
             }
             else
             {
                 additionalFlags = DDSHeaderFlags.Pitch;
-                return CalculatePitch( width, format );
+                return CalculatePitch(width, format);
             }
         }
 
-        public static int CalculatePitch( int width, DDSPixelFormatFourCC format )
+        public static int CalculatePitch(int width, DDSPixelFormatFourCC format)
         {
-            if ( IsBlockCompressed( format ) )
+            if (IsBlockCompressed(format))
             {
-                int blockSize = GetBlockSize( format );
-                return Math.Max( 1, ( ( width + 3 ) / 4 ) ) * blockSize;
+                int blockSize = GetBlockSize(format);
+                return Math.Max(1, ((width + 3) / 4)) * blockSize;
             }
 
-            if ( format == DDSPixelFormatFourCC.R8G8_B8G8 || format == DDSPixelFormatFourCC.G8R8_G8B8 ||
-                 format == DDSPixelFormatFourCC.UYVY || format == DDSPixelFormatFourCC.YUY2 )
+            if (format == DDSPixelFormatFourCC.R8G8_B8G8 || format == DDSPixelFormatFourCC.G8R8_G8B8 ||
+                 format == DDSPixelFormatFourCC.UYVY || format == DDSPixelFormatFourCC.YUY2)
             {
-                return ( ( width + 1 ) >> 1 ) * 4;
+                return ((width + 1) >> 1) * 4;
             }
 
-            int bitsPerPixel = GetBitsPerPixel( format );
-            return ( width * bitsPerPixel + 7 ) / 8;
+            int bitsPerPixel = GetBitsPerPixel(format);
+            return (width * bitsPerPixel + 7) / 8;
         }
 
-        public static int CalculateLinearSize( int width, int height, DDSPixelFormatFourCC format )
+        public static int CalculateLinearSize(int width, int height, DDSPixelFormatFourCC format)
         {
-            return ( ( width * height ) * GetBitsPerPixel( format ) ) / 8;
+            return ((width * height) * GetBitsPerPixel(format)) / 8;
         }
     }
 }

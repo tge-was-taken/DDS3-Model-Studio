@@ -1,70 +1,64 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
+﻿using Assimp;
 using DDS3ModelLibrary.IO.Common;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DDS3ModelLibrary.Models
 {
     public class Geometry : IBinarySerializable
     {
-        private MeshList mTranslucentMeshes;
-
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        public MeshList Meshes { get; set; }
+        public MeshList[] MeshLists { get; } = new MeshList[3];
+
+        public MeshList Meshes
+        {
+            get => MeshLists[0];
+            set => MeshLists[0] = value;
+        }
 
         public MeshList TranslucentMeshes
         {
-            get => mTranslucentMeshes;
-            set
-            {
-                mTranslucentMeshes = value;
-                if ( Meshes == null )
-                    throw new InvalidOperationException( $"{nameof( TranslucentMeshes )} must be null if {nameof( Meshes )} is null" );
-            }
+            get => MeshLists[1];
+            set => MeshLists[1] = value;
+        }
+
+        public MeshList MeshList3
+        {
+            get => MeshLists[2];
+            set => MeshLists[2] = value;
         }
 
         public Geometry()
         {
-            Meshes = new MeshList();
-            TranslucentMeshes = null;
         }
 
-        void IBinarySerializable.Read( EndianBinaryReader reader, object context )
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
-            Meshes = reader.ReadObjectOffset<MeshList>();
-            if ( Meshes != null )
-                TranslucentMeshes = reader.ReadObjectOffset<MeshList>();
-
-            if ( TranslucentMeshes != null )
+            var meshList = reader.ReadObjectOffset<MeshList>();
+            var meshListIndex = 0;
+            while (meshList != null)
             {
-                // TODO: fix crash when meshes are in translucent slot
-                Meshes.AddRange( TranslucentMeshes );
-                TranslucentMeshes = null;
+                MeshLists[meshListIndex++] = meshList;
+                meshList = reader.ReadObjectOffset<MeshList>();
             }
         }
 
-        void IBinarySerializable.Write( EndianBinaryWriter writer, object context )
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            void WriteMeshList(MeshList meshes)
+            foreach (var meshList in MeshLists)
             {
-                var canWrite = meshes?.Count > 0 && meshes.All( x => x.Type == MeshType.Type1 || x.Type == MeshType.Type2 || x.Type == MeshType.Type4 ||
-                                                                     x.Type == MeshType.Type5 || x.Type == MeshType.Type7 || x.Type == MeshType.Type8 
-                                                              );
-
-                if ( canWrite )
+                if (meshList is null)
                 {
-                    writer.ScheduleWriteOffsetAligned( 16, () => { writer.WriteObject( meshes ); } );
+                    writer.WriteInt32(0);
+                    break;
                 }
                 else
                 {
-                    writer.Write( 0 );
+                    writer.ScheduleWriteOffsetAligned(4, () => { writer.WriteObject(meshList); });
                 }
             }
-
-            WriteMeshList( Meshes );
-            if ( Meshes != null )
-                WriteMeshList( TranslucentMeshes );
         }
     }
 }

@@ -1,8 +1,7 @@
-﻿using System.IO;
-using System.Windows.Forms;
-using DDS3ModelLibrary.Models;
+﻿using DDS3ModelLibrary.Models;
 using DDS3ModelStudio.GUI.TreeView;
-using DDS3ModelStudio.GUI.TreeView.DataNodes;
+using System.IO;
+using System.Windows.Forms;
 
 namespace DDS3ModelStudio.GUI.Forms
 {
@@ -16,27 +15,27 @@ namespace DDS3ModelStudio.GUI.Forms
             mDataTreeView.NodeUpdated += HandleDataTreeViewNodeUpdated;
         }
 
-        private void HandleDataTreeViewNodeUpdated( object sender, TreeViewEventArgs e )
+        private void HandleDataTreeViewNodeUpdated(object sender, TreeViewEventArgs e)
         {
-            var node = ( DataTreeNode )e.Node;
+            var node = (DataTreeNode)e.Node;
             mPropertyGrid.SelectedObject = node.DataNode;
         }
 
-        private void HandleDataTreeViewAfterSelect( object sender, TreeViewEventArgs e )
+        private void HandleDataTreeViewAfterSelect(object sender, TreeViewEventArgs e)
         {
-            var node = ( DataTreeNode )e.Node;
+            var node = (DataTreeNode)e.Node;
             mPropertyGrid.SelectedObject = node.DataNode;
         }
 
-        private void MOpenToolStripMenuItem_Click( object sender, System.EventArgs e )
+        private void MOpenToolStripMenuItem_Click(object sender, System.EventArgs e)
         {
-            using ( var dlg = new OpenFileDialog())
+            using (var dlg = new OpenFileDialog())
             {
-                if ( dlg.ShowDialog() != DialogResult.OK )
+                if (dlg.ShowDialog() != DialogResult.OK)
                     return;
 
-                var modelPackNode = DataNodeFactory.Create( Path.GetFileName( dlg.FileName ), new ModelPack( dlg.FileName ) );
-                mDataTreeView.TopNode = new DataTreeNode( modelPackNode );
+                var modelPackNode = DataNodeFactory.Create(Path.GetFileName(dlg.FileName), new ModelPack(dlg.FileName));
+                mDataTreeView.TopNode = new DataTreeNode(modelPackNode);
             }
         }
     }

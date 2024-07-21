@@ -90,7 +90,7 @@ namespace DDS3ModelLibrary.Textures.Processing.WuQuantizer
             }
             finally
             {
-                if(targetData != null)
+                if (targetData != null)
                     result.UnlockBits(targetData);
             }
 
@@ -104,7 +104,7 @@ namespace DDS3ModelLibrary.Textures.Processing.WuQuantizer
 
             BitmapData data = sourceImage.LockBits(
                 Rectangle.FromLTRB(0, 0, bitmapWidth, bitmapHeight),
-                ImageLockMode.ReadOnly, 
+                ImageLockMode.ReadOnly,
                 sourceImage.PixelFormat);
             ColorData colorData = new ColorData(MaxSideIndex, bitmapWidth, bitmapHeight);
 
@@ -121,7 +121,7 @@ namespace DDS3ModelLibrary.Textures.Processing.WuQuantizer
                 var value = new Byte[byteCount];
 
                 Marshal.Copy(data.Scan0, buffer, 0, buffer.Length);
-               
+
                 for (int y = 0; y < bitmapHeight; y++)
                 {
                     var index = 0;
@@ -151,15 +151,15 @@ namespace DDS3ModelLibrary.Textures.Processing.WuQuantizer
                             colorData.MomentsGreen[indexAlpha, indexRed, indexGreen, indexBlue] += value[Green];
                             colorData.MomentsBlue[indexAlpha, indexRed, indexGreen, indexBlue] += value[Blue];
                             colorData.MomentsAlpha[indexAlpha, indexRed, indexGreen, indexBlue] += value[Alpha];
-                            colorData.Moments[indexAlpha, indexRed, indexGreen, indexBlue] += (value[Alpha]*value[Alpha]) +
-                                                                                              (value[Red]*value[Red]) +
-                                                                                              (value[Green]*value[Green]) +
-                                                                                              (value[Blue]*value[Blue]);
+                            colorData.Moments[indexAlpha, indexRed, indexGreen, indexBlue] += (value[Alpha] * value[Alpha]) +
+                                                                                              (value[Red] * value[Red]) +
+                                                                                              (value[Green] * value[Green]) +
+                                                                                              (value[Blue] * value[Blue]);
                         }
 
                         colorData.AddPixel(
                             new Pixel(value[Alpha], value[Red], value[Green], value[Blue]),
-                            BitConverter.ToInt32 (new[] { indexAlpha, indexRed, indexGreen, indexBlue }, 0));
+                            BitConverter.ToInt32(new[] { indexAlpha, indexRed, indexGreen, indexBlue }, 0));
                         index += bitDepth;
                     }
 
@@ -379,7 +379,7 @@ namespace DDS3ModelLibrary.Textures.Processing.WuQuantizer
             return new CubeCut(cutPoint, result);
         }
 
-        private bool Cut(ColorData data, ref Box first,ref Box second)
+        private bool Cut(ColorData data, ref Box first, ref Box second)
         {
             int direction;
             var wholeAlpha = Volume(first, data.MomentsAlpha);
@@ -388,10 +388,10 @@ namespace DDS3ModelLibrary.Textures.Processing.WuQuantizer
             var wholeBlue = Volume(first, data.MomentsBlue);
             var wholeWeight = Volume(first, data.Weights);
 
-            var maxAlpha = Maximize(data, first, Alpha, (byte) (first.AlphaMinimum + 1), first.AlphaMaximum, wholeAlpha, wholeRed, wholeGreen, wholeBlue, wholeWeight);
-            var maxRed = Maximize(data, first, Red, (byte) (first.RedMinimum + 1), first.RedMaximum, wholeAlpha, wholeRed, wholeGreen, wholeBlue, wholeWeight);
-            var maxGreen = Maximize(data, first, Green, (byte) (first.GreenMinimum + 1), first.GreenMaximum, wholeAlpha, wholeRed, wholeGreen, wholeBlue, wholeWeight);
-            var maxBlue = Maximize(data, first, Blue, (byte) (first.BlueMinimum + 1), first.BlueMaximum, wholeAlpha, wholeRed, wholeGreen, wholeBlue, wholeWeight);
+            var maxAlpha = Maximize(data, first, Alpha, (byte)(first.AlphaMinimum + 1), first.AlphaMaximum, wholeAlpha, wholeRed, wholeGreen, wholeBlue, wholeWeight);
+            var maxRed = Maximize(data, first, Red, (byte)(first.RedMinimum + 1), first.RedMaximum, wholeAlpha, wholeRed, wholeGreen, wholeBlue, wholeWeight);
+            var maxGreen = Maximize(data, first, Green, (byte)(first.GreenMinimum + 1), first.GreenMaximum, wholeAlpha, wholeRed, wholeGreen, wholeBlue, wholeWeight);
+            var maxBlue = Maximize(data, first, Blue, (byte)(first.BlueMinimum + 1), first.BlueMaximum, wholeAlpha, wholeRed, wholeGreen, wholeBlue, wholeWeight);
 
             if ((maxAlpha.Value >= maxRed.Value) && (maxAlpha.Value >= maxGreen.Value) && (maxAlpha.Value >= maxBlue.Value))
             {
@@ -416,28 +416,28 @@ namespace DDS3ModelLibrary.Textures.Processing.WuQuantizer
             switch (direction)
             {
                 case Alpha:
-                    second.AlphaMinimum = first.AlphaMaximum = (byte) maxAlpha.Position;
+                    second.AlphaMinimum = first.AlphaMaximum = (byte)maxAlpha.Position;
                     second.RedMinimum = first.RedMinimum;
                     second.GreenMinimum = first.GreenMinimum;
                     second.BlueMinimum = first.BlueMinimum;
                     break;
 
                 case Red:
-                    second.RedMinimum = first.RedMaximum = (byte) maxRed.Position;
+                    second.RedMinimum = first.RedMaximum = (byte)maxRed.Position;
                     second.AlphaMinimum = first.AlphaMinimum;
                     second.GreenMinimum = first.GreenMinimum;
                     second.BlueMinimum = first.BlueMinimum;
                     break;
 
                 case Green:
-                    second.GreenMinimum = first.GreenMaximum = (byte) maxGreen.Position;
+                    second.GreenMinimum = first.GreenMaximum = (byte)maxGreen.Position;
                     second.AlphaMinimum = first.AlphaMinimum;
                     second.RedMinimum = first.RedMinimum;
                     second.BlueMinimum = first.BlueMinimum;
                     break;
 
                 case Blue:
-                    second.BlueMinimum = first.BlueMaximum = (byte) maxBlue.Position;
+                    second.BlueMinimum = first.BlueMaximum = (byte)maxBlue.Position;
                     second.AlphaMinimum = first.AlphaMinimum;
                     second.RedMinimum = first.RedMinimum;
                     second.GreenMinimum = first.GreenMinimum;
@@ -573,12 +573,12 @@ namespace DDS3ModelLibrary.Textures.Processing.WuQuantizer
                 if (weight <= 0) continue;
 
                 var lookup = new Lookup
-                    {
-                        Alpha = (int) (Volume(cube, data.MomentsAlpha)/weight),
-                        Red = (int) (Volume(cube, data.MomentsRed)/weight),
-                        Green = (int) (Volume(cube, data.MomentsGreen)/weight),
-                        Blue = (int) (Volume(cube, data.MomentsBlue)/weight)
-                    };
+                {
+                    Alpha = (int)(Volume(cube, data.MomentsAlpha) / weight),
+                    Red = (int)(Volume(cube, data.MomentsRed) / weight),
+                    Green = (int)(Volume(cube, data.MomentsGreen) / weight),
+                    Blue = (int)(Volume(cube, data.MomentsBlue) / weight)
+                };
                 lookups.Lookups.Add(lookup);
             }
             return lookups;

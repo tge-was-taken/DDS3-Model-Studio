@@ -17,10 +17,10 @@
         /// </summary>
         public Endianness Endianness { get; }
 
-        internal BinarySourceInfo( string filePath, long offset, Endianness endianness )
+        internal BinarySourceInfo(string filePath, long offset, Endianness endianness)
         {
-            FilePath   = filePath;
-            Offset     = offset;
+            FilePath = filePath;
+            Offset = offset;
             Endianness = endianness;
         }
     }

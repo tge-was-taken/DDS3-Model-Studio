@@ -1,35 +1,35 @@
-﻿using System;
+﻿using DDS3ModelLibrary.Textures.Exchange.DDS;
+using System;
 using System.Drawing;
 using System.IO;
-using DDS3ModelLibrary.Textures.Exchange.DDS;
 
 namespace DDS3ModelLibrary.Textures.Utilities
 {
     public static class TextureImportHelper
     {
-        public static Bitmap ImportBitmap( string path )
+        public static Bitmap ImportBitmap(string path)
         {
             try
             {
-                return new Bitmap( path );
+                return new Bitmap(path);
             }
-            catch ( Exception )
+            catch (Exception)
             {
-                var ext = Path.GetExtension( path ).ToLowerInvariant();
-                switch ( ext )
+                var ext = Path.GetExtension(path).ToLowerInvariant();
+                switch (ext)
                 {
                     case ".dds":
-                        return DDSCodec.DecompressImage( path );
+                        return DDSCodec.DecompressImage(path);
                     default:
-                        return new Bitmap( 32, 32 );
+                        return new Bitmap(32, 32);
                 }
             }
         }
 
-        public static Texture ImportTexture( string path )
+        public static Texture ImportTexture(string path)
         {
-            var bitmap = ImportBitmap( path );
-            return new Texture( bitmap, PS2.GS.GSPixelFormat.PSMT8, Path.GetFileNameWithoutExtension( path ) );
+            var bitmap = ImportBitmap(path);
+            return new Texture(bitmap, PS2.GS.GSPixelFormat.PSMT8, Path.GetFileNameWithoutExtension(path));
         }
     }
 }
