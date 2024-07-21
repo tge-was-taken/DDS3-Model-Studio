@@ -8,9 +8,9 @@ namespace DDS3ModelLibrary.Models.Processing
 
         public string Name { get; set; }
 
-        public Dictionary<string, List<string>> Properties { get; }
+        public Dictionary<string, IList<string>> Properties { get; }
 
-        public List<string> this[string key]
+        public IList<string> this[string key]
         {
             get
             {
@@ -21,7 +21,7 @@ namespace DDS3ModelLibrary.Models.Processing
 
         public TagName()
         {
-            Properties = new Dictionary<string, List<string>>();
+            Properties = new Dictionary<string, IList<string>>();
         }
 
         /// <summary>

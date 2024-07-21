@@ -52,10 +52,13 @@ namespace DDS3ModelLibrary.Models
 
         private static int AddTexture(string baseDirectory, string filePath, Dictionary<string, int> textureLookup, TexturePack texturePack, float scale)
         {
-            if (!textureLookup.TryGetValue(filePath, out var textureId))
+            var filePathBase = Path.ChangeExtension(filePath, null);
+
+            if (!textureLookup.TryGetValue(filePathBase, out var textureId))
             {
                 var fileExists = true;
-                var path = filePath;
+                var isTmx = true;
+                var path = Path.ChangeExtension(filePathBase, ".tmx");
 
                 if (!File.Exists(path))
                 {
@@ -65,14 +68,37 @@ namespace DDS3ModelLibrary.Models
                         fileExists = false;
                 }
 
-                var bitmap = fileExists ? TextureImportHelper.ImportBitmap(path) : new Bitmap(32, 32);
-                if (scale != 1)
-                    bitmap = new Bitmap(bitmap, new Size((int)(bitmap.Width / scale), (int)(bitmap.Height / scale)));
-                var name = Path.GetFileNameWithoutExtension(path);
-                var texture = new Texture(bitmap, PS2.GS.GSPixelFormat.PSMT8, name);
+                if (!fileExists)
+                {
+                    isTmx = false;
+                    path = Path.ChangeExtension(filePathBase, ".png");
+
+                    if (!File.Exists(path))
+                    {
+                        // Assume it's a relative path
+                        path = Path.Combine(baseDirectory, path);
+                        if (!File.Exists(path))
+                            fileExists = false;
+                    }
+                }
+
+                Texture texture;
+                if (isTmx)
+                {
+                    texture = new Texture(path);
+                }
+                else
+                {
+                    var bitmap = fileExists ? TextureImportHelper.ImportBitmap(path) : new Bitmap(32, 32);
+                    if (scale != 1)
+                        bitmap = new Bitmap(bitmap, new Size((int)(bitmap.Width / scale), (int)(bitmap.Height / scale)));
+                    var name = Path.GetFileNameWithoutExtension(path);
+                    texture = new Texture(bitmap, PS2.GS.GSPixelFormat.PSMT8, name);
+                }
+
                 textureId = texturePack.Count;
                 texturePack.Add(texture);
-                textureLookup[filePath] = textureId;
+                textureLookup[filePathBase] = textureId;
             }
 
             return textureId;

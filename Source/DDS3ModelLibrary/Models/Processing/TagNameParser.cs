@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace DDS3ModelLibrary.Models.Processing
@@ -14,59 +15,33 @@ namespace DDS3ModelLibrary.Models.Processing
             ParsingPropertyDone
         }
 
-        private static readonly Regex sRegex = new Regex(@"(@?[^@^\()^,]+)", RegexOptions.Compiled);
+        private static readonly Regex sPattern = new Regex(@"@(?<tagName>.+?)\((?<tagValues>.+?)?\)", RegexOptions.Compiled);
+        private static readonly Regex sVerbosePattern = new Regex(@"(_dds3tag_(?<tagName>.+?)_(?<tagValues>.+?)?_dds3tagend)", RegexOptions.Compiled);
 
         public TagName Parse(string input)
         {
-            var matches = sRegex.Matches(input);
-            var state = State.ParsingName;
-
-            var tagName = new TagName();
-            string propertyName = null;
-            List<string> propertyArguments = null;
-
-            foreach (Match match in matches)
+            var matches = sPattern.Matches(input);
+            var verbosePattern = false;
+            if (!matches.Any())
             {
-                switch (state)
-                {
-                    case State.ParsingName:
-                        if (match.Value.StartsWith("@"))
-                        {
-                            goto case State.ParsingPropertyName;
-                        }
-                        else
-                        {
-                            if (tagName.Name == null)
-                                tagName.Name = match.Value;
-                            else
-                                throw new TagNameParseException("Expected property name");
-                        }
-
-                        break;
-
-                    case State.ParsingPropertyName:
-                        propertyName = match.Value.Substring(1);
-                        propertyArguments = new List<string>();
-                        state = State.ParsingPropertyArguments;
-                        break;
-
-                    case State.ParsingPropertyArguments:
-                        if (match.Value.StartsWith("@"))
-                            goto case State.ParsingPropertyDone;
-
-                        propertyArguments.Add(match.Value);
-                        break;
-
-                    case State.ParsingPropertyDone:
-                        tagName[propertyName] = propertyArguments;
-                        goto case State.ParsingPropertyName;
-
-                }
+                matches = sVerbosePattern.Matches(input);
+                verbosePattern = true;
             }
 
-            if (state == State.ParsingPropertyArguments)
+            var state = State.ParsingName;
+
+            var tagName = new TagName()
             {
-                tagName[propertyName] = propertyArguments;
+                Name = input.Substring(0, matches.First().Index)
+            };
+            foreach (Match match in matches)
+            {
+                var seperator = verbosePattern ?
+                    "dds3tagsep" :
+                    ",";
+                var name = match.Groups["tagName"].Value;
+                var values = match.Groups["tagValues"].Value.Split(seperator);
+                tagName.Properties.Add(name, values);
             }
 
             return tagName;

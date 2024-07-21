@@ -1,8 +1,10 @@
 ﻿using AtlusFileSystemLibrary;
 using AtlusFileSystemLibrary.FileSystems.LB;
 using DDS3ModelLibrary.Models;
+using DDS3ModelLibrary.Models.Conversion;
 using DDS3ModelLibrary.Models.Field;
 using DDS3ModelLibrary.Motions;
+using DDS3ModelLibrary.Textures;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -19,21 +21,31 @@ namespace DDS3ModelLibraryCLI
     {
         private static void MatchingTests()
         {
-            // Matches
-            //var tb = new TexturePack(@"F:\Projects\Nocturne\Dump\DDS3\model\field\_test\player_a.TB");
-            //tb.Save("player_a_new.TB");
+           // Matches
+           var tb = new TexturePack(@"F:\Projects\Nocturne\Dump\DDS3\model\field\_test\player_a.TB");
+           tb.Save("player_a_new.TB");
+
+           // Matches
+           var mb = new Model(@"F:\Projects\Nocturne\Dump\DDS3\model\field\_test\player_a.MB");
+           mb.Save("player_a_new.MB");
 
             // Matches
-            //var mb = new Model(@"F:\Projects\Nocturne\Dump\DDS3\model\field\_test\player_a.MB");
-            //mb.Save("player_a_new.MB");
+           var ab = new MotionPack(@"F:\Projects\Nocturne\Dump\DDS3\model\field\_test\player_a_0.AB");
+           ab.Save("player_a_0_new.AB");
+        }
 
-            //var ab = new MotionPack(@"F:\Projects\Nocturne\Dump\DDS3\model\field\_test\player_a_0.AB");
-            //ab.Save("player_a_0_new.AB");
+        private static void ReimportTests()
+        {
+            var pb = new ModelPack(@"F:\Projects\Nocturne\Dump\DDS3\model\field\player_a.PB");
+            AssimpModelExporter.Instance.Export(pb.Models[0], @"player_a.DAE", pb.TexturePack);
+            pb.Replace("player_a.DAE", enableOverlays: true);
+            pb.Save("player_a_new.PB");
         }
 
         private static void Main(string[] args)
         {
-            MatchingTests();
+            //MatchingTests();
+            ReimportTests();
 
             //var resourcePath = @"..\..\..\..\..\Resources";;
 

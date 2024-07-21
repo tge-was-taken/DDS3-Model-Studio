@@ -20,7 +20,10 @@ namespace DDS3ModelLibrary.Models.Conversion
                 Directory.CreateDirectory(texturesPath);
 
                 for (var i = 0; i < textures.Count; i++)
-                    textures[i].GetBitmap().Save(Path.Combine(texturesPath, FormatTextureName(i)));
+                {
+                    textures[i].Save(Path.Combine(texturesPath, FormatTextureName(i) + ".tmx"));
+                    textures[i].GetBitmap().Save(Path.Combine(texturesPath, FormatTextureName(i) + ".png"));
+                }
             }
 
             var aiScene = ConvertToScene(model, config);
@@ -43,7 +46,7 @@ namespace DDS3ModelLibrary.Models.Conversion
                     aiMaterial.TextureDiffuse = new Assimp.TextureSlot
                     {
                         TextureType = Assimp.TextureType.Diffuse,
-                        FilePath = Path.Combine("textures", FormatTextureName(material.TextureId.Value))
+                        FilePath = Path.Combine("textures", FormatTextureName(material.TextureId.Value) + ".png")
                     };
                 }
 
@@ -330,17 +333,17 @@ namespace DDS3ModelLibrary.Models.Conversion
             aiMesh.Bones.Add(aiBone);
         }
 
-        private static string FormatTextureName(int textureIndex) => $"texture_{textureIndex:D2}.png";
+        private static string FormatTextureName(int textureIndex) => $"texture_{textureIndex:D2}";
 
         private static string FormatMaterialName(Material material, int index)
         {
             var name = $"material_{index:D2}";
 
             if (MaterialPresetStore.TryGetPresetId(material, out var presetId))
-                name += $"@ps({presetId})";
+                name += $"_dds3tag_ps_{presetId}_dds3tagend";
 
             if (material.OverlayTextureIds != null)
-                name += $"@ovl({FormatTextureName(material.OverlayTextureIds[0])},{FormatTextureName(material.OverlayTextureIds[1])})";
+                name += $"_dds3tag_ovl_{FormatTextureName(material.OverlayTextureIds[0])}_dds3tagsep_{FormatTextureName(material.OverlayTextureIds[1])}_dds3tagend";
 
             return name;
         }
