@@ -8,6 +8,18 @@ using Quaternion = Assimp.Quaternion;
 
 namespace DDS3ModelLibrary.Models.Utilities
 {
+    public struct BoneWeight
+    {
+        public Bone Bone;
+        public float Weight;
+
+        public void Deconstruct(out Bone bone, out float weight)
+        {
+            bone = Bone;
+            weight = Weight;
+        }
+    }
+
     public static class AssimpExtensions
     {
         public static Vector3D ToAssimp(this Vector3 value) => new Vector3D(value.X, value.Y, value.Z);
@@ -105,21 +117,21 @@ namespace DDS3ModelLibrary.Models.Utilities
         /// </summary>
         /// <param name="mesh"></param>
         /// <returns></returns>
-        public static List<(Bone Bone, float Weight)>[] GetVertexWeights(this Assimp.Mesh mesh)
+        public static List<BoneWeight>[] GetVertexWeights(this Assimp.Mesh mesh)
         {
             // Map out the vertex weights for each vertex
-            var vertexWeights = new List<(Bone, float)>[mesh.VertexCount];
+            var vertexWeights = new List<BoneWeight>[mesh.VertexCount];
             var missingVertexWeights = new List<int>();
             for (int i = 0; i < mesh.VertexCount; i++)
             {
-                var weights = new List<(Bone, float)>();
+                var weights = new List<BoneWeight>();
                 foreach (var bone in mesh.Bones)
                 {
                     foreach (var vertexWeight in bone.VertexWeights)
                     {
                         if (vertexWeight.VertexID == i)
                         {
-                            weights.Add((bone, vertexWeight.Weight));
+                            weights.Add(new BoneWeight() { Bone = bone, Weight = vertexWeight.Weight });
                         }
                     }
                 }
@@ -137,41 +149,44 @@ namespace DDS3ModelLibrary.Models.Utilities
             foreach (var i in missingVertexWeights)
             {
                 var position = mesh.Vertices[i];
-                var range = 0.001f;
-                List<(Bone, float)> weights = null;
+                var closestVertexIndex = FindClosestVertexWithWeights(mesh, i, vertexWeights);
 
-                while (weights == null)
+                if (closestVertexIndex != -1)
                 {
-                    for (var j = 0; j < mesh.Vertices.Count; j++)
-                    {
-                        if (missingVertexWeights.Contains(j))
-                            continue;
-
-                        // ＤＥＬＴＡ
-                        var otherPosition = mesh.Vertices[j];
-                        var delta = position - otherPosition;
-                        if (IsWithinRange(delta, range))
-                        {
-                            weights = vertexWeights[j];
-                            break;
-                        }
-                    }
-
-                    range *= 2f;
+                    vertexWeights[i] = vertexWeights[closestVertexIndex];
                 }
-
-                vertexWeights[i] = weights;
+                else
+                {
+                    vertexWeights[i] = new List<BoneWeight>() { new BoneWeight() { Bone = mesh.Bones.First(), Weight = 0 } };
+                }
             }
 
             Debug.Assert(vertexWeights.All(x => x != null));
             return vertexWeights;
         }
 
-        private static bool IsWithinRange(Vector3D position, float range)
+        private static int FindClosestVertexWithWeights(Assimp.Mesh mesh, int currentIndex, List<BoneWeight>[] vertexWeights)
         {
-            return (position.X < 0 ? position.X >= -range : position.X <= range) &&
-                   (position.Y < 0 ? position.Y >= -range : position.Y <= range) &&
-                   (position.Z < 0 ? position.Z >= -range : position.Z <= range);
+            var position = mesh.Vertices[currentIndex];
+            var closestIndex = -1;
+            var closestDistance = float.MaxValue;
+
+            for (int j = 0; j < mesh.VertexCount; j++)
+            {
+                if (vertexWeights[j] != null)
+                {
+                    var otherPosition = mesh.Vertices[j];
+                    var distance = (position - otherPosition).LengthSquared();
+
+                    if (distance < closestDistance)
+                    {
+                        closestIndex = j;
+                        closestDistance = distance;
+                    }
+                }
+            }
+
+            return closestIndex;
         }
     }
 }

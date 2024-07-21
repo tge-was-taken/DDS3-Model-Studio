@@ -53,7 +53,7 @@ namespace DDS3ModelLibrary.IO
             writer.Write((int)ResourceDescriptor.FileType);
             writer.Write((uint)ResourceDescriptor.Identifier);
             writer.Write(0); // dummy data size
-            writer.ScheduleWriteOffsetAligned(-1, 16, () =>
+            writer.ScheduleWriteOffsetAligned(-1, 16, false, () =>
             {
                 // Write data size
                 var relocationTableStart = writer.Position;

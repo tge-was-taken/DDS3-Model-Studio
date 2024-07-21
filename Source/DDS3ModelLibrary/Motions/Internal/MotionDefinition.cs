@@ -7,7 +7,7 @@ namespace DDS3ModelLibrary.Motions.Internal
     {
         BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
 
-        public int Duration { get; set; }
+        public int Duration { get; set; } 
 
         public List<KeyframeTrack> Tracks { get; }
 

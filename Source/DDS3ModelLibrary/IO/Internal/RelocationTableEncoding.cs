@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace DDS3ModelLibrary.IO.Internal
 {
@@ -61,16 +62,20 @@ namespace DDS3ModelLibrary.IO.Internal
 
         public static byte[] Encode(IList<int> addressLocations, int addressBaseOffset)
         {
+            var sortedAddressLocations = addressLocations
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
             int prevRelocSum = 0;
             List<byte> relocationTable = new List<byte>();
 
             // Detect address sequence runs
-            List<AddressSequence> sequences = DetectAddressSequenceRuns(addressLocations);
+            List<AddressSequence> sequences = DetectAddressSequenceRuns(sortedAddressLocations);
 
-            for (int addressLocationIndex = 0; addressLocationIndex < addressLocations.Count; addressLocationIndex++)
+            for (int addressLocationIndex = 0; addressLocationIndex < sortedAddressLocations.Count; addressLocationIndex++)
             {
                 int seqIdx = sequences.FindIndex(item => item.AddressLocationListStartIndex == addressLocationIndex);
-                int reloc = (addressLocations[addressLocationIndex] - prevRelocSum) - addressBaseOffset;
+                int reloc = (sortedAddressLocations[addressLocationIndex] - prevRelocSum) - addressBaseOffset;
 
                 // Check if a matching sequence was found
                 if (seqIdx == -1)

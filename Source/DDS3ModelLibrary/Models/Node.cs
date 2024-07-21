@@ -6,6 +6,7 @@ using System.Numerics;
 
 namespace DDS3ModelLibrary.Models
 {
+    // sdfModelNode_t
     public class Node : IBinarySerializable
     {
         // For debugging only, only valid when read from a file.
@@ -260,7 +261,7 @@ namespace DDS3ModelLibrary.Models
             writer.ScheduleWriteObjectOffsetAligned(BoundingBox, 16);
 
             if (Geometry != null)
-                writer.ScheduleWriteObjectOffsetAligned(Geometry, 16);
+                writer.ScheduleWriteObjectOffsetAligned(Geometry, 8);
             else if (DeprecatedMeshList != null)
                 writer.ScheduleWriteObjectOffsetAligned(DeprecatedMeshList, 16);
             else

@@ -112,7 +112,7 @@ namespace DDS3ModelLibrary.Models
                 writer.PushBaseOffset(start + 16);
 
                 // Write relocation table last (lowest priority)
-                writer.ScheduleWriteOffsetAligned(-1, 16, () =>
+                writer.ScheduleWriteOffsetAligned(-1, 16, false, () =>
                 {
                     // Encode & write relocation table
                     var encodedRelocationTable =
@@ -151,8 +151,14 @@ namespace DDS3ModelLibrary.Models
                     writer.WriteObject(Materials[i], i);
             });
 
-            var morpherMeshCount = Nodes.Where(x => x.Geometry != null && x.Geometry.Meshes?.Count > 0)
-                                        .Sum(x => x.Geometry.Meshes.Count(y => MeshTypeTraits.HasMorphers(y.Type)));
+            var morpherMeshCount = Nodes
+                .Where(
+                    x => x.Geometry != null && 
+                    x.Geometry.MeshLists.Sum(y => y?.Count ?? 0) > 0)
+                .Sum(x => x.Geometry.MeshLists
+                    .Where(meshList => meshList != null)
+                    .SelectMany(meshList => meshList.AsEnumerable())
+                    .Count(mesh => MeshTypeTraits.HasMorphers(mesh.Type)));
 
             writer.Write(morpherMeshCount);
 
@@ -170,6 +176,7 @@ namespace DDS3ModelLibrary.Models
                             writer.Align(4);
                             writer.Write(i);
                         }
+                        writer.Align(32);
                     });
                 }
 

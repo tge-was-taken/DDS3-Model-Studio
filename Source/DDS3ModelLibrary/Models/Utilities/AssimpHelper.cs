@@ -156,7 +156,10 @@ namespace DDS3ModelLibrary.Models.Utilities
                 // Get faces that fit inside the new mesh
                 foreach (var face in remainingFaces)
                 {
-                    var faceUsedBones = face.Indices.SelectMany(y => vertexWeights[y].Select(z => z.Item1)).ToList();
+                    var faceUsedBones = face.Indices
+                        .SelectMany(y => vertexWeights[y].Select(z => z.Bone))
+                        .Distinct()
+                        .ToList();
                     var faceUniqueUsedBoneCount = faceUsedBones.Count(x => !usedBones.Contains(x));
                     if ((usedBones.Count + faceUniqueUsedBoneCount) > maxBoneCount)
                     {
@@ -174,10 +177,17 @@ namespace DDS3ModelLibrary.Models.Utilities
 
                 if (faces.Count == 0)
                 {
-                    if (remainingFaces.All(x => x.Indices.SelectMany(y => vertexWeights[y].Select(z => z.Item1)).Count() > maxBoneCount))
+                    if (remainingFaces
+                        .All(x => x.Indices.SelectMany(y => vertexWeights[y].Select(z => z.Bone))
+                        .Distinct()
+                        .Count() > maxBoneCount))
                     {
                         // Need to reduce weights per face
                         throw new NotSupportedException("Too many weights per face");
+                    }
+                    else
+                    {
+                        throw new Exception("help");
                     }
                 }
 
@@ -206,7 +216,7 @@ namespace DDS3ModelLibrary.Models.Utilities
                             // This vertex is new
 #if DEBUG
                             for (int i = 0; i < vertex.Weights.Count; i++)
-                                Debug.Assert(usedBones.Contains(vertex.Weights[i].Item1));
+                                Debug.Assert(usedBones.Contains(vertex.Weights[i].Bone));
 #endif
                             cacheIndex = vertexCache.Count;
                             vertexCache.Add(vertex);
@@ -314,14 +324,14 @@ namespace DDS3ModelLibrary.Models.Utilities
             return subMeshes;
         }
 
-        private static int FindVertexCacheIndex(Assimp.Mesh mesh, int i, List<(Bone, float)>[] vertexWeights, List<Vertex> vertexCache, out Vertex vertex)
+        private static int FindVertexCacheIndex(Assimp.Mesh mesh, int i, List<BoneWeight>[] vertexWeights, List<Vertex> vertexCache, out Vertex vertex)
         {
             var position = mesh.HasVertices ? mesh.Vertices[i] : new Vector3D();
             var normal = mesh.HasNormals ? mesh.Normals[i] : new Vector3D();
             var texCoord = mesh.HasTextureCoords(0) ? mesh.TextureCoordinateChannels[0][i] : new Vector3D();
             var texCoord2 = mesh.HasTextureCoords(1) ? mesh.TextureCoordinateChannels[1][i] : new Vector3D();
             var color = mesh.HasVertexColors(0) ? mesh.VertexColorChannels[0][i] : new Color4D();
-            var weights = mesh.HasBones ? vertexWeights[i] : new List<(Bone, float)>();
+            var weights = mesh.HasBones ? vertexWeights[i] : new List<BoneWeight>();
             var cacheIndex = vertexCache.FindIndex(y => y.Position == position && y.Normal == normal && y.TexCoord == texCoord &&
                                                          y.TexCoord2 == texCoord2 && y.Color == color &&
                                                          y.Weights.SequenceEqual(weights));
@@ -396,9 +406,9 @@ namespace DDS3ModelLibrary.Models.Utilities
             public readonly Vector3D TexCoord;
             public readonly Vector3D TexCoord2;
             public readonly Color4D Color;
-            public readonly List<(Bone Bone, float Weight)> Weights;
+            public readonly List<BoneWeight> Weights;
 
-            public Vertex(Vector3D position, Vector3D normal, Vector3D texCoord, Vector3D texCoord2, Color4D color, List<(Bone, float)> weights)
+            public Vertex(Vector3D position, Vector3D normal, Vector3D texCoord, Vector3D texCoord2, Color4D color, List<BoneWeight> weights)
             {
                 Position = position;
                 Normal = normal;

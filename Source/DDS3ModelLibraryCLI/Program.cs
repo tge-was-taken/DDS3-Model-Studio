@@ -1,7 +1,10 @@
 ﻿using AtlusFileSystemLibrary;
 using AtlusFileSystemLibrary.FileSystems.LB;
 using DDS3ModelLibrary.Models;
+using DDS3ModelLibrary.Models.Conversion;
 using DDS3ModelLibrary.Models.Field;
+using DDS3ModelLibrary.Motions;
+using DDS3ModelLibrary.Textures;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
@@ -16,12 +19,55 @@ namespace DDS3ModelLibraryCLI
 {
     internal class Program
     {
+        private static void MatchingTests()
+        {
+            // Matches
+            //var tb = new TexturePack(@"F:\Projects\Nocturne\Dump\DDS3\model\field\_test\player_a.TB");
+            //tb.Save("player_a_new.TB");
+
+            // Matches
+            //var mb = new Model(@"F:\Projects\Nocturne\Dump\DDS3\model\field\_test\player_a.MB");
+            //mb.Save("player_a_new.MB");
+
+            var ab = new MotionPack(@"F:\Projects\Nocturne\Dump\DDS3\model\field\_test\player_a_0.AB");
+            ab.Save("player_a_0_new.AB");
+        }
+
         private static void Main(string[] args)
         {
-            //var resourcePath = @"..\..\..\..\..\Resources";;
-            var model = new Model(@"F:\Projects\Nocturne\Dump\DDS3\model\field\wpc.MB");
-            model.Save("wpc_new.MB");
+            MatchingTests();
 
+            //var resourcePath = @"..\..\..\..\..\Resources";;
+
+            //var model = new ModelPack(@"F:\Projects\Nocturne\Dump\DDS3\model\field\player_a.PB");
+            ////FbxModelExporter.Instance.Export(model.Models[0], "player_a.fbx", new FbxModelExporterConfig()
+            ////{
+            ////    MergeMeshes = true,
+            ////}, model.TexturePack);
+            //AssimpModelExporter.Instance.Export(model.Models[0], "player_a.dae", new AssimpModelExporter.Config()
+            //{
+
+            //}, model.TexturePack);
+            ////model.Replace("player_A.fbx");
+            //model.Replace("player_A_new.fbx");
+            //model.Save(@"F:\Projects\Nocturne\Hostfs\dds3data\model\field\player_a.PB");
+
+            //var fieldModel2 = new FieldScene(@"D:\Software\Games\PS2\Shin Megami Tensei - Digital Devil Saga (USA)\DDS3\fld\f\f010\f010_002\02_00.F1");
+
+            //var fieldModel = new FieldScene(@"F:\Projects\Nocturne\Hostfs\dds3data\fld\f\f015\f015_006.LB_unpacked\02_00.F1");
+            //fieldModel.Objects.RemoveAll(x => x.ResourceType == FieldObjectResourceType.Model);
+            //foreach (var item in fieldModel2.Objects.Where(x =>x.ResourceType == FieldObjectResourceType.Model))
+            //{
+            //    fieldModel.Objects.Add(
+            //        new FieldObject() 
+            //        { 
+            //            Id = fieldModel.Objects.Max(x => x.Id) + 1, 
+            //            Name = item.Name,
+            //            Transform = item.Transform, 
+            //            Resource = item.Resource
+            //        });
+            //}
+            //fieldModel.Save(@"F:\Projects\Nocturne\Hostfs\dds3data\fld\f\f015\f015_006.LB_unpacked\02_00.F1");
 
             #region Old stuff
             //{
@@ -552,22 +598,33 @@ namespace DDS3ModelLibraryCLI
                         if (node.Geometry == null)
                             continue;
 
-                        if (node.Geometry.Meshes != null)
+                        if (node.Geometry.MeshLists[0] != null)
                         {
-                            for (var meshIndex = 0; meshIndex < node.Geometry.Meshes.Count; meshIndex++)
+                            for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[0].Count; meshIndex++)
                             {
-                                var mesh = node.Geometry.Meshes[meshIndex];
+                                var mesh = node.Geometry.MeshLists[0][meshIndex];
                                 writer.WriteLine($"// node '{node.Name}' mesh ({mesh.Type}) #{meshIndex}");
                                 WriteMesh(writer, model, node, mesh, meshIndex, false, ref vertexBaseIndex);
                             }
                         }
 
-                        if (node.Geometry.TranslucentMeshes != null)
+                        if (node.Geometry.MeshLists[1] != null)
                         {
-                            for (var meshIndex = 0; meshIndex < node.Geometry.TranslucentMeshes.Count; meshIndex++)
+                            for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[1].Count; meshIndex++)
                             {
-                                var mesh = node.Geometry.TranslucentMeshes[meshIndex];
-                                writer.WriteLine($"// node '{node.Name}' mesh(XLU) ({mesh.Type}) #{meshIndex}");
+                                var mesh = node.Geometry.MeshLists[1][meshIndex];
+                                writer.WriteLine($"// node '{node.Name}' mesh(2) ({mesh.Type}) #{meshIndex}");
+                                WriteMesh(writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex);
+                            }
+                        }
+
+
+                        if (node.Geometry.MeshLists[2] != null)
+                        {
+                            for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[3].Count; meshIndex++)
+                            {
+                                var mesh = node.Geometry.MeshLists[3][meshIndex];
+                                writer.WriteLine($"// node '{node.Name}' mesh(3) ({mesh.Type}) #{meshIndex}");
                                 WriteMesh(writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex);
                             }
                         }
@@ -587,22 +644,33 @@ namespace DDS3ModelLibraryCLI
                     if (node.Geometry == null)
                         continue;
 
-                    if (node.Geometry.Meshes != null)
+                    if (node.Geometry.MeshLists[0] != null)
                     {
-                        for (var meshIndex = 0; meshIndex < node.Geometry.Meshes.Count; meshIndex++)
+                        for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[0].Count; meshIndex++)
                         {
-                            var mesh = node.Geometry.Meshes[meshIndex];
+                            var mesh = node.Geometry.MeshLists[0][meshIndex];
                             writer.WriteLine($"// node '{node.Name}' mesh ({mesh.Type}) #{meshIndex}");
                             WriteMesh(writer, model, node, mesh, meshIndex, false, ref vertexBaseIndex);
                         }
                     }
 
-                    if (node.Geometry.TranslucentMeshes != null)
+                    if (node.Geometry.MeshLists[1] != null)
                     {
-                        for (var meshIndex = 0; meshIndex < node.Geometry.TranslucentMeshes.Count; meshIndex++)
+                        for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[0].Count; meshIndex++)
                         {
-                            var mesh = node.Geometry.TranslucentMeshes[meshIndex];
-                            writer.WriteLine($"// node '{node.Name}' mesh(XLU) ({mesh.Type}) #{meshIndex}");
+                            var mesh = node.Geometry.MeshLists[1][meshIndex];
+                            writer.WriteLine($"// node '{node.Name}' mesh(2) ({mesh.Type}) #{meshIndex}");
+                            WriteMesh(writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex);
+                        }
+                    }
+
+
+                    if (node.Geometry.MeshLists[2] != null)
+                    {
+                        for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[2].Count; meshIndex++)
+                        {
+                            var mesh = node.Geometry.MeshLists[2][meshIndex];
+                            writer.WriteLine($"// node '{node.Name}' mesh(3) ({mesh.Type}) #{meshIndex}");
                             WriteMesh(writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex);
                         }
                     }
@@ -631,22 +699,32 @@ namespace DDS3ModelLibraryCLI
                         if (node.Geometry == null)
                             continue;
 
-                        if (node.Geometry.Meshes != null)
+                        if (node.Geometry.MeshLists[0] != null)
                         {
-                            for (var meshIndex = 0; meshIndex < node.Geometry.Meshes.Count; meshIndex++)
+                            for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[0].Count; meshIndex++)
                             {
-                                var mesh = node.Geometry.Meshes[meshIndex];
+                                var mesh = node.Geometry.MeshLists[0][meshIndex];
                                 writer.WriteLine($"// node '{node.Name}' mesh ({mesh.Type}) #{meshIndex}");
                                 WriteMesh(writer, model, node, mesh, meshIndex, false, ref vertexBaseIndex, obj);
                             }
                         }
 
-                        if (node.Geometry.TranslucentMeshes != null)
+                        if (node.Geometry.MeshLists[1] != null)
                         {
-                            for (var meshIndex = 0; meshIndex < node.Geometry.TranslucentMeshes.Count; meshIndex++)
+                            for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[1].Count; meshIndex++)
                             {
-                                var mesh = node.Geometry.TranslucentMeshes[meshIndex];
-                                writer.WriteLine($"// node '{node.Name}' mesh(XLU) ({mesh.Type}) #{meshIndex}");
+                                var mesh = node.Geometry.MeshLists[1][meshIndex];
+                                writer.WriteLine($"// node '{node.Name}' mesh(2) ({mesh.Type}) #{meshIndex}");
+                                WriteMesh(writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex, obj);
+                            }
+                        }
+
+                        if (node.Geometry.MeshLists[2] != null)
+                        {
+                            for (var meshIndex = 0; meshIndex < node.Geometry.MeshLists[2].Count; meshIndex++)
+                            {
+                                var mesh = node.Geometry.MeshLists[2][meshIndex];
+                                writer.WriteLine($"// node '{node.Name}' mesh(3) ({mesh.Type}) #{meshIndex}");
                                 WriteMesh(writer, model, node, mesh, meshIndex, true, ref vertexBaseIndex, obj);
                             }
                         }

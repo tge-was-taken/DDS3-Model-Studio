@@ -390,10 +390,11 @@ namespace DDS3ModelLibrary.Models
             var aiContext = new Assimp.AssimpContext();
             //    aiContext.SetConfig( new Assimp.Configs.FBXPreservePivotsConfig( false ) );
             aiContext.SetConfig(new Assimp.Configs.VertexBoneWeightLimitConfig(4));
+            //aiContext.SetConfig(new Assimp.Configs.MaxBoneCountConfig(4));
             var aiScene = aiContext.ImportFile(filePath, Assimp.PostProcessSteps.JoinIdenticalVertices |
                                                           Assimp.PostProcessSteps.FindInvalidData | Assimp.PostProcessSteps.FlipUVs |
                                                           Assimp.PostProcessSteps.ImproveCacheLocality |
-                                                          Assimp.PostProcessSteps.Triangulate | Assimp.PostProcessSteps.LimitBoneWeights
+                                                          Assimp.PostProcessSteps.Triangulate | Assimp.PostProcessSteps.LimitBoneWeights //| Assimp.PostProcessSteps.SplitByBoneCount
                                               );
 
             // Clear stuff we're going to replace
@@ -549,7 +550,9 @@ namespace DDS3ModelLibrary.Models
                         if (node.Geometry == null)
                             node.Geometry = new Geometry();
 
-                        node.Geometry.Meshes.Add(mesh);
+                        if (node.Geometry.MeshLists[0] == null)
+                            node.Geometry.MeshLists[0] = new MeshList();
+                        node.Geometry.MeshLists[0].Add(mesh);
                     }
                 }
 

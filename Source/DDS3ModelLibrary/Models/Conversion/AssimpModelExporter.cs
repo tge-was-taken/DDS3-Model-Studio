@@ -65,6 +65,9 @@ namespace DDS3ModelLibrary.Models.Conversion
 
                     if (node.Geometry.TranslucentMeshes != null)
                         ConvertMeshList(node.Geometry.TranslucentMeshes, node, i, model.Nodes, aiScene, aiNode);
+
+                    if (node.Geometry.MeshList3 != null)
+                        ConvertMeshList(node.Geometry.MeshList3, node, i, model.Nodes, aiScene, aiNode);
                 }
 
                 aiNode.Parent.Children.Add(aiNode);

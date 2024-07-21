@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -23,14 +24,17 @@ namespace DDS3ModelLibrary.IO.Common
 
             public int Priority { get; }
 
+            public bool Relocatable { get; }
+
             public object Object { get; }
 
-            public ScheduledWrite(long position, long baseOffset, Func<long> action, int priority, object obj)
+            public ScheduledWrite(long position, long baseOffset, Func<long> action, int priority, bool relocatable, object obj)
             {
                 Position = position;
                 BaseOffset = baseOffset;
                 Action = action;
                 Priority = priority;
+                Relocatable = relocatable;
                 Object = obj;
             }
         }
@@ -453,9 +457,11 @@ namespace DDS3ModelLibrary.IO.Common
 
         public void ScheduleWriteOffsetAligned(int alignment, Action action) => ScheduleWriteOffsetAligned(0, alignment, action);
 
-        public void ScheduleWriteOffsetAligned(int priority, int alignment, Action action)
+        public void ScheduleWriteOffsetAligned(int priority, int alignment, Action action) => ScheduleWriteOffsetAligned(priority, alignment, true, action);
+
+        public void ScheduleWriteOffsetAligned(int priority, int alignment, bool relocatable, Action action)
         {
-            ScheduleWriteOffset(priority, null, () =>
+            ScheduleWriteOffset(priority, relocatable, null, () =>
             {
                 Align(alignment);
                 long offset = BaseStream.Position;
@@ -475,7 +481,7 @@ namespace DDS3ModelLibrary.IO.Common
             }
             else
             {
-                ScheduleWriteOffset(0, list, () =>
+                ScheduleWriteOffset(0, true, list, () =>
                 {
                     Align(alignment);
                     long current = BaseStream.Position;
@@ -496,7 +502,7 @@ namespace DDS3ModelLibrary.IO.Common
             }
             else
             {
-                ScheduleWriteOffset(0, obj, () =>
+                ScheduleWriteOffset(0, true, obj, () =>
                 {
                     Align(alignment);
                     long current = BaseStream.Position;
@@ -517,7 +523,7 @@ namespace DDS3ModelLibrary.IO.Common
             }
             else
             {
-                ScheduleWriteOffset(0, obj, () =>
+                ScheduleWriteOffset(0, true, obj, () =>
                 {
                     Align(alignment);
                     long current = BaseStream.Position;
@@ -538,7 +544,7 @@ namespace DDS3ModelLibrary.IO.Common
             }
             else
             {
-                ScheduleWriteOffset(0, obj, () =>
+                ScheduleWriteOffset(0, true, obj, () =>
                 {
                     Align(alignment);
                     long current = BaseStream.Position;
@@ -557,7 +563,7 @@ namespace DDS3ModelLibrary.IO.Common
             if (list != null && (WriteEmptyLists || list.Count != 0))
             {
                 count = list.Count;
-                ScheduleWriteOffset(0, list, () =>
+                ScheduleWriteOffset(0, true, list, () =>
                 {
                     Align(alignment);
                     var offset = BaseStream.Position;
@@ -585,7 +591,7 @@ namespace DDS3ModelLibrary.IO.Common
             if (list != null && (WriteEmptyLists || list.Count != 0))
             {
                 count = list.Count;
-                ScheduleWriteOffset(0, list, () =>
+                ScheduleWriteOffset(0, true, list, () =>
                 {
                     Align(alignment);
                     long offset = BaseStream.Position;
@@ -634,31 +640,24 @@ namespace DDS3ModelLibrary.IO.Common
 
         private void DoScheduledOffsetWrites()
         {
-            int curPriority = 0;
-
             while (mScheduledWrites.Count > 0)
             {
-                var anyWritesDone = false;
-                var current = mScheduledWrites.First;
+                // Extract and sort the scheduled writes by priority
+                var sortedScheduledWrites = mScheduledWrites
+                    .AsEnumerable()
+                    .OrderByDescending(sw => sw.Priority)
+                    .ToList();
 
-                while (current != null)
+                // Clear the original linked list to allow new writes to be added during processing
+                mScheduledWrites.Clear();
+
+                // Execute each ScheduledWrite recursively,
+                // to ensure the order matches that of the original files.
+                foreach (var scheduledWrite in sortedScheduledWrites)
                 {
-                    var next = current.Next;
-
-                    if (current.Value.Priority == curPriority)
-                    {
-                        DoScheduledWrite(current.Value);
-                        mScheduledWrites.Remove(current);
-                        anyWritesDone = true;
-                    }
-
-                    current = next;
+                    DoScheduledWrite(scheduledWrite);
+                    DoScheduledOffsetWrites();
                 }
-
-                if (anyWritesDone)
-                    ++curPriority;
-                else
-                    --curPriority;
             }
         }
 
@@ -678,7 +677,8 @@ namespace DDS3ModelLibrary.IO.Common
         private void DoScheduledWrite(ScheduledWrite scheduledWrite)
         {
             long offsetPosition = scheduledWrite.Position;
-            mOffsetPositions.Add(offsetPosition);
+            if (scheduledWrite.Relocatable)
+                mOffsetPositions.Add(offsetPosition);
 
             long offset;
             if (scheduledWrite.Object == null)
@@ -707,9 +707,9 @@ namespace DDS3ModelLibrary.IO.Common
             BaseStream.Seek(returnPos, SeekOrigin.Begin);
         }
 
-        private void ScheduleWriteOffset(int priority, object obj, Func<long> action)
+        private void ScheduleWriteOffset(int priority, bool relocatable, object obj, Func<long> action)
         {
-            mScheduledWrites.AddLast(new ScheduledWrite(BaseStream.Position, BaseOffset, action, priority, obj));
+            mScheduledWrites.AddLast(new ScheduledWrite(BaseStream.Position, BaseOffset, action, priority, relocatable, obj));
             Write(0);
         }
 

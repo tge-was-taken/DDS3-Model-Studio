@@ -5,6 +5,7 @@ using DDS3ModelLibrary.Models;
 using DDS3ModelLibrary.Motions.Internal;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 
@@ -28,6 +29,12 @@ namespace DDS3ModelLibrary.Motions
         public MotionPack()
         {
             Motions = new List<Motion>();
+        }
+
+        public MotionPack(string filePath) : this()
+        {
+            using (var reader = new EndianBinaryReader(new MemoryStream(File.ReadAllBytes(filePath)), filePath, Endianness.Little))
+                Read(reader);
         }
 
         internal override void ReadContent(EndianBinaryReader reader, IOContext context)
@@ -83,7 +90,7 @@ namespace DDS3ModelLibrary.Motions
             // -- header --
             // Write relocation table last (lowest priority)
             writer.PushBaseOffset(start + 0x10);
-            writer.ScheduleWriteOffsetAligned(-1, 16, () =>
+            writer.ScheduleWriteOffsetAligned(-1, 4, false, () =>
             {
                 // Encode & write relocation table
                 var encodedRelocationTable =
@@ -109,7 +116,8 @@ namespace DDS3ModelLibrary.Motions
                                                 .SelectMany(x => x.Controllers)
                                                 .Select(x => x.GetDefinition())
                                                 .Distinct()
-                                                //.OrderBy( x => x.NodeIndex )
+                                                .OrderBy( x => x.NodeIndex )
+                                                .ThenBy( x => (int)x.Type )
                                                 .ToList();
             }
 

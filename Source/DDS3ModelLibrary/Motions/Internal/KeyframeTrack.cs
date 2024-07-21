@@ -24,7 +24,7 @@ namespace DDS3ModelLibrary.Motions.Internal
 
         void IBinarySerializable.Read(EndianBinaryReader reader, object context)
         {
-            reader.SeekCurrent(4);
+            var dataSize = reader.ReadInt32();
             var keyframeCount = reader.ReadInt16();
             var keyframeSize = reader.ReadInt16();
             var keyframeTimings = reader.ReadInt16Array(keyframeCount);
@@ -160,7 +160,7 @@ namespace DDS3ModelLibrary.Motions.Internal
             Debug.Assert(Keyframes.All(x => x.Size == keyframeSize));
 
             var keyframes = Keyframes.OrderBy(x => x.Time);
-            writer.WriteInt32(dataSize);
+            writer.WriteInt32(0); // data size placeholder
             writer.WriteInt16((short)Keyframes.Count);
             writer.WriteInt16((short)keyframeSize);
             writer.WriteInt16s(keyframes.Select(x => x.Time));
