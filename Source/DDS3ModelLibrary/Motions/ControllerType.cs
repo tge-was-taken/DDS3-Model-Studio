@@ -1,6 +1,6 @@
 ﻿namespace DDS3ModelLibrary.Motions
 {
-    public enum ControllerType : short
+    public enum ControllerType : int
     {
         Position,
         Type1,
@@ -9,5 +9,7 @@
         Morph,
         Type5,
         Type8 = 8,
+        Type10004 = 0x10004,
+        Type20000 = 0x20000,
     }
 }

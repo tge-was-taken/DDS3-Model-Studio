@@ -1,11 +1,8 @@
 ﻿using AtlusFileSystemLibrary;
 using AtlusFileSystemLibrary.FileSystems.LB;
 using DDS3ModelLibrary.Models;
-using DDS3ModelLibrary.Models.Conversion;
 using DDS3ModelLibrary.Models.Field;
 using DDS3ModelLibrary.Motions;
-using DDS3ModelLibrary.Textures;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -13,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Security.Cryptography;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace DDS3ModelLibraryCLI
@@ -29,8 +27,8 @@ namespace DDS3ModelLibraryCLI
             //var mb = new Model(@"F:\Projects\Nocturne\Dump\DDS3\model\field\_test\player_a.MB");
             //mb.Save("player_a_new.MB");
 
-            var ab = new MotionPack(@"F:\Projects\Nocturne\Dump\DDS3\model\field\_test\player_a_0.AB");
-            ab.Save("player_a_0_new.AB");
+            //var ab = new MotionPack(@"F:\Projects\Nocturne\Dump\DDS3\model\field\_test\player_a_0.AB");
+            //ab.Save("player_a_0_new.AB");
         }
 
         private static void Main(string[] args)
@@ -1021,7 +1019,7 @@ namespace DDS3ModelLibraryCLI
                                     id = materialCache[materialHash].Id;
                                 }
 
-                                var json = JsonConvert.SerializeObject(material, Formatting.Indented);
+                                var json = JsonSerializer.Serialize(material, new JsonSerializerOptions() { WriteIndented = true });
                                 var name = id.ToString();
 
                                 if (isTextured)
@@ -1049,7 +1047,7 @@ namespace DDS3ModelLibraryCLI
                 materialIdLookup[tuple.Key] = tuple.Value.Id;
             }
 
-            File.WriteAllText("material_presets\\index.json", JsonConvert.SerializeObject(materialIdLookup, Formatting.Indented));
+            File.WriteAllText("material_presets\\index.json", JsonSerializer.Serialize(materialIdLookup, new JsonSerializerOptions() { WriteIndented = true }));
         }
 
         private static void ReplaceModelTest()

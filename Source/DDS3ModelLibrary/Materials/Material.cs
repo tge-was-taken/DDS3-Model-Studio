@@ -1,10 +1,10 @@
 ﻿using DDS3ModelLibrary.IO.Common;
 using DDS3ModelLibrary.Models;
-using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace DDS3ModelLibrary.Materials
 {
@@ -51,7 +51,7 @@ namespace DDS3ModelLibrary.Materials
         /// <summary>
         /// Gets or sets Color1.
         /// </summary>
-        [JsonProperty(PropertyName = "16", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("16")]
         public Color? Color1
         {
             get => mColor1;
@@ -61,7 +61,7 @@ namespace DDS3ModelLibrary.Materials
         /// <summary>
         /// Gets or sets Color2.
         /// </summary>
-        [JsonProperty(PropertyName = "17", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("17")]
         public Color? Color2
         {
             get => mColor2;
@@ -81,7 +81,7 @@ namespace DDS3ModelLibrary.Materials
         /// <summary>
         /// Gets or sets FloatArray1.
         /// </summary>
-        [JsonProperty(PropertyName = "19", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("19")]
         public float[] FloatArray1
         {
             get => mFloatArray1;
@@ -91,7 +91,7 @@ namespace DDS3ModelLibrary.Materials
         /// <summary>
         /// Gets or sets Color3.
         /// </summary>
-        [JsonProperty(PropertyName = "20", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("20")]
         public Color? Color3
         {
             get => mColor3;
@@ -101,7 +101,7 @@ namespace DDS3ModelLibrary.Materials
         /// <summary>
         /// Gets or sets the masked overlay tetxture id. First value is mask id, second is diffuse id.
         /// </summary>
-        [JsonProperty(PropertyName = "21", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("21")]
         public short[] OverlayTextureIds
         {
             get => mOverlayTextureIds;
@@ -111,7 +111,7 @@ namespace DDS3ModelLibrary.Materials
         /// <summary>
         /// Gets or sets FloatArray2.
         /// </summary>
-        [JsonProperty(PropertyName = "22", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("22")]
         public float[] FloatArray2
         {
             get => mFloatArray2;
@@ -121,7 +121,7 @@ namespace DDS3ModelLibrary.Materials
         /// <summary>
         /// Gets or sets Color4.
         /// </summary>
-        [JsonProperty(PropertyName = "23", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("23")]
         public Color? Color4
         {
             get => mColor4;
@@ -131,7 +131,7 @@ namespace DDS3ModelLibrary.Materials
         /// <summary>
         /// Gets or sets Color5.
         /// </summary>
-        [JsonProperty(PropertyName = "24", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("24")]
         public Color? Color5
         {
             get => mColor5;
@@ -142,7 +142,7 @@ namespace DDS3ModelLibrary.Materials
         /// <summary>
         /// Gets or sets Float1.
         /// </summary>
-        [JsonProperty(PropertyName = "25", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("25")]
         public float? Float1
         {
             get => mFloat1;
@@ -152,7 +152,7 @@ namespace DDS3ModelLibrary.Materials
         /// <summary>
         /// Gets or sets FloatArray3.
         /// </summary>
-        [JsonProperty(PropertyName = "26", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("26")]
         public float[] FloatArray3
         {
             get => mFloatArray3;

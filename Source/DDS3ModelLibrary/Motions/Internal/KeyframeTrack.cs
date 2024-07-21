@@ -53,7 +53,8 @@ namespace DDS3ModelLibrary.Motions.Internal
                                 break;
 
                             default:
-                                throw new NotImplementedException();
+                                key = reader.ReadObject<RawKey>(keyframeSize);
+                                break;
                         }
                         break;
 
@@ -65,7 +66,8 @@ namespace DDS3ModelLibrary.Motions.Internal
                                 break;
 
                             default:
-                                throw new NotImplementedException();
+                                key = reader.ReadObject<RawKey>(keyframeSize);
+                                break;
                         }
                         break;
 
@@ -81,7 +83,8 @@ namespace DDS3ModelLibrary.Motions.Internal
                                 break;
 
                             default:
-                                throw new NotImplementedException();
+                                key = reader.ReadObject<RawKey>(keyframeSize);
+                                break;
                         }
                         break;
 
@@ -97,7 +100,8 @@ namespace DDS3ModelLibrary.Motions.Internal
                                 break;
 
                             default:
-                                throw new NotImplementedException();
+                                key = reader.ReadObject<RawKey>(keyframeSize);
+                                break;
                         }
                         break;
 
@@ -113,7 +117,8 @@ namespace DDS3ModelLibrary.Motions.Internal
                                 break;
 
                             default:
-                                throw new NotImplementedException();
+                                key = reader.ReadObject<RawKey>(keyframeSize);
+                                break;
                         }
                         break;
 
@@ -125,7 +130,8 @@ namespace DDS3ModelLibrary.Motions.Internal
                                 break;
 
                             default:
-                                throw new NotImplementedException();
+                                key = reader.ReadObject<RawKey>(keyframeSize);
+                                break;
                         }
                         break;
 
@@ -137,12 +143,38 @@ namespace DDS3ModelLibrary.Motions.Internal
                                 break;
 
                             default:
-                                throw new NotImplementedException();
+                                key = reader.ReadObject<RawKey>(keyframeSize);
+                                break;
+                        }
+                        break;
+
+                    case ControllerType.Type10004:
+                        switch (keyframeSize)
+                        {
+                            case 4:
+                                key = reader.ReadObject<UInt32Key>();
+                                break;
+                            default:
+                                key = reader.ReadObject<RawKey>(keyframeSize);
+                                break;
+                        }
+                        break;
+
+                    case ControllerType.Type20000:
+                        switch (keyframeSize)
+                        {
+                            case 8:
+                                key = reader.ReadObject<Single2Key>();
+                                break;
+                            default:
+                                key = reader.ReadObject<RawKey>(keyframeSize);
+                                break;
                         }
                         break;
 
                     default:
-                        throw new NotImplementedException();
+                        key = reader.ReadObject<RawKey>(keyframeSize);
+                        break;
                 }
 
                 key.Time = keyframeTimings[i];

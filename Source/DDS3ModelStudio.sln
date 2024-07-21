@@ -3,21 +3,21 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35027.167
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS3ModelLibrary", "DDS3ModelLibrary\DDS3ModelLibrary.csproj", "{D8D5B882-7D8F-4206-8DC7-DF0F0EB59A55}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DDS3ModelLibrary", "DDS3ModelLibrary\DDS3ModelLibrary.csproj", "{D8D5B882-7D8F-4206-8DC7-DF0F0EB59A55}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS3ModelLibrary.Playground", "DDS3ModelLibraryCLI\DDS3ModelLibrary.Playground.csproj", "{6453CE1B-556C-4584-B10D-70A51071C055}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DDS3ModelLibrary.Playground", "DDS3ModelLibraryCLI\DDS3ModelLibrary.Playground.csproj", "{6453CE1B-556C-4584-B10D-70A51071C055}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS3ModelConverter", "DDS3ModelConverter\DDS3ModelConverter.csproj", "{180CC7A2-1A4E-42EC-AD44-09CEF7F93C97}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS3ModelStudio", "DDS3ModelStudio\DDS3ModelStudio.csproj", "{696B91C6-1FC3-43E7-8588-A7E691B6F4A3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DDS3ModelConverter", "DDS3ModelConverter\DDS3ModelConverter.csproj", "{180CC7A2-1A4E-42EC-AD44-09CEF7F93C97}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Externals", "Externals", "{B79191C5-E95C-4F18-A05E-EEB51B5CF2FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleCommandLine", "..\Externals\SimpleCommandLine\Source\SimpleCommandLine\SimpleCommandLine.csproj", "{7A1F22A9-5EED-4F8D-A3C9-A99B8ECFACB0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimpleCommandLine", "..\Externals\SimpleCommandLine\Source\SimpleCommandLine\SimpleCommandLine.csproj", "{7A1F22A9-5EED-4F8D-A3C9-A99B8ECFACB0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtlusFileSystemLibrary", "..\Externals\AtlusFileSystemLibrary\Source\AtlusFileSystemLibrary\AtlusFileSystemLibrary.csproj", "{9960B785-6207-44E8-BA42-EC7F6F785344}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AtlusFileSystemLibrary", "..\Externals\AtlusFileSystemLibrary\Source\AtlusFileSystemLibrary\AtlusFileSystemLibrary.csproj", "{9960B785-6207-44E8-BA42-EC7F6F785344}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DDS3ModelLibrary.Native", "DDS3ModelLibrary.Native\DDS3ModelLibrary.Native.vcxproj", "{9034CDF5-52AC-4E6C-9759-879B0B4F3887}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS3ModelLibrary.Tests", "DDS3ModelLibrary.Tests\DDS3ModelLibrary.Tests.csproj", "{1489EA62-C982-4ACE-A4EA-BA275732B382}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,18 +65,6 @@ Global
 		{180CC7A2-1A4E-42EC-AD44-09CEF7F93C97}.Release|x64.Build.0 = Release|Any CPU
 		{180CC7A2-1A4E-42EC-AD44-09CEF7F93C97}.Release|x86.ActiveCfg = Release|Any CPU
 		{180CC7A2-1A4E-42EC-AD44-09CEF7F93C97}.Release|x86.Build.0 = Release|Any CPU
-		{696B91C6-1FC3-43E7-8588-A7E691B6F4A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{696B91C6-1FC3-43E7-8588-A7E691B6F4A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{696B91C6-1FC3-43E7-8588-A7E691B6F4A3}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{696B91C6-1FC3-43E7-8588-A7E691B6F4A3}.Debug|x64.Build.0 = Debug|Any CPU
-		{696B91C6-1FC3-43E7-8588-A7E691B6F4A3}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{696B91C6-1FC3-43E7-8588-A7E691B6F4A3}.Debug|x86.Build.0 = Debug|Any CPU
-		{696B91C6-1FC3-43E7-8588-A7E691B6F4A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{696B91C6-1FC3-43E7-8588-A7E691B6F4A3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{696B91C6-1FC3-43E7-8588-A7E691B6F4A3}.Release|x64.ActiveCfg = Release|Any CPU
-		{696B91C6-1FC3-43E7-8588-A7E691B6F4A3}.Release|x64.Build.0 = Release|Any CPU
-		{696B91C6-1FC3-43E7-8588-A7E691B6F4A3}.Release|x86.ActiveCfg = Release|Any CPU
-		{696B91C6-1FC3-43E7-8588-A7E691B6F4A3}.Release|x86.Build.0 = Release|Any CPU
 		{7A1F22A9-5EED-4F8D-A3C9-A99B8ECFACB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7A1F22A9-5EED-4F8D-A3C9-A99B8ECFACB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A1F22A9-5EED-4F8D-A3C9-A99B8ECFACB0}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -111,6 +99,18 @@ Global
 		{9034CDF5-52AC-4E6C-9759-879B0B4F3887}.Release|x64.Build.0 = Release|x64
 		{9034CDF5-52AC-4E6C-9759-879B0B4F3887}.Release|x86.ActiveCfg = Release|Win32
 		{9034CDF5-52AC-4E6C-9759-879B0B4F3887}.Release|x86.Build.0 = Release|Win32
+		{1489EA62-C982-4ACE-A4EA-BA275732B382}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1489EA62-C982-4ACE-A4EA-BA275732B382}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1489EA62-C982-4ACE-A4EA-BA275732B382}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1489EA62-C982-4ACE-A4EA-BA275732B382}.Debug|x64.Build.0 = Debug|Any CPU
+		{1489EA62-C982-4ACE-A4EA-BA275732B382}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1489EA62-C982-4ACE-A4EA-BA275732B382}.Debug|x86.Build.0 = Debug|Any CPU
+		{1489EA62-C982-4ACE-A4EA-BA275732B382}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1489EA62-C982-4ACE-A4EA-BA275732B382}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1489EA62-C982-4ACE-A4EA-BA275732B382}.Release|x64.ActiveCfg = Release|Any CPU
+		{1489EA62-C982-4ACE-A4EA-BA275732B382}.Release|x64.Build.0 = Release|Any CPU
+		{1489EA62-C982-4ACE-A4EA-BA275732B382}.Release|x86.ActiveCfg = Release|Any CPU
+		{1489EA62-C982-4ACE-A4EA-BA275732B382}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

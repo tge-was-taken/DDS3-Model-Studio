@@ -12,7 +12,7 @@ namespace DDS3ModelLibrary.IO.Common
 {
     public sealed partial class EndianBinaryWriter : BinaryWriter
     {
-        private static readonly Encoding sEncoding = Encoding.GetEncoding(932);
+        private static readonly Encoding sEncoding = ShiftJISEncoding.Instance;
 
         internal class ScheduledWrite
         {

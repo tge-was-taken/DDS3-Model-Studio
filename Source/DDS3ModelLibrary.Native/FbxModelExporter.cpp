@@ -104,7 +104,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 		if ( textures )
 		{
 			// Export textures
-			for ( size_t i = 0; i < textures->Count; i++ )
+			for ( int i = 0; i < textures->Count; i++ )
 			{
 				auto textureName = FormatTextureName( textures, nullptr, i );
 				textures[ i ]->GetBitmap( 0, 0 )->Save(
@@ -113,7 +113,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 		}
 
 		// Convert materials
-		for ( size_t i = 0; i < model->Materials->Count; i++ )
+		for ( int i = 0; i < model->Materials->Count; i++ )
 			ConvertMaterialToFbxSurfacePhong( fScene, model, model->Materials[ i ], textures, i );
 
 		// 3ds Max a bind pose. The name is taken from it as well.
@@ -126,7 +126,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 
 		// Fully populate the nodes & process the meshes
 		auto meshes = gcnew List<GenericMesh^>( 256 );
-		for ( size_t i = 0; i < model->Nodes->Count; i++ )
+		for ( int i = 0; i < model->Nodes->Count; i++ )
 		{
 			ConvertNodeToFbxNode( model, model->Nodes[ i ], fScene, (FbxNode*)mConvertedNodes[ i ].ToPointer(),
 				meshes );
@@ -139,11 +139,11 @@ namespace DDS3ModelLibrary::Models::Conversion
 			ConvertBlendShapesToMeshes( meshes, model );
 
 		// Build FBX meshes for all of the processed meshes
-		for ( size_t i = 0; i < meshes->Count; i++ )
+		for ( int i = 0; i < meshes->Count; i++ )
 		{
 			auto mesh = meshes[ i ];
 			int faceCount = 0;
-			for ( size_t j = 0; j < mesh->Groups->Length; j++ )
+			for ( int j = 0; j < mesh->Groups->Length; j++ )
 				faceCount += mesh->Groups[ j ].Triangles->Length;
 
 			auto fMeshNode = CreateFbxNodeForMesh( fScene, Utf8String( String::Format( "mesh_{0}", i ) ).ToCStr() );
@@ -180,12 +180,12 @@ namespace DDS3ModelLibrary::Models::Conversion
 	{
 		auto newMeshes = gcnew List<GenericMesh^>();
 
-		for ( size_t i = 0; i < meshes->Count; i++ )
+		for ( int i = 0; i < meshes->Count; i++ )
 		{
 			if ( !meshes[ i ]->BlendShapes ) continue;
 			auto mesh = meshes[ i ];
 
-			for ( size_t j = 0; j < mesh->BlendShapes->Length; j++ )
+			for ( int j = 0; j < mesh->BlendShapes->Length; j++ )
 			{
 				auto bs = mesh->BlendShapes[ j ];
 				auto bsMesh = gcnew GenericMesh();
@@ -203,7 +203,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 			mesh->BlendShapes = nullptr;
 		}
 
-		for ( size_t i = 0; i < newMeshes->Count; i++ )
+		for ( int i = 0; i < newMeshes->Count; i++ )
 			meshes->Add( newMeshes[ i ] );
 	}
 
@@ -216,7 +216,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 		int groupCount = 0;
 		bool usesNormals = false, usesColors = false, usesUV1 = false, 
 			usesUV2 = false, usesWeights = false;
-		for ( size_t i = 0; i < meshes->Count; i++ )
+		for ( int i = 0; i < meshes->Count; i++ )
 		{
 			if ( meshes[ i ]->BlendShapes ) continue;
 			vertexCount += meshes[ i ]->Vertices->Length;
@@ -243,7 +243,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 		// merge meshes
 		int vertexOffset = 0;
 		int groupOffset = 0;
-		for ( size_t i = 0; i < meshes->Count; i++ )
+		for ( int i = 0; i < meshes->Count; i++ )
 		{
 			if ( meshes[ i ]->BlendShapes ) continue;
 			auto mesh = meshes[ i ];
@@ -259,7 +259,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 			{
 				// generate weights
 				auto nodeIndex = model->Nodes->IndexOf( mesh->ParentNode );
-				for ( size_t i = 0; i < mesh->Vertices->Length; i++ )
+				for ( int i = 0; i < mesh->Vertices->Length; i++ )
 				{
 					auto weights = mergedMesh->Weights[ vertexOffset + i ] = gcnew array<NodeWeight>( 1 );
 					weights[ 0 ].NodeIndex = nodeIndex;
@@ -268,11 +268,11 @@ namespace DDS3ModelLibrary::Models::Conversion
 			}
 
 			Array::Copy( mesh->Groups, 0, mergedMesh->Groups, groupOffset, mesh->Groups->Length );
-			for ( size_t j = 0; j < mesh->Groups->Length; j++ )
+			for ( int j = 0; j < mesh->Groups->Length; j++ )
 			{
 				// adjust vertex indices
 				auto% grp = mergedMesh->Groups[ groupOffset + j ];
-				for ( size_t k = 0; k < grp.Triangles->Length; k++ )
+				for ( int k = 0; k < grp.Triangles->Length; k++ )
 				{
 					grp.Triangles[ k ].A += vertexOffset;
 					grp.Triangles[ k ].B += vertexOffset;
@@ -285,7 +285,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 		}
 
 		// add blend shape meshes as-is
-		for ( size_t i = 0; i < meshes->Count; i++ )
+		for ( int i = 0; i < meshes->Count; i++ )
 		{
 			if ( !meshes[ i ]->BlendShapes ) continue;
 			newMeshes->Add( meshes[ i ] );
@@ -327,7 +327,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 
 		if ( mesh->BlendShapes )
 		{
-			for ( size_t i = 0; i < mesh->BlendShapes->Length; i++ )
+			for ( int i = 0; i < mesh->BlendShapes->Length; i++ )
 			{
 				auto blendShape = mesh->BlendShapes[ i ];
 
@@ -353,7 +353,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 		}
 
 		int faceOffset = 0;
-		for ( size_t i = 0; i < mesh->Groups->Length; i++ )
+		for ( int i = 0; i < mesh->Groups->Length; i++ )
 		{
 			auto grp = mesh->Groups[ i ];
 
@@ -389,11 +389,11 @@ namespace DDS3ModelLibrary::Models::Conversion
 		}
 
 		auto fCluster = (FbxCluster*)fClusterPtr.ToPointer();
-		for ( size_t j = 0; j < mesh->Vertices->Length; j++ )
+		for ( int j = 0; j < mesh->Vertices->Length; j++ )
 			fCluster->AddControlPointIndex( vertexStart + j, 1 );
 	}
 
-	void FbxModelExporter::ConvertMaterialToFbxSurfacePhong( FbxScene* fScene, Model^ model, Material^ mat, TexturePack^ textures, const size_t& i )
+	void FbxModelExporter::ConvertMaterialToFbxSurfacePhong( FbxScene* fScene, Model^ model, Material^ mat, TexturePack^ textures, const int& i )
 	{
 		auto fMat = FbxSurfacePhong::Create( fScene, Utf8String( FormatMaterialName( model, mat ) ).ToCStr() );
 		fMat->ShadingModel.Set( "Phong" );
@@ -430,7 +430,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 
 	void FbxModelExporter::BuildNodeToFbxNodeMapping( Model^ model, FbxScene* fScene )
 	{
-		for ( size_t i = 0; i < model->Nodes->Count; i++ )
+		for ( int i = 0; i < model->Nodes->Count; i++ )
 		{
 			auto node = model->Nodes[ i ];
 			auto fNode = FbxNode::Create( fScene, Utf8String( FormatNodeName( model, node ) ).ToCStr() );
@@ -498,7 +498,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 
 	void FbxModelExporter::ProcessMeshList( Model^ model, Node^ node, MeshList^ meshList, List<GenericMesh^>^ processedMeshes )
 	{
-		for ( size_t i = 0; i < meshList->Count; i++ )
+		for ( int i = 0; i < meshList->Count; i++ )
 			ProcessMesh( model, node, meshList[i], processedMeshes );
 	}
 
@@ -540,7 +540,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 
 	void FbxModelExporter::ProcessMeshType1( Model^ model, Node^ node, MeshType1^ mesh, List<GenericMesh^>^ meshes )
 	{
-		for ( size_t i = 0; i < mesh->Batches->Count; i++ )
+		for ( int i = 0; i < mesh->Batches->Count; i++ )
 		{
 			auto batch = mesh->Batches[ i ];
 			auto transformed = batch->Transform( node->WorldTransform );
@@ -561,7 +561,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 
 	void FbxModelExporter::ProcessMeshType2( Model^ model, Node^ node, MeshType2^ mesh, List<GenericMesh^>^ meshes )
 	{
-		for ( size_t i = 0; i < mesh->Batches->Count; i++ )
+		for ( int i = 0; i < mesh->Batches->Count; i++ )
 		{
 			auto batch = mesh->Batches[ i ];
 			auto transformed = batch->Transform( model->Nodes );
@@ -612,7 +612,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 			gMesh->Groups[ 0 ].Triangles = mesh->Triangles;
 
 			gMesh->BlendShapes = gcnew array<GenericBlendShape>( transformed->Length - 1 );
-			for ( size_t i = 0; i < gMesh->BlendShapes->Length; i++ )
+			for ( int i = 0; i < gMesh->BlendShapes->Length; i++ )
 			{
 				auto morphData = GenericBlendShape();
 				morphData.Vertices = transformed[ 1 + i ].Item1;
@@ -653,7 +653,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 		gMesh->Groups[ 0 ].Triangles = mesh->Triangles;
 
 		int vertexStart = 0;
-		for ( size_t i = 0; i < mesh->Batches->Count; i++ )
+		for ( int i = 0; i < mesh->Batches->Count; i++ )
 		{
 			auto batch = mesh->Batches[ i ];
 			auto transformed = batch->Transform( model->Nodes );
@@ -690,7 +690,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 		gMesh->Groups[ 0 ].Triangles = mesh->Triangles;
 
 		int vertexStart = 0;
-		for ( size_t i = 0; i < mesh->Batches->Count; i++ )
+		for ( int i = 0; i < mesh->Batches->Count; i++ )
 		{
 			auto batch = mesh->Batches[ i ];
 			auto transformed = batch->Transform( node->WorldTransform );
@@ -733,7 +733,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 	// Conversion -> FBX functions
 	FbxVector4* FbxModelExporter::ConvertPositionsToFbxControlPoints( FbxVector4* fControlPoints, array<Vector3>^ positions )
 	{
-		for ( size_t j = 0; j < positions->Length; j++ )
+		for ( int j = 0; j < positions->Length; j++ )
 		{
 			*fControlPoints++ = FbxVector4( positions[ j ].X, positions[ j ].Y, positions[ j ].Z );
 		}
@@ -743,7 +743,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 
 	void FbxModelExporter::ConvertNormalsToFbxLayerElementNormalDirectArray( FbxLayerElementNormal* fElementNormal, array<Vector3>^ normals, int vertexStart )
 	{
-		for ( size_t j = 0; j < normals->Length; j++ )
+		for ( int j = 0; j < normals->Length; j++ )
 		{
 			fElementNormal->GetDirectArray().SetAt( vertexStart + j, FbxVector4( normals[ j ].X, normals[ j ].Y, normals[ j ].Z ) );
 		}
@@ -756,7 +756,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 		fCluster->SetLink( fNode );
 		fCluster->SetLinkMode( FbxCluster::ELinkMode::eTotalOne );
 		fCluster->SetTransformLinkMatrix( fNode->EvaluateGlobalTransform() );
-		for ( size_t i = 0; i < fMesh->GetControlPointsCount(); i++ ) fCluster->AddControlPointIndex( (int)i, 1 );
+		for ( int i = 0; i < fMesh->GetControlPointsCount(); i++ ) fCluster->AddControlPointIndex( (int)i, 1 );
 		fSkin->AddCluster( fCluster );
 		fMesh->AddDeformer( fSkin );
 	}
@@ -769,13 +769,13 @@ namespace DDS3ModelLibrary::Models::Conversion
 
 	void FbxModelExporter::ConvertTexCoordsToFbxLayerElementUVDirectArray( FbxLayerElementUV* fElementUV, array<Vector2>^ texCoords, int vertexStart )
 	{
-		for ( size_t j = 0; j < texCoords->Length; j++ )
+		for ( int j = 0; j < texCoords->Length; j++ )
 			fElementUV->GetDirectArray().SetAt( vertexStart + j, FbxVector2( texCoords[ j ].X, 1.0f - texCoords[ j ].Y ) );
 	}
 
 	void FbxModelExporter::ConvertColorsToFbxLayerElementVertexColorsDirectArray( FbxLayerElementVertexColor* fElementColors, array<Color>^ colors, int vertexStart )
 	{
-		for ( size_t i = 0; i < colors->Length; i++ )
+		for ( int i = 0; i < colors->Length; i++ )
 		{
 			fElementColors->GetDirectArray().SetAt( vertexStart + i, 
 				FbxColor( (double)colors[ i ].R / 255.0, (float)colors[ i ].G / 255.0, 
@@ -785,7 +785,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 
 	void FbxModelExporter::ConvertTrianglesToFbxPolygons( FbxMesh* fMesh, array<Triangle>^ triangles, int vertexStart, int materialIndex )
 	{
-		for ( size_t i = 0; i < triangles->Length; i++ )
+		for ( int i = 0; i < triangles->Length; i++ )
 		{
 			fMesh->BeginPolygon( materialIndex, -1, -1, false );
 			fMesh->AddPolygon( vertexStart + triangles[ i ].A );
@@ -800,9 +800,9 @@ namespace DDS3ModelLibrary::Models::Conversion
 		typedef float Matrix4x4Data[ 4 ][ 4 ];
 
 		FbxAMatrix fm;
-		for ( size_t y = 0; y < 4; y++ )
+		for ( int y = 0; y < 4; y++ )
 		{
-			for ( size_t x = 0; x < 4; x++ )
+			for ( int x = 0; x < 4; x++ )
 				fm[ y ][ x ] = ( *(Matrix4x4Data*)&m )[ y ][ x ];
 		}
 
@@ -813,12 +813,12 @@ namespace DDS3ModelLibrary::Models::Conversion
 		System::IntPtr>^ fClusterLookup, fbxsdk::FbxScene* fScene, FbxNode* fMeshNode, fbxsdk::FbxSkin* fSkin,
 		int vertexStart, Model^ model, GenericMesh^ mesh )
 	{
-		for ( size_t vIdx = 0; vIdx < weights->Length; vIdx++ )
+		for ( int vIdx = 0; vIdx < weights->Length; vIdx++ )
 		{
 			auto vWeights = weights[ vIdx ];
 			if ( vWeights )
 			{
-				for ( size_t wIdx = 0; wIdx < vWeights->Length; wIdx++ )
+				for ( int wIdx = 0; wIdx < vWeights->Length; wIdx++ )
 				{
 					auto w = weights[ vIdx ][ wIdx ];
 					if ( w.Weight == 0.0f ) continue;
@@ -905,7 +905,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 		fElementColors->SetMappingMode( FbxLayerElement::EMappingMode::eByControlPoint );
 		fElementColors->SetReferenceMode( FbxLayerElement::EReferenceMode::eDirect );
 		fElementColors->GetDirectArray().SetCount( fMesh->GetControlPointsCount() );
-		for ( size_t i = 0; i < fElementColors->GetDirectArray().GetCount(); i++ )
+		for ( int i = 0; i < fElementColors->GetDirectArray().GetCount(); i++ )
 			fElementColors->GetDirectArray().SetAt( i, FbxColor( 1, 1, 1, 1 ) );
 
 		return fElementColors;

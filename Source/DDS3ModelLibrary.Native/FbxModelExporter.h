@@ -86,7 +86,7 @@ namespace DDS3ModelLibrary::Models::Conversion
 		FbxNode* CreateFbxNodeForMesh( FbxScene* fScene, const char* name );
 		void ConvertProcessedMeshToFbxMesh( Model^ model, GenericMesh^ mesh, MeshConversionContext^ work, int vertexStart );
 		void AddRigidFbxClusterForParentNode( Model^ model, GenericMesh^ mesh, FbxSkin* fSkin, Dictionary<int, IntPtr>^ fClusterLookup, int vertexStart );
-		void ConvertMaterialToFbxSurfacePhong( fbxsdk::FbxScene* fScene, DDS3ModelLibrary::Models::Model^ model, DDS3ModelLibrary::Materials::Material^ mat, DDS3ModelLibrary::Textures::TexturePack^ textures, const size_t& i );
+		void ConvertMaterialToFbxSurfacePhong( fbxsdk::FbxScene* fScene, DDS3ModelLibrary::Models::Model^ model, DDS3ModelLibrary::Materials::Material^ mat, DDS3ModelLibrary::Textures::TexturePack^ textures, const int& i );
 		
 		void BuildNodeToFbxNodeMapping( Model^ model, FbxScene* fScene );
 		void ConvertNodeToFbxNode( Model^ model, Node^ node, FbxScene* fScene, FbxNode* fNode, List<GenericMesh^>^ processedMeshes );

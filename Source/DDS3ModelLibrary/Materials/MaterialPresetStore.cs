@@ -1,8 +1,8 @@
 ﻿using DDS3ModelLibrary.Data;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 
 namespace DDS3ModelLibrary.Materials
 {
@@ -22,7 +22,7 @@ namespace DDS3ModelLibrary.Materials
             var hashToIdJsonPath = GetPath("index.json");
             if (File.Exists(hashToIdJsonPath))
             {
-                sMaterialHashToId = JsonConvert.DeserializeObject<Dictionary<int, int>>(File.ReadAllText(hashToIdJsonPath));
+                sMaterialHashToId = JsonSerializer.Deserialize<Dictionary<int, int>>(File.ReadAllText(hashToIdJsonPath));
                 foreach (int value in sMaterialHashToId.Values)
                     sValidPresetIds.Add(value);
             }
@@ -52,7 +52,7 @@ namespace DDS3ModelLibrary.Materials
                 throw new ArgumentOutOfRangeException(nameof(id), $"Material preset {id} does not exist");
 
             var json = File.ReadAllText(path);
-            return JsonConvert.DeserializeObject<Material>(json);
+            return JsonSerializer.Deserialize<Material>(json);
         }
 
         private static string GetMaterialPresetPath(int id, bool hasTexture, bool hasOverlay)

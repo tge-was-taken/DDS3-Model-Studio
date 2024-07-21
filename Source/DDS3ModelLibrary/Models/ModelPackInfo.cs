@@ -40,7 +40,7 @@ namespace DDS3ModelLibrary.Models
         internal override void WriteContent(EndianBinaryWriter writer, IOContext context)
         {
             if (!(context.Context is ModelPack modelPack))
-                throw new InvalidOperationException();
+                throw new InvalidOperationException($"Expected {nameof(ModelPack)} as context argument.");
 
             writer.Write(BOM);
             writer.Write(INFO_OFFSET);

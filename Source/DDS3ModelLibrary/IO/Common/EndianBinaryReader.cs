@@ -7,9 +7,20 @@ using System.Text;
 
 namespace DDS3ModelLibrary.IO.Common
 {
+    public static class ShiftJISEncoding
+    {
+        public static readonly Encoding Instance;
+
+        static ShiftJISEncoding()
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            Instance = Encoding.GetEncoding(932);
+        }
+    }
+
     public sealed class EndianBinaryReader : BinaryReader
     {
-        private static readonly Encoding sEncoding = Encoding.GetEncoding(932);
+        private static readonly Encoding sEncoding = ShiftJISEncoding.Instance;
 
         private Endianness mEndianness;
         private Dictionary<long, object> mObjectLookup;

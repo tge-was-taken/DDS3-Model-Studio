@@ -17,9 +17,5 @@ namespace DDS3ModelLibrary.Models.Processing
         public TagNameParseException(string message, Exception innerException) : base(message, innerException)
         {
         }
-
-        protected TagNameParseException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
     }
 }

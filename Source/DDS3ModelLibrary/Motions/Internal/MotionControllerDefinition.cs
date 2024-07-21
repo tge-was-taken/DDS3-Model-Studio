@@ -49,7 +49,7 @@ namespace DDS3ModelLibrary.Motions.Internal
 
         void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
-            writer.WriteInt32((short)Type);
+            writer.WriteInt32((int)Type);
             writer.WriteInt32(NodeIndex);
         }
     }

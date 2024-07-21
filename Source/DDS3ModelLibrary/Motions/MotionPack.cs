@@ -31,6 +31,12 @@ namespace DDS3ModelLibrary.Motions
             Motions = new List<Motion>();
         }
 
+        public MotionPack(Stream stream, bool leaveOpen = false) : this()
+        {
+            using (var reader = new EndianBinaryReader(stream, leaveOpen, Endianness.Little))
+                Read(reader);
+        }
+
         public MotionPack(string filePath) : this()
         {
             using (var reader = new EndianBinaryReader(new MemoryStream(File.ReadAllBytes(filePath)), filePath, Endianness.Little))
@@ -128,7 +134,7 @@ namespace DDS3ModelLibrary.Motions
 
             writer.WriteInt16((short)Motions.Count);
             writer.WriteInt16((short)mControllerDefinitions.Count);
-            writer.ScheduleWriteOffsetAligned(16, () =>
+            writer.ScheduleWriteOffsetAligned(4, () =>
             {
                 writer.ScheduleWriteObjectOffsetsAligned(mMotionDefinitions, 4);
             });
@@ -201,7 +207,7 @@ namespace DDS3ModelLibrary.Motions
                                 key = new SingleKey();
                                 break;
                             default:
-                                throw new InvalidOperationException();
+                                throw new NotSupportedException($"Adding placeholder keyframe not implemented for type {controllerDef.Type}");
                         }
 
                         key.Time = time;

@@ -1,4 +1,5 @@
 ﻿using DDS3ModelLibrary.IO.Common;
+using System;
 using System.Numerics;
 
 namespace DDS3ModelLibrary.Motions
@@ -58,6 +59,29 @@ namespace DDS3ModelLibrary.Motions
         }
     }
 
+    public struct RawKey : IKey
+    {
+        public int Size => Data.Length;
+
+        public short Time { get; set; }
+
+        public byte[] Data { get; set; }
+
+        // -- IBinarySerializable --
+        BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
+
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
+        {
+            var keyFrameSize = context as int? ?? throw new ArgumentException($"Expected int as context argument");
+            Data = reader.ReadBytes(keyFrameSize);
+        }
+
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
+        {
+            writer.WriteBytes(Data);
+        }
+    }
+
     public struct Vector3Key : IKey
     {
         public int Size => 12;
@@ -77,6 +101,28 @@ namespace DDS3ModelLibrary.Motions
         void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
         {
             writer.WriteVector3(Value);
+        }
+    }
+
+    public struct Single2Key : IKey
+    {
+        public int Size => 8;
+
+        public short Time { get; set; }
+
+        public float[] Values { get; set; }
+
+        // -- IBinarySerializable --
+        BinarySourceInfo IBinarySerializable.SourceInfo { get; set; }
+
+        void IBinarySerializable.Read(EndianBinaryReader reader, object context)
+        {
+            Values = reader.ReadSingleArray(2);
+        }
+
+        void IBinarySerializable.Write(EndianBinaryWriter writer, object context)
+        {
+            writer.WriteSingles(Values);
         }
     }
 

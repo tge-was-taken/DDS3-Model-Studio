@@ -3,11 +3,10 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>DDS3ModelLibraryCLI</RootNamespace>
     <AssemblyName>DDS3ModelLibraryCLI</AssemblyName>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net8-windows</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <AssemblyTitle>DDS3ModelLibraryCLI</AssemblyTitle>
     <Product>DDS3ModelLibraryCLI</Product>
-    <LangVersion>7.2</LangVersion>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <PostBuildEvent>xcopy $(SolutionDir)..\Resources Resources /q /e /d /y /i</PostBuildEvent>
     <PostBuildEvent>xcopy $(SolutionDir)..\Resources Resources /q /e /d /y /i</PostBuildEvent>
@@ -24,13 +23,7 @@
     <PostBuildEvent>xcopy $(SolutionDir)..\Resources Resources /q /e /d /y /i</PostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Net.Http" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="AssimpNet" Version="4.1.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Externals\AtlusFileSystemLibrary\Source\AtlusFileSystemLibrary\AtlusFileSystemLibrary.csproj" />

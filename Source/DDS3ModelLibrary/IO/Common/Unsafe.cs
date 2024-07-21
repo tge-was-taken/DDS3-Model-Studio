@@ -5,21 +5,17 @@ namespace DDS3ModelLibrary.IO.Common
     public static unsafe class Unsafe
     {
         public static TDest ReinterpretCast<TSource, TDest>(TSource source)
+            where TSource : unmanaged
+            where TDest : unmanaged
         {
-            var sourceRef = __makeref(source);
-            var dest = default(TDest);
-            var destRef = __makeref(dest);
-            *(IntPtr*)&destRef = *((IntPtr*)&sourceRef);
-            return __refvalue(destRef, TDest);
+            return *(TDest*)&source;
         }
 
         public static void ReinterpretCast<TSource, TDest>(TSource source, out TDest destination)
+            where TSource : unmanaged
+            where TDest : unmanaged
         {
-            var sourceRef = __makeref(source);
-            var dest = default(TDest);
-            var destRef = __makeref(dest);
-            *(IntPtr*)&destRef = *((IntPtr*)&sourceRef);
-            destination = __refvalue(destRef, TDest);
+            destination = *(TDest*)&source;
         }
     }
 }

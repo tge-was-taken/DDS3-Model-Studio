@@ -37,7 +37,7 @@ namespace DDS3ModelLibrary.Motions.Conversion
             {
                 if (!aiChannelLookup.TryGetValue(controller.NodeIndex, out var aiChannel))
                 {
-                    throw new InvalidOperationException();
+                    throw new InvalidOperationException($"Missing channel for node {controller.NodeIndex}");
                 }
 
                 switch (controller.Type)

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net8-windows</TargetFramework>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <AssemblyTitle>DDS3ModelConverter</AssemblyTitle>
     <Product>DDS3ModelConverter</Product>
@@ -27,17 +27,9 @@
     <PostBuildEvent>xcopy $(SolutionDir)..\Resources Resources /q /e /d /y /i</PostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Net.Http" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\Externals\AtlusFileSystemLibrary\Source\AtlusFileSystemLibrary\AtlusFileSystemLibrary.csproj" />
     <ProjectReference Include="..\..\Externals\SimpleCommandLine\Source\SimpleCommandLine\SimpleCommandLine.csproj" />
     <ProjectReference Include="..\DDS3ModelLibrary.Native\DDS3ModelLibrary.Native.vcxproj" />
     <ProjectReference Include="..\DDS3ModelLibrary\DDS3ModelLibrary.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="System.Collections" Version="4.3.0" />
   </ItemGroup>
 </Project>

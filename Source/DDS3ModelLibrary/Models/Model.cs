@@ -29,6 +29,12 @@ namespace DDS3ModelLibrary.Models
             Extensions = new List<ModelExtension>();
         }
 
+        public Model(Stream stream, string filePath = default) : this()
+        {
+            using (var reader = new EndianBinaryReader(stream, filePath, Endianness.Little))
+                Read(reader);
+        }
+
         public Model(string filePath) : this()
         {
             using (var reader = new EndianBinaryReader(new MemoryStream(File.ReadAllBytes(filePath)), filePath, Endianness.Little))
