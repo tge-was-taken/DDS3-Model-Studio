@@ -134,7 +134,7 @@ namespace DDS3ModelConverter
                                 Options.Output :
                                 $"{Path.GetFileNameWithoutExtension(Options.Output)}_{i}.{Options.OutputFormat}";
 
-                        if (Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX)
+                        if (!Options.Assimp.UseLegacyFbxExporter && (Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX))
                             FbxModelExporter.Instance.Export(modelPack.Models[i], modelOutfilePath, FbxConfig, modelPack.TexturePack);
                         else
                             AssimpModelExporter.Instance.Export(modelPack.Models[i], modelOutfilePath, modelPack.TexturePack);
@@ -177,7 +177,7 @@ namespace DDS3ModelConverter
                 case OutputFormat.OBJ:
                 case OutputFormat.DAE:
                 case OutputFormat.FBX:
-                    if (Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX)
+                    if (!Options.Assimp.UseLegacyFbxExporter && (Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX))
                         FbxModelExporter.Instance.Export(model, Options.Output, FbxConfig, null);
                     else
                         AssimpModelExporter.Instance.Export(model, Options.Output);
@@ -210,7 +210,7 @@ namespace DDS3ModelConverter
                             model.Nodes[0].Transform *= obj.Transform.Matrix;
 
                             var outFilePath = Path.Combine(outDirPath, obj.Name + Path.GetExtension(Options.Output));
-                            if (Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX)
+                            if (!Options.Assimp.UseLegacyFbxExporter && (Options.OutputFormat == OutputFormat.DAE || Options.OutputFormat == OutputFormat.FBX))
                                 FbxModelExporter.Instance.Export(model, outFilePath, FbxConfig, null);
                             else
                                 AssimpModelExporter.Instance.Export(model, outFilePath);
@@ -427,6 +427,9 @@ namespace DDS3ModelConverter
 
             [Option("pbm", "output-pb-motion", "When specified, motions found within the given packed model file are exported when exporting a PB model obj/dae/fbx.")]
             public bool OutputPbMotion { get; set; }
+
+            [Option("legacy-fbx-exp", "use-legacy-fbx-exporter", "When specified, the legacy Assimp FBX exporter is used instead of the FBX SDK.")]
+            public bool UseLegacyFbxExporter { get; set; }
         }
         public class PackedModelOptions
         {
